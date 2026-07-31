@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#d99a9a">
-<title>禾蔓里·美甲美睫工作室</title>
+<title>[演示] 禾蔓里·美甲美睫工作室</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -238,6 +238,25 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-light);font-size:11px;}
 .tab-item.active{color:var(--primary);}
 .tab-item .icon{font-size:22px;}
+.tab-item{position:relative;}
+.tab-dot{position:absolute;top:9px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px #fff;}
+
+/* 客户端打卡送礼 */
+.cu-gtabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch;}
+.cu-gtabs::-webkit-scrollbar{display:none;}
+.cu-gtab{flex:0 0 auto;padding:7px 13px;border-radius:16px;background:#fff;border:1px solid var(--border);font-size:12.5px;color:var(--text-light);white-space:nowrap;}
+.cu-gtab.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;}
+.cu-dot{width:30px;height:30px;border-radius:50%;margin:0 auto;background:#f2ecec;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;}
+.cu-dot.on{background:var(--primary);border-color:var(--primary);}
+.cu-dot.today{box-shadow:0 0 0 3px rgba(214,150,150,.22);}
+.cu-way{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.cu-way:last-child{border-bottom:none;}
+.cu-shop{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cu-goods{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;box-shadow:var(--shadow-2);}
+.cu-ticket{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border);}
+.cu-ticket:last-child{border-bottom:none;}
+.cu-ticket.used{opacity:.5;}
 
 /* 客户卡片 */
 .user-card{
@@ -376,10 +395,76 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
   .workspace-content{padding:14px;}
   .form-grid,.form-grid-3{grid-template-columns:1fr;}
   .modal{width:94vw;max-height:90vh;}
+  .sch-week{min-width:720px;}
+  .sch-month{min-width:640px;}
+  .tl-wrap{min-width:760px;}
 }
+
+/* ============ 排班管理 ============ */
+.sch-tabs{display:flex;gap:6px;background:var(--bg-2);padding:4px;border-radius:var(--radius-sm);width:fit-content;}
+.sch-tab{padding:6px 16px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-light);transition:.15s;}
+.sch-tab.active{background:#fff;color:var(--primary-dark);font-weight:600;box-shadow:var(--shadow-2);}
+.sch-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.sch-week{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+.sch-week th,.sch-week td{border:1px solid var(--border);padding:0;text-align:center;}
+.sch-week th{background:var(--bg-2);padding:8px 4px;font-weight:600;font-size:12px;color:var(--text-light);}
+.sch-week th.today{background:var(--primary-light);color:var(--primary-dark);}
+.sch-week td.tech-col{width:110px;text-align:left;padding:8px 10px;background:#fffdfd;}
+.sch-cell{min-height:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:.15s;}
+.sch-cell:hover{filter:brightness(.96);}
+.sch-cell .s-name{font-weight:600;font-size:12px;}
+.sch-cell .s-time{font-size:10px;opacity:.75;}
+.sch-cell.empty{color:#d9cfcf;font-size:18px;background:#fff;}
+.tech-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+.tech-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;margin-bottom:8px;}
+.tech-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7a4a4a;font-size:14px;flex:none;}
+.shift-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:2px solid transparent;cursor:pointer;margin-bottom:8px;}
+.shift-opt.sel{border-color:var(--primary-dark);}
+/* 月历 */
+.sch-month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.sch-month .mh{background:var(--bg-2);text-align:center;padding:8px 0;font-size:12px;color:var(--text-light);font-weight:600;}
+.sch-month .md{background:#fff;min-height:84px;padding:5px 5px 6px;cursor:pointer;transition:.15s;}
+.sch-month .md:hover{background:var(--bg-2);}
+.sch-month .md.out{background:#fbf8f8;opacity:.45;}
+.sch-month .md.today .dnum{background:var(--primary-dark);color:#fff;}
+.sch-month .dnum{font-size:12px;font-weight:600;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;margin-bottom:3px;}
+.mchip{font-size:10px;line-height:1.5;border-radius:4px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 时间轴 */
+.tl-wrap{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:#fff;}
+.tl-head,.tl-row{display:flex;}
+.tl-head{background:var(--bg-2);border-bottom:1px solid var(--border);}
+.tl-name{width:110px;flex:none;padding:8px 10px;font-size:12px;border-right:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.tl-track{flex:1;position:relative;height:52px;background-image:repeating-linear-gradient(to right,var(--border) 0 1px,transparent 1px var(--tlstep));}
+.tl-head .tl-track{height:30px;background-image:none;display:flex;}
+.tl-tick{flex:1;font-size:10px;color:var(--text-light);text-align:left;padding:8px 0 0 3px;border-left:1px solid var(--border);}
+.tl-row{border-bottom:1px solid var(--border);}
+.tl-row:last-child{border-bottom:none;}
+.tl-block{position:absolute;top:6px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;}
+.tl-appt{position:absolute;top:28px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;background:var(--primary);color:#fff;cursor:pointer;}
+
+/* ============ 打卡送礼 ============ */
+.rw-switch{position:relative;display:inline-block;width:44px;height:24px;flex:none;cursor:pointer;}
+.rw-switch input{opacity:0;width:0;height:0;position:absolute;}
+.rw-switch span{position:absolute;inset:0;background:#d9d0d0;border-radius:24px;transition:.2s;}
+.rw-switch span:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.rw-switch input:checked+span{background:var(--primary-dark);}
+.rw-switch input:checked+span:before{transform:translateX(20px);}
+.stat-mini{background:var(--bg-2);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+.stat-mini .v{font-size:22px;font-weight:700;color:var(--primary-dark);}
+.stat-mini .l{font-size:11.5px;color:var(--text-light);margin-top:2px;}
+.rw-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:#fff;}
+.rw-item.locked{opacity:.55;}
+.streak-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;background:var(--bg-2);color:var(--text-light);}
+.streak-dot.on{background:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
+<div id="demo-bar" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(90deg,#c4797b,#d99a9a);color:#fff;font-size:12.5px;padding:6px 12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 6px rgba(0,0,0,.12)">
+<span>🎬 这是<strong>演示版</strong>，内置示例数据，随便点不会影响正式数据</span>
+<span><a href="index.html" style="color:#fff;text-decoration:underline;margin-right:12px">进入正式版</a><a href="#" onclick="if(confirm('重置演示数据？')){localStorage.removeItem('hemanli_demo_v1');location.reload()}return false" style="color:#fff;text-decoration:underline">重置数据</a></span>
+</div>
+<style>body{padding-top:30px!important}</style>
+
 
 <!-- ========= 工作台 ========= -->
 <div id="workspace-view" class="workspace" style="display:none">
@@ -397,12 +482,14 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
         <div class="nav-item active" data-route="dashboard"><span class="icon">🏠</span>工作台 <span class="badge" id="badge-noti" style="display:none">0</span></div>
         <div class="nav-item" data-route="appointment"><span class="icon">📅</span>预约管理 <span class="badge" id="badge-appoint" style="display:none">0</span></div>
         <div class="nav-item" data-route="order"><span class="icon">💰</span>报价开单</div>
+        <div class="nav-item" data-route="schedule"><span class="icon">🗓️</span>排班管理</div>
       </div>
       <div class="nav-group">
         <div class="nav-group-title">客户管理</div>
         <div class="nav-item" data-route="customer"><span class="icon">👤</span>客户档案</div>
         <div class="nav-item" data-route="member"><span class="icon">💳</span>会员管理</div>
         <div class="nav-item" data-route="points"><span class="icon">⭐</span>积分中心</div>
+        <div class="nav-item" data-route="rewards"><span class="icon">🎁</span>打卡送礼 <span class="badge" id="badge-rewards" style="display:none">0</span></div>
       </div>
       <div class="nav-group">
         <div class="nav-group-title">运营工具</div>
@@ -445,17 +532,447 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 /* =============================================================
    数据层 - localStorage包装
    ============================================================= */
-const DB_KEY='hemanli_db_v1';
+const DB_KEY='hemanli_demo_v1';
 /* 云端同步基于 Supabase（免费、无需配置域名白名单）。
    工作台把 Provider 配置保存在 DB.settings.cloud 中，重载页面自动连接；
    客户端配置通过扫码链接 ?sb_url=...&sb_key=... 自动携带，无需手动填写。 */
-const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
+/* 积分营销（打卡送礼）默认规则 —— 全部可在工作台「打卡送礼」页自定义，随云端同步到手机/iPad */
+const DEFAULT_REWARDS={
+  /* 1. 推荐新客 */
+  referral:{enabled:true,referrerPoints:200,refereePoints:200,requireConsume:true,note:'新客首次消费后双方到账'},
+  /* 2. 社交分享 */
+  share:{enabled:true,points:80,maxPerMonth:2,needAudit:true,platforms:['小红书','抖音','微信朋友圈','大众点评']},
+  /* 3. 会员注册 / 每日签到 */
+  signin:{enabled:true,dailyPoints:10,firstMemberPoints:100,streakBonus:[{days:7,points:50},{days:30,points:200}]},
+  /* 4. 积分抵现 */
+  deduct:{enabled:true,pointsPerYuan:100,maxPercent:20,minPoints:100},
+  /* 9. 积分升级会员 */
+  levelUp:{enabled:true,rules:[{points:1000,amount:300},{points:3000,amount:500},{points:8000,amount:1000}]},
+  /* 10. 积分有效期 */
+  expire:{enabled:true,months:12,remindDays:30},
+  /* 11. 双倍积分日 */
+  doubleDay:{enabled:true,mode:'weekday',weekday:3,monthDay:8,multiplier:2,label:'双倍积分日'}
+};
+/* 默认兑换目录（5/6/7/8） */
+const DEFAULT_REWARD_ITEMS=[
+  {id:'rw_unload',name:'卸甲服务',type:'service',points:100,value:30,icon:'🧴',stock:-1,enabled:true,desc:'低门槛尝甜头'},
+  {id:'rw_touch',name:'单色补色',type:'service',points:300,value:80,icon:'💅',stock:-1,enabled:true,desc:'补色一次'},
+  {id:'rw_hand',name:'免费手部护理',type:'service',points:500,value:128,icon:'🤲',stock:-1,enabled:true,desc:'中高价值'},
+  {id:'rw_sticker',name:'限量款美甲贴纸',type:'product',points:800,value:68,icon:'✨',stock:20,enabled:true,desc:'限量周边'},
+  {id:'rw_coupon8',name:'8折美甲券',type:'coupon',points:300,value:0.8,icon:'🎫',stock:-1,enabled:true,desc:'下次消费打8折',validDays:60},
+  {id:'rw_cash10',name:'¥10 现金抵扣券',type:'coupon',points:1000,value:10,icon:'💰',stock:-1,enabled:true,desc:'满100可用',validDays:90}
+];
+const REWARD_TYPES={service:{label:'服务',color:'#dcfce7',text:'#166534'},product:{label:'实物',color:'#dbeafe',text:'#1e40af'},coupon:{label:'优惠券',color:'#fef3c7',text:'#92400e'}};
+const POINT_SOURCES={consume:'消费',signin:'签到',referral:'推荐好友',referred:'被推荐',share:'社交分享',member:'开通会员',redeem:'积分兑换',deduct:'积分抵现',expire:'过期作废',manual:'手动调整',levelup:'等级奖励'};
+
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],technicians:[],shifts:[],priceMemory:[],rewardItems:[],redeems:[],signins:[],referrals:[],shares:[],coupons:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,depositAmount:50,imageMaxCount:6,rewards:DEFAULT_REWARDS,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
 
 const MEMBER_TIERS={
   '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
   '500':{name:'银卡',amount:500,discount:0.9,tag:'silver',pointsRate:1.2,expireMonths:12,color:'#a8a8a8'},
   '1000':{name:'金卡',amount:1000,discount:0.8,tag:'gold',pointsRate:1.5,expireMonths:12,color:'#d4a85a'}
 };
+
+/* 班次类型（排班用） */
+const SHIFT_TYPES={
+  morning:{label:'早班',short:'早',start:'09:00',end:'14:00',color:'#fef3c7',textColor:'#92400e'},
+  afternoon:{label:'中班',short:'中',start:'14:00',end:'18:00',color:'#dbeafe',textColor:'#1e40af'},
+  evening:{label:'晚班',short:'晚',start:'18:00',end:'21:00',color:'#ede9fe',textColor:'#5b21b6'},
+  fullday:{label:'全天',short:'全',start:'09:00',end:'21:00',color:'#dcfce7',textColor:'#166534'},
+  rest:{label:'休息',short:'休',start:'-',end:'-',color:'#f3f4f6',textColor:'#6b7280'}
+};
+const TECH_COLORS=['#f7c5c5','#c5e8f7','#d5f7c5','#f7e6c5','#e6c5f7','#c5f7f0','#f7d5c5','#f7c5e6'];
+const PAY_METHODS={cash:{label:'现金',icon:'💵'},wechat:{label:'微信',icon:'💚'},card:{label:'储值卡扣卡',icon:'💳'}};
+
+/* 图片压缩工具：客户端 File → Canvas 缩放到 800px → JPEG 0.6 → base64 dataURL */
+function compressImage(file,maxSide=800,quality=0.6){
+  return new Promise((resolve,reject)=>{
+    if(!file||!file.type||!file.type.startsWith('image/')){reject(new Error('不是图片'));return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h&&w>maxSide){h=h*(maxSide/w);w=maxSide;}
+        else if(h>maxSide){w=w*(maxSide/h);h=maxSide;}
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.round(w);canvas.height=Math.round(h);
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const data=canvas.toDataURL('image/jpeg',quality);
+        resolve(data);
+      };
+      img.onerror=()=>reject(new Error('图片解码失败'));
+      img.src=ev.target.result;
+    };
+    reader.onerror=()=>reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+/* 估算 base64 dataURL 字节数（用于 localStorage 容量检查） */
+function approxBytes(dataUrl){
+  if(!dataUrl)return 0;
+  const i=dataUrl.indexOf(',');
+  const b64=i>=0?dataUrl.slice(i+1):dataUrl;
+  return Math.ceil(b64.length*0.75);
+}
+/* 读取多个 File → 压缩后 base64 数组 */
+async function compressImageBatch(files,maxCount){
+  const list=Array.from(files).slice(0,maxCount);
+  const out=[];
+  for(const f of list){
+    try{out.push(await compressImage(f));}catch(e){console.warn('跳过:',f.name,e);}
+  }
+  return out;
+}
+/* 价格记忆：写入（同名覆盖去重，限 100 条） */
+function rememberPrice(itemName,price){
+  if(!itemName||!price)return;
+  const key=(itemName||'').trim();
+  if(!key)return;
+  DB.priceMemory=DB.priceMemory.filter(p=>p.itemName!==key);
+  DB.priceMemory.unshift({itemName:key,price:+price,ts:Date.now()});
+  if(DB.priceMemory.length>100)DB.priceMemory=DB.priceMemory.slice(0,100);
+}
+/* 查找与 itemName 相关的历史价格（用于报价快捷输入） */
+function recallPrices(itemName,limit=5){
+  if(!itemName)return DB.priceMemory.slice(0,limit);
+  const key=itemName.trim();
+  return DB.priceMemory.filter(p=>p.itemName===key||p.itemName.includes(key)||key.includes(p.itemName)).slice(0,limit);
+}
+/* 周一日期工具：返回 YYYY-MM-DD 字符串 */
+function getWeekStart(d){
+  const dt=new Date(d);
+  const day=dt.getDay()||7; // 周日=0 转为 7
+  dt.setDate(dt.getDate()-day+1);
+  return ymd(dt);
+}
+function getWeekDates(weekStartStr){
+  const out=[];
+  const base=new Date(weekStartStr);
+  for(let i=0;i<7;i++){
+    const d=new Date(base);d.setDate(base.getDate()+i);
+    out.push({date:ymd(d),day:i,dayLabel:'周'+['一','二','三','四','五','六','日'][i]});
+  }
+  return out;
+}
+
+/* =============================================================
+   积分营销规则引擎（打卡送礼）
+   ============================================================= */
+function RW(){return (DB.settings&&DB.settings.rewards)||DEFAULT_REWARDS;}
+
+/* 11. 是否双倍积分日 */
+function isDoubleDay(dateStr){
+  const cfg=RW().doubleDay;
+  if(!cfg||!cfg.enabled)return false;
+  const d=dateStr?new Date(dateStr):new Date();
+  if(cfg.mode==='weekday')return d.getDay()===(+cfg.weekday);
+  if(cfg.mode==='monthday')return d.getDate()===(+cfg.monthDay);
+  return false;
+}
+function doubleDayLabel(){
+  const cfg=RW().doubleDay;
+  if(!cfg||!cfg.enabled)return '';
+  const WD=['周日','周一','周二','周三','周四','周五','周六'];
+  return cfg.mode==='weekday'?`每${WD[+cfg.weekday]}`:`每月${cfg.monthDay}号`;
+}
+
+/* 10. 积分有效期 */
+function pointsExpireAt(fromTs){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return 0;
+  const d=new Date(fromTs||Date.now());
+  d.setMonth(d.getMonth()+(+cfg.months||12));
+  return d.getTime();
+}
+
+/* 通用加分入口：自动应用双倍日、写日志、检查升级 */
+function grantPoints(customerId,points,source,reason,opt){
+  opt=opt||{};
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c||!points)return 0;
+  let final=Math.round(points);
+  let dbl=false;
+  if(opt.allowDouble!==false&&final>0&&isDoubleDay(opt.date)){
+    final=Math.round(final*(+RW().doubleDay.multiplier||2));
+    dbl=true;
+  }
+  c.points=(+c.points||0)+final;
+  DB.points_log.unshift({
+    id:genId('pl'),date:opt.date||ymd(new Date()),
+    customerId:c.id,name:c.name,change:final,
+    source:source||'manual',
+    reason:(reason||POINT_SOURCES[source]||'调整')+(dbl?` 🎉${RW().doubleDay.label||'双倍日'}×${RW().doubleDay.multiplier}`:''),
+    balance:c.points,
+    expireAt:final>0?pointsExpireAt():0,
+    ts:Date.now()
+  });
+  if(final>0)checkLevelUp(c);
+  return final;
+}
+/* 扣分（兑换/抵现） */
+function spendPoints(customerId,points,source,reason){
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c)return false;
+  points=Math.round(Math.abs(points));
+  if((+c.points||0)<points)return false;
+  c.points=(+c.points)-points;
+  DB.points_log.unshift({
+    id:genId('pl'),date:ymd(new Date()),
+    customerId:c.id,name:c.name,change:-points,
+    source:source||'redeem',reason:reason||POINT_SOURCES[source]||'消耗',
+    balance:c.points,expireAt:0,ts:Date.now()
+  });
+  return true;
+}
+
+/* 9. 积分自动升级会员 */
+function checkLevelUp(c){
+  const cfg=RW().levelUp;
+  if(!cfg||!cfg.enabled||!cfg.rules||!cfg.rules.length)return;
+  const total=+c.points||0;
+  const hit=[...cfg.rules].sort((a,b)=>b.points-a.points).find(r=>total>=r.points);
+  if(!hit)return;
+  const cur=+c.membershipAmount||0;
+  if(cur>=hit.amount)return;
+  c.membershipAmount=hit.amount;
+  if(!c.membershipExpire){
+    const d=new Date();d.setMonth(d.getMonth()+12);
+    c.membershipExpire=ymd(d);
+  }
+  const tier=MEMBER_TIERS[String(hit.amount)];
+  DB.notifications.unshift({
+    id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),
+    customerName:c.name,type:'升级',
+    content:`🎉 ${c.name} 积分达 ${total} 分，已自动升级为「${tier?tier.name:hit.amount}」，享 ${tier?(tier.discount*10).toFixed(1):''} 折`,
+    createdAt:Date.now()
+  });
+}
+
+/* 4. 积分抵现计算 */
+function calcPointsDeduct(customerId,orderAmount,wantPoints){
+  const cfg=RW().deduct;
+  const res={usablePoints:0,deductAmount:0,maxAmount:0,reason:''};
+  if(!cfg||!cfg.enabled){res.reason='未开启积分抵现';return res;}
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c){res.reason='无客户档案';return res;}
+  const bal=+c.points||0;
+  const per=+cfg.pointsPerYuan||100;
+  res.maxAmount=+(orderAmount*(+cfg.maxPercent||20)/100).toFixed(2);
+  const maxByBalance=bal/per;
+  const cap=Math.min(res.maxAmount,maxByBalance);
+  let amt=wantPoints!=null?Math.min(wantPoints/per,cap):cap;
+  amt=Math.floor(amt*100)/100;
+  if(amt<=0){res.reason=bal<(+cfg.minPoints||0)?`积分不足（需≥${cfg.minPoints}分）`:'不可抵扣';return res;}
+  if(bal<(+cfg.minPoints||0)){res.reason=`积分不足（需≥${cfg.minPoints}分）`;return res;}
+  res.deductAmount=amt;
+  res.usablePoints=Math.ceil(amt*per);
+  return res;
+}
+
+/* 3. 每日签到 */
+function todaySignedIn(customerId){
+  const t=ymd(new Date());
+  return DB.signins.some(s=>s.customerId===customerId&&s.date===t);
+}
+function signinStreak(customerId){
+  const days=DB.signins.filter(s=>s.customerId===customerId).map(s=>s.date).sort().reverse();
+  if(!days.length)return 0;
+  let streak=0;const d=new Date();
+  for(let i=0;i<400;i++){
+    const ds=ymd(d);
+    if(days.includes(ds)){streak++;d.setDate(d.getDate()-1);}
+    else if(i===0){d.setDate(d.getDate()-1);}   // 今天还没签，从昨天算
+    else break;
+  }
+  return streak;
+}
+function doSignin(customerId){
+  const cfg=RW().signin;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'签到功能未开启'};
+  if(todaySignedIn(customerId))return{ok:false,msg:'今天已经签到过啦'};
+  const base=+cfg.dailyPoints||10;
+  const rec={id:genId('si'),date:ymd(new Date()),customerId,points:base,ts:Date.now()};
+  DB.signins.unshift(rec);
+  let got=grantPoints(customerId,base,'signin','每日签到');
+  const streak=signinStreak(customerId);
+  let bonusMsg='';
+  (cfg.streakBonus||[]).forEach(b=>{
+    if(streak===(+b.days)){
+      const bp=grantPoints(customerId,+b.points,'signin',`连续签到${b.days}天奖励`);
+      got+=bp;bonusMsg=` + 连签${b.days}天奖励${bp}分`;
+    }
+  });
+  rec.points=got;
+  saveDB();syncChannel();
+  return{ok:true,points:got,streak,msg:`签到成功 +${got}分${bonusMsg}`};
+}
+
+/* 1. 推荐新客 */
+function genReferralCode(c){
+  if(typeof c==='string')c=DB.customers.find(x=>x.id===c);
+  if(!c)return '';
+  if(c.referralCode)return c.referralCode;
+  const base=(c.phone||'').slice(-4)||String(Math.floor(Math.random()*9000)+1000);
+  c.referralCode='HM'+base+String(Math.floor(Math.random()*90)+10);
+  return c.referralCode;
+}
+function findByReferralCode(code){
+  if(!code)return null;
+  return DB.customers.find(c=>(c.referralCode||'').toUpperCase()===code.toUpperCase())||null;
+}
+function applyReferral(refereeId,code,opt){
+  const cfg=RW().referral;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'推荐功能未开启'};
+  const referrer=findByReferralCode(code);
+  const referee=DB.customers.find(c=>c.id===refereeId);
+  if(!referrer||!referee)return{ok:false,msg:'推荐码无效'};
+  if(referrer.id===referee.id)return{ok:false,msg:'不能推荐自己'};
+  if(DB.referrals.some(r=>r.refereeId===referee.id))return{ok:false,msg:'该客户已被推荐过'};
+  const pending=cfg.requireConsume&&!(opt&&opt.consumed);
+  const rec={
+    id:genId('rf'),date:ymd(new Date()),
+    referrerId:referrer.id,referrerName:referrer.name,
+    refereeId:referee.id,refereeName:referee.name,
+    referrerPoints:+cfg.referrerPoints||0,refereePoints:+cfg.refereePoints||0,
+    status:pending?'pending':'done',ts:Date.now()
+  };
+  DB.referrals.unshift(rec);
+  if(!pending)settleReferral(rec.id);
+  saveDB();syncChannel();
+  return{ok:true,pending,msg:pending?'已绑定推荐关系，新客首次消费后双方到账':`推荐成功，双方各得积分`};
+}
+function settleReferral(refId){
+  const r=DB.referrals.find(x=>x.id===refId);
+  if(!r||r.status==='done')return false;
+  grantPoints(r.referrerId,r.referrerPoints,'referral',`推荐 ${r.refereeName} 到店`);
+  grantPoints(r.refereeId,r.refereePoints,'referred',`由 ${r.referrerName} 推荐`);
+  r.status='done';r.settledAt=Date.now();
+  return true;
+}
+/* 新客首次消费时自动结算待处理推荐 */
+function autoSettleReferralOnConsume(customerId){
+  const pend=DB.referrals.filter(r=>r.refereeId===customerId&&r.status==='pending');
+  pend.forEach(r=>settleReferral(r.id));
+  return pend.length;
+}
+
+/* 2. 社交分享 */
+function submitShare(customerId,platform,url,note){
+  const cfg=RW().share;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'分享奖励未开启'};
+  const month=ymd(new Date()).slice(0,7);
+  const used=DB.shares.filter(s=>s.customerId===customerId&&s.date.startsWith(month)&&s.status!=='rejected').length;
+  if(used>=(+cfg.maxPerMonth||2))return{ok:false,msg:`本月分享奖励已达上限（${cfg.maxPerMonth}次）`};
+  const c=DB.customers.find(x=>x.id===customerId);
+  const rec={
+    id:genId('sh'),date:ymd(new Date()),customerId,customerName:c?c.name:'',
+    platform,url,note:note||'',points:+cfg.points||0,
+    status:cfg.needAudit?'pending':'approved',ts:Date.now()
+  };
+  DB.shares.unshift(rec);
+  if(!cfg.needAudit)grantPoints(customerId,rec.points,'share',`${platform} 分享奖励`);
+  saveDB();syncChannel();
+  return{ok:true,msg:cfg.needAudit?'已提交，店家审核通过后积分到账':`分享成功 +${rec.points}分`};
+}
+function auditShare(shareId,approve){
+  const s=DB.shares.find(x=>x.id===shareId);
+  if(!s||s.status!=='pending')return false;
+  if(approve){s.status='approved';grantPoints(s.customerId,s.points,'share',`${s.platform} 分享奖励（已审核）`);}
+  else s.status='rejected';
+  s.auditedAt=Date.now();
+  saveDB();syncChannel();
+  return true;
+}
+
+/* 5-8. 积分兑换 */
+function redeemReward(customerId,itemId){
+  const it=DB.rewardItems.find(x=>x.id===itemId);
+  if(!it||!it.enabled)return{ok:false,msg:'该奖品已下架'};
+  if(it.stock===0)return{ok:false,msg:'库存不足'};
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c)return{ok:false,msg:'无客户档案'};
+  if((+c.points||0)<it.points)return{ok:false,msg:`积分不足（还差 ${it.points-(+c.points||0)} 分）`};
+  if(!spendPoints(customerId,it.points,'redeem',`兑换「${it.name}」`))return{ok:false,msg:'扣分失败'};
+  if(it.stock>0)it.stock--;
+  const code=genRedeemCode();
+  const rec={
+    id:genId('rd'),date:ymd(new Date()),customerId,customerName:c.name,
+    itemId:it.id,itemName:it.name,itemType:it.type,points:it.points,value:it.value,
+    code,status:'unused',ts:Date.now()
+  };
+  DB.redeems.unshift(rec);
+  // 优惠券入券包
+  if(it.type==='coupon'){
+    const exp=new Date();exp.setDate(exp.getDate()+(+it.validDays||60));
+    DB.coupons.unshift({
+      id:genId('cp'),customerId,customerName:c.name,name:it.name,
+      kind:it.value<1?'discount':'cash',value:it.value,
+      code,expireDate:ymd(exp),status:'unused',fromRedeem:rec.id,ts:Date.now()
+    });
+  }
+  saveDB();syncChannel();
+  return{ok:true,code,msg:`兑换成功！核销码 ${code}`};
+}
+function genRedeemCode(){
+  return String(Math.floor(Math.random()*900000)+100000);
+}
+function useRedeem(redeemId){
+  const r=DB.redeems.find(x=>x.id===redeemId);
+  if(!r||r.status==='used')return false;
+  r.status='used';r.usedAt=Date.now();
+  const cp=DB.coupons.find(x=>x.fromRedeem===r.id);
+  if(cp)cp.status='used';
+  saveDB();syncChannel();
+  return true;
+}
+
+/* 10. 扫描过期积分（每次启动跑一次） */
+function expireOldPoints(){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return 0;
+  const now=Date.now();
+  let expired=0;
+  const byCust={};
+  DB.points_log.forEach(l=>{
+    if(l.change>0&&l.expireAt&&l.expireAt<now&&!l.expired&&l.source!=='expire'){
+      l.expired=true;
+      byCust[l.customerId]=(byCust[l.customerId]||0)+l.change;
+    }
+  });
+  Object.entries(byCust).forEach(([cid,pts])=>{
+    const c=DB.customers.find(x=>x.id===cid);
+    if(!c)return;
+    const cut=Math.min(pts,+c.points||0);
+    if(cut<=0)return;
+    c.points=(+c.points)-cut;
+    expired+=cut;
+    DB.points_log.unshift({
+      id:genId('pl'),date:ymd(new Date()),customerId:c.id,name:c.name,
+      change:-cut,source:'expire',reason:`积分过期作废（有效期${cfg.months}个月）`,
+      balance:c.points,expireAt:0,ts:Date.now()
+    });
+  });
+  if(expired>0){saveDB();syncChannel();}
+  return expired;
+}
+/* 即将过期提醒列表 */
+function expiringSoonList(){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return [];
+  const now=Date.now(),limit=now+(+cfg.remindDays||30)*86400000;
+  const map={};
+  DB.points_log.forEach(l=>{
+    if(l.change>0&&l.expireAt&&!l.expired&&l.expireAt>now&&l.expireAt<=limit){
+      if(!map[l.customerId])map[l.customerId]={customerId:l.customerId,name:l.name,points:0,soonest:l.expireAt};
+      map[l.customerId].points+=l.change;
+      map[l.customerId].soonest=Math.min(map[l.customerId].soonest,l.expireAt);
+    }
+  });
+  return Object.values(map).sort((a,b)=>a.soonest-b.soonest);
+}
 
 function loadDB(){
   try{
@@ -464,12 +981,72 @@ function loadDB(){
       const merged=Object.assign({},SCHEMA,data);
       merged.settings=Object.assign({},SCHEMA.settings,data.settings||{});
       merged.settings.cloud=Object.assign({},SCHEMA.settings.cloud,(data.settings&&data.settings.cloud)||{});
+      merged.technicians=merged.technicians||[];
+      merged.shifts=merged.shifts||[];
+      merged.priceMemory=merged.priceMemory||[];
+      // 积分营销（打卡送礼）
+      ['rewardItems','redeems','signins','referrals','shares','coupons'].forEach(k=>{merged[k]=merged[k]||[];});
+      if(!merged.rewardItems.length)merged.rewardItems=JSON.parse(JSON.stringify(DEFAULT_REWARD_ITEMS));
+      const rw=(data.settings&&data.settings.rewards)||{};
+      merged.settings.rewards={
+        referral:Object.assign({},DEFAULT_REWARDS.referral,rw.referral||{}),
+        share:Object.assign({},DEFAULT_REWARDS.share,rw.share||{}),
+        signin:Object.assign({},DEFAULT_REWARDS.signin,rw.signin||{}),
+        deduct:Object.assign({},DEFAULT_REWARDS.deduct,rw.deduct||{}),
+        levelUp:Object.assign({},DEFAULT_REWARDS.levelUp,rw.levelUp||{}),
+        expire:Object.assign({},DEFAULT_REWARDS.expire,rw.expire||{}),
+        doubleDay:Object.assign({},DEFAULT_REWARDS.doubleDay,rw.doubleDay||{})
+      };
+      // 字段迁移：shift→type、level→role
+      merged.shifts.forEach(s=>{if(!s.type&&s.shift)s.type=s.shift;});
+      merged.technicians.forEach(t=>{if(!t.role)t.role=t.level||'美甲师';if(t.active===undefined)t.active=true;if(!t.skills)t.skills=[];});
+      // 老数据兼容：为已有预约补默认值
+      if(merged.appointments){
+        merged.appointments.forEach(a=>{
+          if(a.images===undefined)a.images=[];
+          if(a.styleNames===undefined)a.styleNames=[];
+          if(a.quotedPrice===undefined)a.quotedPrice=0;
+          if(a.deposit===undefined)a.deposit=0;
+          if(a.depositPaid===undefined)a.depositPaid=false;
+          if(!a.payMethod)a.payMethod='cash';
+          if(a.technicianId===undefined)a.technicianId='';
+          if(!a.item&&a.styleNames&&a.styleNames[0])a.item=a.styleNames.join('+');
+        });
+      }
       return merged;
     }
   }catch(e){}
-  const init=Object.assign({},SCHEMA);
+  const init=JSON.parse(JSON.stringify(SCHEMA));
+  init.rewardItems=JSON.parse(JSON.stringify(DEFAULT_REWARD_ITEMS));
   // 初始化示例数据
   init.memberships=[{id:'m300',amount:300,discount:0.95,name:'储值卡',pointsRate:1.0,expireMonths:12},{id:'m500',amount:500,discount:0.9,name:'银卡',pointsRate:1.2,expireMonths:12},{id:'m1000',amount:1000,discount:0.8,name:'金卡',pointsRate:1.5,expireMonths:12}];
+  // 示例美甲师
+  init.technicians=[
+    {id:'t_jiajia',name:'佳佳',role:'高级美甲师',skills:['法式','猫眼','手绘'],phone:'',color:'#f7c5c5',active:true,createdAt:Date.now()},
+    {id:'t_siyuan',name:'思远',role:'美睫师',skills:['美睫','日式加固'],phone:'',color:'#c5e8f7',active:true,createdAt:Date.now()}
+  ];
+  // 示例班次：本周 5 天排班
+  const weekStart=getWeekStart(new Date());
+  const dates=getWeekDates(weekStart);
+  init.shifts=[
+    {id:'s_d1_jiajia',technicianId:'t_jiajia',date:dates[0].date,type:'morning'},
+    {id:'s_d2_jiajia',technicianId:'t_jiajia',date:dates[1].date,type:'afternoon'},
+    {id:'s_d3_jiajia',technicianId:'t_jiajia',date:dates[2].date,type:'fullday'},
+    {id:'s_d4_jiajia',technicianId:'t_jiajia',date:dates[3].date,type:'rest'},
+    {id:'s_d5_jiajia',technicianId:'t_jiajia',date:dates[4].date,type:'fullday'},
+    {id:'s_d1_siyuan',technicianId:'t_siyuan',date:dates[0].date,type:'afternoon'},
+    {id:'s_d2_siyuan',technicianId:'t_siyuan',date:dates[1].date,type:'fullday'},
+    {id:'s_d3_siyuan',technicianId:'t_siyuan',date:dates[2].date,type:'rest'},
+    {id:'s_d4_siyuan',technicianId:'t_siyuan',date:dates[3].date,type:'evening'},
+    {id:'s_d5_siyuan',technicianId:'t_siyuan',date:dates[4].date,type:'morning'}
+  ];
+  // 示例价格记忆
+  init.priceMemory=[
+    {itemName:'本甲单色',price:80,ts:Date.now()-86400000*5},
+    {itemName:'本甲猫眼',price:150,ts:Date.now()-86400000*4},
+    {itemName:'甲片款式',price:280,ts:Date.now()-86400000*3},
+    {itemName:'复杂款手绘',price:580,ts:Date.now()-86400000*2}
+  ];
   init.items=[
     {id:'i1',name:'本甲单色',price:80,duration:60,category:'本甲',hot:false},
     {id:'i2',name:'本甲法式',price:120,duration:90,category:'本甲',hot:true},
@@ -481,25 +1058,75 @@ function loadDB(){
     {id:'i8',name:'卸甲',price:30,duration:20,category:'护理',hot:false},
     {id:'i9',name:'贴钻每个',price:5,duration:10,category:'加项',hot:false,pointsMultiple:2}
   ];
-  /* ===== demo 演示数据：仅当本地无数据(首次打开)时注入，不影响真实数据 ===== */
-  const _t=Date.now(),_d=n=>{const x=new Date(_t+n*86400000);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+
+  /* ===== demo 演示数据：仅当本地无数据（首次打开）时注入 ===== */
+  const _t=Date.now();
+  const _d=n=>{const x=new Date(_t+n*86400000);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+  const _bd=(m,d)=>new Date().getFullYear()+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
   init.customers=[
-    {id:'c_demo1',name:'林小满',phone:'13800000001',points:120,createdAt:_t-30*86400000,membershipAmount:500,membershipExpire:_d(80)},
-    {id:'c_demo2',name:'苏念',phone:'13800000002',points:30,createdAt:_t-10*86400000},
-    {id:'c_demo3',name:'阿May',phone:'13800000003',points:0,createdAt:_t-2*86400000}
+    {id:'c_demo1',name:'林小满',phone:'13800000001',points:1280,createdAt:_t-120*86400000,membershipAmount:'500',membershipBalance:326,membershipExpire:_d(80),birthday:_bd(3,18),referralCode:'HM000188'},
+    {id:'c_demo2',name:'苏念',phone:'13800000002',points:430,createdAt:_t-40*86400000,membershipAmount:'300',membershipBalance:118,membershipExpire:_d(150),birthday:_bd(7,2),referralCode:'HM000242'},
+    {id:'c_demo3',name:'阿May',phone:'13800000003',points:90,createdAt:_t-6*86400000,birthday:_bd(11,25)},
+    {id:'c_demo4',name:'周宁',phone:'13800000004',points:3150,createdAt:_t-200*86400000,membershipAmount:'1000',membershipBalance:742,membershipExpire:_d(210),birthday:_bd(1,9),referralCode:'HM000455'}
   ];
   init.appointments=[
-    {id:'a_demo1',name:'林小满',phone:'13800000001',customerId:'c_demo1',date:_d(1),startTime:'10:00',endTime:'11:30',item:'甲片款式',price:280,status:'confirmed',source:'workbench',createdAt:_t-86400000},
-    {id:'a_demo2',name:'苏念',phone:'13800000002',customerId:'c_demo2',date:_d(0),startTime:'14:00',endTime:'15:00',item:'本甲猫眼',price:150,status:'pending',source:'customer',createdAt:_t-3600000},
-    {id:'a_demo3',name:'阿May',phone:'13800000003',customerId:'c_demo3',date:_d(-3),startTime:'16:00',endTime:'17:00',item:'本甲单色',price:80,status:'completed',source:'workbench',createdAt:_t-4*86400000}
+    {id:'a_demo1',name:'林小满',phone:'13800000001',customerId:'c_demo1',date:_d(1),startTime:'10:00',endTime:'11:30',
+     item:'甲片款式',styleNames:['甲片款式'],quotedPrice:280,deposit:50,depositPaid:true,technicianId:'t_jiajia',
+     status:'confirmed',source:'workbench',createdAt:_t-86400000},
+    {id:'a_demo2',name:'苏念',phone:'13800000002',customerId:'c_demo2',date:_d(0),startTime:'14:00',endTime:'16:00',
+     item:'本甲猫眼+贴钻每个',styleNames:['本甲猫眼','贴钻每个'],quotedPrice:0,deposit:0,depositPaid:false,
+     status:'pending',source:'customer',createdAt:_t-3600000,note:'想要偏冷调的猫眼'},
+    {id:'a_demo3',name:'阿May',phone:'13800000003',customerId:'c_demo3',date:_d(0),startTime:'16:30',endTime:'17:30',
+     item:'本甲单色',styleNames:['本甲单色'],quotedPrice:80,deposit:0,depositPaid:false,technicianId:'t_siyuan',
+     status:'confirmed',source:'customer',createdAt:_t-7200000},
+    {id:'a_demo4',name:'周宁',phone:'13800000004',customerId:'c_demo4',date:_d(-3),startTime:'13:00',endTime:'17:00',
+     item:'复杂款手绘',styleNames:['复杂款手绘'],quotedPrice:580,finalPrice:464,originalPrice:580,
+     pointsUsed:0,pointsDeduct:0,pointsEarned:696,technicianId:'t_jiajia',payMethod:'card',
+     status:'completed',source:'workbench',createdAt:_t-4*86400000,completedAt:_t-3*86400000},
+    {id:'a_demo5',name:'林小满',phone:'13800000001',customerId:'c_demo1',date:_d(-8),startTime:'10:00',endTime:'11:00',
+     item:'本甲法式',styleNames:['本甲法式'],quotedPrice:120,finalPrice:108,pointsEarned:144,technicianId:'t_siyuan',
+     payMethod:'wechat',status:'completed',source:'workbench',createdAt:_t-9*86400000,completedAt:_t-8*86400000}
   ];
   init.transactions=[
-    {id:'t_demo1',date:_d(0),type:'收入',amount:280,category:'美甲',note:'甲片款式·林小满',createdAt:_t-3600000},
-    {id:'t_demo2',date:_d(-2),type:'收入',amount:150,category:'美甲',note:'本甲猫眼·苏念',createdAt:_t-2*86400000}
+    {id:'t_demo1',date:_d(-3),type:'收入',amount:464,name:'复杂款手绘',customerId:'c_demo4',customerName:'周宁',payMethod:'card',source:'appointment',createdAt:_t-3*86400000},
+    {id:'t_demo2',date:_d(-3),type:'扣卡',amount:464,name:'复杂款手绘',customerId:'c_demo4',customerName:'周宁',payMethod:'card',source:'card_deduct',balanceAfter:'742.00',createdAt:_t-3*86400000},
+    {id:'t_demo3',date:_d(-8),type:'收入',amount:108,name:'本甲法式',customerId:'c_demo1',customerName:'林小满',payMethod:'wechat',source:'appointment',createdAt:_t-8*86400000},
+    {id:'t_demo4',date:_d(-15),type:'收入',amount:150,name:'本甲猫眼',customerId:'c_demo2',customerName:'苏念',payMethod:'cash',source:'manual',createdAt:_t-15*86400000},
+    {id:'t_demo5',date:_d(-20),type:'支出',amount:860,name:'甲油胶进货',category:'耗材',createdAt:_t-20*86400000}
   ];
+  init.memberships.unshift(
+    {id:'ms_demo1',date:_d(-3),customerId:'c_demo4',customerName:'周宁',type:'扣减',amount:-464,note:'复杂款手绘',balanceAfter:'742.00'},
+    {id:'ms_demo2',date:_d(-60),customerId:'c_demo4',customerName:'周宁',type:'充值',amount:1000,note:'开通金卡',balanceAfter:'1206.00'}
+  );
+  /* --- 打卡送礼演示数据 --- */
+  init.signins=[0,1,2,3].map(i=>({id:'si_demo'+i,date:_d(-i),customerId:'c_demo1',points:10,ts:_t-i*86400000}));
   init.points_log=[
-    {id:'pl_demo1',customerId:'c_demo1',customerName:'林小满',change:120,reason:'消费累计',date:_d(0),createdAt:_t-3600000},
-    {id:'pl_demo2',customerId:'c_demo2',customerName:'苏念',change:30,reason:'新客赠送',date:_d(-10),createdAt:_t-10*86400000}
+    {id:'pl_d1',date:_d(0),customerId:'c_demo1',name:'林小满',change:10,source:'signin',reason:'每日签到',balance:1280,expireAt:_t+365*86400000,ts:_t-3600000},
+    {id:'pl_d2',date:_d(-3),customerId:'c_demo4',name:'周宁',change:696,source:'consume',reason:'消费 复杂款手绘 ¥464.00',balance:3150,expireAt:_t+362*86400000,ts:_t-3*86400000},
+    {id:'pl_d3',date:_d(-5),customerId:'c_demo1',name:'林小满',change:200,source:'referral',reason:'推荐 阿May 到店',balance:1270,expireAt:_t+360*86400000,ts:_t-5*86400000},
+    {id:'pl_d4',date:_d(-5),customerId:'c_demo3',name:'阿May',change:200,source:'referred',reason:'由 林小满 推荐',balance:200,expireAt:_t+360*86400000,ts:_t-5*86400000},
+    {id:'pl_d5',date:_d(-7),customerId:'c_demo2',name:'苏念',change:80,source:'share',reason:'小红书 分享奖励（已审核）',balance:430,expireAt:_t+358*86400000,ts:_t-7*86400000},
+    {id:'pl_d6',date:_d(-9),customerId:'c_demo3',name:'阿May',change:-100,source:'redeem',reason:'兑换「卸甲服务」',balance:90,expireAt:0,ts:_t-9*86400000},
+    {id:'pl_d7',date:_d(-12),customerId:'c_demo1',name:'林小满',change:-500,source:'deduct',reason:'积分抵现 ¥5.00（本甲法式）',balance:1070,expireAt:0,ts:_t-12*86400000}
+  ];
+  init.referrals=[
+    {id:'rf_d1',date:_d(-5),referrerId:'c_demo1',referrerName:'林小满',refereeId:'c_demo3',refereeName:'阿May',referrerPoints:200,refereePoints:200,status:'done',settledAt:_t-5*86400000,ts:_t-6*86400000},
+    {id:'rf_d2',date:_d(-1),referrerId:'c_demo4',referrerName:'周宁',refereeId:'c_demo2',refereeName:'苏念',referrerPoints:200,refereePoints:200,status:'pending',ts:_t-86400000}
+  ];
+  init.shares=[
+    {id:'sh_d1',date:_d(-7),customerId:'c_demo2',customerName:'苏念',platform:'小红书',url:'https://www.xiaohongshu.com/explore/demo1',note:'带店铺定位',points:80,status:'approved',auditedAt:_t-7*86400000,ts:_t-7*86400000},
+    {id:'sh_d2',date:_d(0),customerId:'c_demo1',customerName:'林小满',platform:'抖音',url:'https://v.douyin.com/demo2/',note:'视频已发布',points:80,status:'pending',ts:_t-1800000}
+  ];
+  init.redeems=[
+    {id:'rd_d1',date:_d(-9),customerId:'c_demo3',customerName:'阿May',itemId:'rw_unload',itemName:'卸甲服务',itemType:'service',points:100,value:30,code:'482013',status:'used',usedAt:_t-8*86400000,ts:_t-9*86400000},
+    {id:'rd_d2',date:_d(-2),customerId:'c_demo4',customerName:'周宁',itemId:'rw_coupon8',itemName:'8折美甲券',itemType:'coupon',points:300,value:0.8,code:'739456',status:'unused',ts:_t-2*86400000}
+  ];
+  init.coupons=[
+    {id:'cp_d1',customerId:'c_demo4',customerName:'周宁',name:'8折美甲券',kind:'discount',value:0.8,code:'739456',expireDate:_d(58),status:'unused',fromRedeem:'rd_d2',ts:_t-2*86400000}
+  ];
+  init.notifications=[
+    {id:'nt_d1',date:_d(0)+' 09:30',customerName:'林小满',type:'预约提醒',content:'【禾蔓里】亲爱的林小满，提醒您明天有预约美甲服务，期待您的光临~',createdAt:_t-9000000},
+    {id:'nt_d2',date:_d(-3)+' 18:02',customerName:'周宁',type:'升级',content:'🎉 周宁 积分达 3150 分，已自动升级为「金卡」，享 8.0 折',createdAt:_t-3*86400000}
   ];
   return init;
 }
@@ -589,7 +1216,7 @@ const CLOUD={
     this.apptPoll=setInterval(async()=>{const list=await this.fetchAppts(phone);cb(list);},5000);
   },
   stopPoll(){if(this.apptPoll){clearInterval(this.apptPoll);this.apptPoll=null;}},
-  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,appointments:[]}},
+  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,technicians:DB.technicians,shifts:DB.shifts,priceMemory:DB.priceMemory,rewardItems:DB.rewardItems,redeems:DB.redeems,signins:DB.signins,referrals:DB.referrals,shares:DB.shares,coupons:DB.coupons,appointments:[]}},
   async pushDB(){
     if(!this.ready)return false;
     try{const{error}=await this.sb.from("sync").upsert({id:"main",data:this.dbFragment()});if(error){console.warn("pushDB",error);return false;}return true;}catch(e){return false;}
@@ -613,6 +1240,7 @@ const CLOUD={
 };
 function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=0.08;o.start();setTimeout(()=>o.stop(),200);}catch(e){}}
 /* 从扫码链接读取 Supabase 配置：?sb_url=...&sb_key=... */
+function getUrlRef(){try{const m=location.href.match(/[?&]ref=([^&#]+)/);return m?decodeURIComponent(m[1]).trim():'';}catch(e){return '';}}
 function getUrlCloud(){try{const u=location.href.match(/[?&]sb_url=([^&#]+)/);const k=location.href.match(/[?&]sb_key=([^&#]+)/);return{url:u?decodeURIComponent(u[1]):'',key:k?decodeURIComponent(k[1]):''}}catch(e){return{url:'',key:''}}}
 function renderCurrentRouteSafe(){if(currentMode==='workspace')renderCurrentRoute();else renderCustomerPage();}
 function ensureCustomerFromAppt(a){
@@ -656,7 +1284,7 @@ function applyApptsForClient(list){
 /* 工作台间：合并其它数据 */
 function applyDB(frag){
   if(!frag)return;
-  ['customers','transactions','items','memberships','points_log','notifications','settings'].forEach(k=>{if(frag[k]!==undefined)DB[k]=frag[k];});
+  ['customers','transactions','items','memberships','points_log','notifications','settings','technicians','shifts','priceMemory','rewardItems','redeems','signins','referrals','shares','coupons'].forEach(k=>{if(frag[k]!==undefined)DB[k]=frag[k];});
   saveLocalOnly();
   if(!document.querySelector('.modal-mask'))renderCurrentRouteSafe();
   refreshBadges();
@@ -796,8 +1424,10 @@ function renderRoute(){
     appointment:'预约管理',
     order:'报价开单',
     customer:'客户档案',
+    schedule:'排班管理',
     member:'会员管理',
     points:'积分中心',
+    rewards:'打卡送礼',
     marketing:'营销管理',
     finance:'财务管理',
     crawler:'链接抓取',
@@ -810,9 +1440,11 @@ function renderRoute(){
     dashboard:renderDashboard,
     appointment:renderAppointment,
     order:renderOrder,
+    schedule:renderSchedule,
     customer:renderCustomer,
     member:renderMember,
     points:renderPoints,
+    rewards:renderRewards,
     marketing:renderMarketing,
     finance:renderFinance,
     crawler:renderCrawler,
@@ -930,8 +1562,9 @@ function renderAppointment(el){
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="appt-filters">
         <button class="btn sm primary" data-filter="all">全部 (${DB.appointments.length})</button>
-        <button class="btn sm" data-filter="pending">待确认 (${DB.appointments.filter(a=>a.status==='pending').length})</button>
-        <button class="btn sm" data-filter="confirmed">已确认 (${DB.appointments.filter(a=>a.status==='confirmed').length})</button>
+        <button class="btn sm" data-filter="pending">待报价 (${DB.appointments.filter(a=>a.status==='pending'&&!a.quotedPrice).length})</button>
+        <button class="btn sm" data-filter="quoted">待付定金 (${DB.appointments.filter(a=>a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid).length})</button>
+        <button class="btn sm" data-filter="confirmed">已确认 (${DB.appointments.filter(a=>a.status==='confirmed'||(a.status==='pending'&&a.depositPaid)).length})</button>
         <button class="btn sm" data-filter="completed">已完成 (${DB.appointments.filter(a=>a.status==='completed').length})</button>
         <button class="btn sm" data-filter="cancelled">已取消 (${DB.appointments.filter(a=>a.status==='cancelled').length})</button>
       </div>
@@ -940,7 +1573,12 @@ function renderAppointment(el){
   `;
   let curFilter='all';
   const list=()=>{
-    const data=curFilter==='all'?DB.appointments:DB.appointments.filter(a=>a.status===curFilter);
+    const data=curFilter==='all'?DB.appointments:DB.appointments.filter(a=>{
+      if(curFilter==='quoted')return a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid;
+      if(curFilter==='pending')return a.status==='pending'&&!a.quotedPrice;
+      if(curFilter==='confirmed')return a.status==='confirmed'||(a.status==='pending'&&a.depositPaid);
+      return a.status===curFilter;
+    });
     return data.sort((a,b)=>b.date.localeCompare(a.date)||a.startTime.localeCompare(b.startTime));
   };
   function draw(){
@@ -949,19 +1587,28 @@ function renderAppointment(el){
     if(arr.length===0){target.innerHTML='<div class="empty"><div class="icon">📅</div>暂无预约</div>';return;}
     target.innerHTML='<div id="appt-rows">'+arr.map(a=>{
       const customer=DB.customers.find(c=>c.id===a.customerId)||{};
-      const statusTag={pending:'<span class="tag warning">待确认</span>',confirmed:'<span class="tag primary">已确认</span>',completed:'<span class="tag success">已完成</span>',cancelled:'<span class="tag danger">已取消</span>'}[a.status];
+      const imgs=(a.imagesByName&&a.imagesByName.length)?a.imagesByName:((a.images||[]).map(u=>({name:'',image:u})));
+      const statusMap={pending:'待确认',confirmed:'已确认',completed:'已完成',cancelled:'已取消'};
+      const statusCls={pending:'warning',confirmed:'primary',completed:'success',cancelled:'danger'};
+      const st=statusMap[a.status]||a.status;
+      const subSt=(a.status==='pending'&&a.quotedPrice>0)?(a.depositPaid?'已付定金':'待付定金'):'';
       return `<div class="swipe-wrap" data-id="${a.id}">
         <div class="swipe-action" onclick="deleteAppt('${a.id}')">删除</div>
         <div class="swipe-content">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <div><strong>${customer.name||a.name||'(已删除客户)'}</strong> <span style="color:#999;font-size:12px">${a.phone||customer.phone||''}</span></div>
-            ${statusTag}
+            <div><span class="tag ${statusCls[a.status]||''}">${st}</span>${subSt?` <span class="tag" style="background:${a.depositPaid?'#dcfce7':'#fef3c7'};color:${a.depositPaid?'#166534':'#92400e'}">${subSt}</span>`:''}</div>
           </div>
-          <div style="font-size:13px;color:#666">📅 ${a.date} ${a.startTime}-${a.endTime} ${a.item?'· '+a.item:''}</div>
+          <div style="font-size:13px;color:#666">📅 ${a.date} ${a.startTime}-${a.endTime} ${a.styleNames&&a.styleNames.length?'· '+a.styleNames.join(' + '):a.item?'· '+a.item:''}</div>
+          ${imgs.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${imgs.slice(0,5).map(o=>`<div style="position:relative"><img src="${o.image}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="showImgPreview('${o.image}')">${o.name?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;padding:1px 3px;border-radius:0 0 6px 6px;text-align:center;overflow:hidden">${o.name}</div>`:''}</div>`).join('')}${imgs.length>5?`<div style="width:52px;height:52px;background:var(--bg-2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:11px">+${imgs.length-5}</div>`:''}</div>`:''}
+          ${a.quotedPrice?`<div style="margin-top:8px;padding:8px 10px;background:#fffaf8;border-radius:6px;font-size:12.5px">💵 报价 ¥${a.quotedPrice}${a.quotedOriginal&&a.quotedOriginal>a.quotedPrice?`<span style="text-decoration:line-through;color:#999;font-size:11px"> ¥${a.quotedOriginal}</span>`:''}${a.deposit?` · 定金 ¥${a.deposit}${a.depositPaid?'（已付）':''}`:''}</div>`:''}
           ${a.note?'<div style="font-size:12px;color:#999;margin-top:4px">备注：'+a.note+'</div>':''}
           <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-            ${a.status==='pending'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','confirmed')">确认</button>`:''}
-            ${a.status==='confirmed'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','completed')">完成</button>`:''}
+            ${(a.status==='pending'&&!a.quotedPrice)?`<button class="btn sm primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="openQuoteAppt('${a.id}')">💰 报价</button>`:''}
+            ${(a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid)?`<button class="btn sm primary" style="background:var(--success);border-color:var(--success);color:#fff" onclick="markDepositPaid('${a.id}')">✅ 定金已付</button>`:''}
+            ${(a.status==='pending'&&a.quotedPrice>0&&a.depositPaid)?`<button class="btn sm success" onclick="setApptStatus('${a.id}','confirmed')">确认预约</button>`:''}
+            ${(a.status==='confirmed'||a.depositPaid)?`<button class="btn sm primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="openQuickSettle('${a.id}')">💰 快速结算</button>`:''}
+            ${(a.status==='confirmed'||a.depositPaid)?`<button class="btn sm success" onclick="setApptStatus('${a.id}','completed')">标记完成</button>`:''}
             ${a.status!=='cancelled'&&a.status!=='completed'?`<button class="btn sm danger" onclick="cancelAppt('${a.id}')">取消预约</button>`:''}
             <button class="btn sm" onclick="editAppt('${a.id}')">编辑</button>
             ${a.status==='cancelled'?`<button class="btn sm danger" onclick="deleteAppt('${a.id}')">删除</button>`:''}
@@ -1037,6 +1684,23 @@ function deleteAppt(id){
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
   if(CLOUD.ready)CLOUD.removeAppt(id);
 }
+function markDepositPaid(id){
+  if(!confirm('确认已收到客户定金？将自动写入定金记录'))return;
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  if(!a.deposit){toast('该预约尚未设置定金');return;}
+  a.depositPaid=true;
+  a.depositPaidAt=Date.now();
+  a.status='confirmed';
+  DB.transactions.unshift({
+    id:genId('tx'),date:ymd(new Date()),type:'定金',
+    amount:a.deposit,name:'预约定金-'+(a.styleNames&&a.styleNames.join('+')||a.item),
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'workbench_deposit',apptId:a.id
+  });
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  renderRoute();toast('已标记定金到账');
+}
 function cancelAppt(id){
   if(!confirm('确定取消该预约？'))return;
   const a=DB.appointments.find(x=>x.id===id);
@@ -1082,16 +1746,34 @@ function renderOrder(el){
             <label class="form-label" style="margin-top:10px">技师自填金额(可选)</label>
             <input id="order-amount" type="number" placeholder="留空按款式价" oninput="recalcOrder()">
           </div>
-          <div style="margin-top:14px">
-            <label class="form-label">消费日期</label>
-            <input id="order-date" type="date" value="${today}">
-          </div>
+      <div style="margin-top:14px">
+        <label class="form-label">消费日期</label>
+        <input id="order-date" type="date" value="${today}">
+      </div>
+      <div style="margin-top:14px">
+        <label class="form-label">支付方式</label>
+        <div id="order-pay" style="display:flex;gap:8px;flex-wrap:wrap">
+          ${Object.entries(PAY_METHODS).map(([k,v])=>`<label class="pay-opt" data-k="${k}" onclick="selectPayMethod('${k}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:${k==='cash'?'var(--primary-light)':'#fff'}"><span style="font-size:16px">${v.icon}</span>${v.label}</label>`).join('')}
         </div>
+        <div id="order-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
+      </div>
+      ${RW().deduct.enabled?`<div style="margin-top:14px">
+        <label class="form-label">⭐ 积分抵现（${RW().deduct.pointsPerYuan}分=1元，最多抵 ${RW().deduct.maxPercent}%）</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="order-use-pts" type="number" min="0" step="${RW().deduct.pointsPerYuan}" value="0" placeholder="使用积分数" oninput="recalcOrder()" style="flex:1">
+          <button class="btn sm" onclick="orderMaxPoints()">用满</button>
+          <button class="btn sm" onclick="document.getElementById('order-use-pts').value=0;recalcOrder()">清空</button>
+        </div>
+        <div id="order-ded-tip" class="text-muted mt-1" style="font-size:12px"></div>
+      </div>`:''}
+    </div>
       </div>
       <div class="card" style="margin-top:14px;background:#fffaf8">
+        ${isDoubleDay()?`<div style="background:#fff7e6;border:1px solid #f6d68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12.5px;color:#92400e">🎉 今天是<strong>${RW().doubleDay.label||'双倍积分日'}</strong>，消费积分自动 ×${RW().doubleDay.multiplier}</div>`:''}
         <div class="row">
           <div class="col">原价：<span id="order-original">¥0</span></div>
           <div class="col">会员折扣：<span id="order-discount">无</span></div>
+          <div class="col">积分抵现：<span id="order-deduct">¥0</span></div>
           <div class="col text-success"><strong>应付：<span id="order-final">¥0</span></strong></div>
         </div>
         <div class="text-muted mt-1" style="font-size:12px" id="order-points-tip">本次消费将获得积分：0 分</div>
@@ -1113,7 +1795,23 @@ function renderOrder(el){
   drawOrderList();
 }
 
-let orderState={customer:null,item:null};
+let orderState={customer:null,item:null,pay:'cash'};
+function selectPayMethod(k){
+  orderState.pay=k;
+  document.querySelectorAll('.pay-opt').forEach(o=>{
+    o.style.background=o.dataset.k===k?'var(--primary-light)':'#fff';
+    o.style.borderColor=o.dataset.k===k?'var(--primary-dark)':'var(--border)';
+  });
+  const tip=document.getElementById('order-card-tip');
+  if(k==='card'&&orderState.customer){
+    const bal=(+orderState.customer.membershipBalance||0);
+    tip.style.display='';
+    if(bal>0)tip.innerHTML=`💳 客户当前储值余额 <strong>¥${bal.toFixed(2)}</strong>`;
+    else tip.innerHTML='<span class="text-danger">⚠️ 客户未开卡或余额为 0，将按扣卡失败处理</span>';
+  }else if(tip){
+    tip.style.display='none';
+  }
+}
 function populateOrderCustomers(){
   const sel=document.getElementById('order-customer');
   if(!sel)return;
@@ -1149,17 +1847,48 @@ function recalcOrder(){
     final=original*tier.discount;
     discountText=getMembershipName(orderState.customer.membershipAmount)+' ×'+tier.discount;
   }
+  // 积分抵现
+  let ptsCut=0,usePts=0,dedNote='';
+  const upEl=document.getElementById('order-use-pts');
+  if(orderState.customer&&upEl){
+    const want=Math.max(0,parseInt(upEl.value)||0);
+    const res=calcPointsDeduct(orderState.customer.id,final,want);
+    ptsCut=res.deductAmount;usePts=res.usablePoints;
+    dedNote=res.reason||`客户 ${orderState.customer.points||0} 分 · 可抵上限 ¥${res.maxAmount.toFixed(2)} · 本次抵 ¥${ptsCut.toFixed(2)}（消耗 ${usePts} 分）`;
+    final=Math.max(0,+(final-ptsCut).toFixed(2));
+  }else if(upEl){dedNote='请先选择客户';}
+  const dtEl=document.getElementById('order-ded-tip');if(dtEl)dtEl.textContent=dedNote;
+  const dEl=document.getElementById('order-deduct');if(dEl)dEl.textContent='-¥'+ptsCut.toFixed(2);
+
   const pointsEl=document.getElementById('order-points-tip');
   if(pointsEl){
     let rate=1.0;
     if(orderState.customer&&orderState.customer.membershipAmount&&MEMBER_TIERS[orderState.customer.membershipAmount]){rate=MEMBER_TIERS[orderState.customer.membershipAmount].pointsRate;}
     if(orderState.item&&orderState.item.pointsMultiple)rate*=orderState.item.pointsMultiple;
-    const pts=Math.floor(original*rate);
-    pointsEl.textContent=`本次消费将获得积分：${pts} 分 (倍率 ×${rate.toFixed(1)})`;
+    const dbl=isDoubleDay(document.getElementById('order-date')?.value);
+    const mul=dbl?(+RW().doubleDay.multiplier||2):1;
+    const pts=Math.floor(original*rate)*mul;
+    pointsEl.textContent=`本次消费将获得积分：${pts} 分 (倍率 ×${rate.toFixed(1)}${dbl?' · 双倍日 ×'+mul:''})`;
   }
   document.getElementById('order-original').textContent='¥'+original.toFixed(0);
   document.getElementById('order-discount').textContent=discountText;
-  document.getElementById('order-final').textContent='¥'+final.toFixed(0);
+  document.getElementById('order-final').textContent='¥'+final.toFixed(2);
+  if(orderState.pay==='card')selectPayMethod('card');
+  else{
+    const tip=document.getElementById('order-card-tip');if(tip)tip.style.display='none';
+  }
+}
+function orderMaxPoints(){
+  const c=orderState.customer;
+  if(!c){toast('请先选择客户');return;}
+  const itemPrice=orderState.item?orderState.item.price:0;
+  const manual=parseFloat(document.getElementById('order-amount')?.value)||0;
+  let base=manual||itemPrice;
+  if(c.membershipAmount&&MEMBER_TIERS[c.membershipAmount])base*=MEMBER_TIERS[c.membershipAmount].discount;
+  const d=RW().deduct;
+  const cap=Math.min(+c.points||0,Math.floor(base*(+d.maxPercent||20)/100*(+d.pointsPerYuan||100)));
+  document.getElementById('order-use-pts').value=Math.max(0,cap);
+  recalcOrder();
 }
 function submitOrder(){
   const date=document.getElementById('order-date').value;
@@ -1186,6 +1915,24 @@ function submitOrder(){
   const customer=DB.customers.find(c=>c.id===customerId);
   let final=original;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){final=original*MEMBER_TIERS[customer.membershipAmount].discount;}
+  // 积分抵现
+  let usePts=0,ptsCut=0;
+  const upEl=document.getElementById('order-use-pts');
+  if(customer&&upEl){
+    const want=Math.max(0,parseInt(upEl.value)||0);
+    if(want>0){
+      const res=calcPointsDeduct(customer.id,final,want);
+      if(res.deductAmount<=0&&res.reason){toast(res.reason);return;}
+      usePts=res.usablePoints;ptsCut=res.deductAmount;
+      final=Math.max(0,+(final-ptsCut).toFixed(2));
+    }
+  }
+  // 扣卡校验
+  const payMethod=orderState.pay||'cash';
+  if(payMethod==='card'){
+    if(!customer||!(+customer.membershipBalance>0)){toast('该客户未开卡或余额为 0，无法扣卡');return;}
+    if((+customer.membershipBalance)<final){toast(`余额不足（剩 ¥${(+customer.membershipBalance).toFixed(2)}，需 ¥${final.toFixed(2)}）`);return;}
+  }
   // 写入消费记录
   const tx={
     id:genId('tx'),
@@ -1196,19 +1943,42 @@ function submitOrder(){
     customerId,
     customerName:customer?customer.name:'',
     createdAt:Date.now(),
-    source:'manual'
+    source:'manual',
+    payMethod
   };
   DB.transactions.unshift(tx);
-  // 积分自动计算
+  // 扣卡
+  if(payMethod==='card'&&customer){
+    customer.membershipBalance=(+customer.membershipBalance)-final;
+    DB.transactions.unshift({
+      id:genId('tx'),date,type:'扣卡',amount:final,
+      name:item?item.name:'自填消费',customerId:customer.id,customerName:customer.name,
+      createdAt:Date.now(),source:'card_deduct',
+      payMethod:'card',refTxId:tx.id,
+      balanceAfter:(+customer.membershipBalance).toFixed(2)
+    });
+    DB.memberships.unshift({
+      id:genId('ms'),date,customerId:customer.id,customerName:customer.name,
+      type:'扣减',amount:-final,note:item?item.name:'自填消费',
+      balanceAfter:(+customer.membershipBalance).toFixed(2)
+    });
+  }
+  // 积分自动计算（基于原价，grantPoints 内自动应用双倍日 + 自动升级会员）
   let ptsRate=1.0;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){ptsRate=MEMBER_TIERS[customer.membershipAmount].pointsRate;}
   if(item&&item.pointsMultiple)ptsRate*=item.pointsMultiple;
-  const earned=Math.floor(original*ptsRate);
+  let earned=0;
   if(customer){
-    customer.points=(+customer.points||0)+earned;
-    DB.points_log.unshift({id:genId('pl'),date,customerId:customer.id,name:customer.name,change:earned,reason:'消费 '+tx.name+' ¥'+final,balance:customer.points});
+    // 积分抵现
+    if(usePts>0&&ptsCut>0)spendPoints(customer.id,usePts,'deduct',`积分抵现 ¥${ptsCut.toFixed(2)}（${tx.name}）`);
+    earned=grantPoints(customer.id,Math.floor(original*ptsRate),'consume',`消费 ${tx.name} ¥${final.toFixed(2)}`,{date});
+    const n=autoSettleReferralOnConsume(customer.id);
+    if(n)setTimeout(()=>toast(`🎉 推荐奖励已到账（${n} 笔）`),1200);
   }
-  saveDB();syncChannel();toast(`开单成功 +${earned}积分`);
+  tx.earnedPoints=earned;tx.pointsUsed=usePts;tx.pointsDeduct=ptsCut;
+  saveDB();syncChannel();
+  toast(`开单成功 ¥${final.toFixed(2)}${earned?' · +'+earned+'积分'+(isDoubleDay(date)?' 🎉双倍':''):''}${ptsCut>0?' · 积分抵'+ptsCut.toFixed(2)+'元':''}${payMethod==='card'?' · 扣卡':''}`);
+  const upe=document.getElementById('order-use-pts');if(upe)upe.value=0;
   drawOrderList();
   populateOrderCustomers();
   recalcOrder();
@@ -1246,6 +2016,556 @@ function deleteFinance(id){
   if(!confirm('删除？'))return;
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+
+/* =============================================================
+   快速结算（从预约一键开单 + 扣卡 + 积分 + 完成预约）
+   ============================================================= */
+let _qsState={pay:'cash',apptId:null,rate:1,discount:1,usePoints:0,couponId:''};
+function openQuickSettle(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);
+  if(!a){toast('预约不存在');return;}
+  _qsState.apptId=apptId;
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const itm=(a.item||(a.styleNames&&a.styleNames[0]))?(DB.items.find(i=>i.name===(a.item||a.styleNames[0]))||null):null;
+  const quotedPrice=(+a.quotedPrice)||(itm?itm.price:0);
+  const tier=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount]:null;
+  const discountRate=tier?tier.discount:1;
+  const ptsRate=(tier?tier.pointsRate:1)*(itm&&itm.pointsMultiple?itm.pointsMultiple:1);
+  _qsState.rate=ptsRate;
+  _qsState.discount=discountRate;
+  _qsState.usePoints=0;
+  _qsState.couponId='';
+  const dcfg=RW().deduct;
+  const dbl=isDoubleDay(a.date);
+  const dblMul=+RW().doubleDay.multiplier||2;
+  const earnPts=Math.floor(quotedPrice*ptsRate)*(dbl?dblMul:1);
+  const bal=cust?(+cust.points||0):0;
+  const today=ymd(new Date());
+  const myCoupons=cust?DB.coupons.filter(cp=>cp.customerId===cust.id&&cp.status==='unused'&&cp.expireDate>=today):[];
+  const canDeduct=cust&&dcfg.enabled&&bal>=(+dcfg.minPoints||0);
+
+  showModal(`💰 快速结算 · ${a.name||''}`,`
+    <div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px">
+      <div>👤 客户：<strong>${a.name||'(散客)'}</strong>${cust&&cust.phone?' · '+cust.phone:''}${cust?` · ⭐${bal}分`:''}</div>
+      <div>📅 预约：${a.date} ${a.startTime||''}-${a.endTime||''}</div>
+      <div>💅 项目：${a.item||(a.styleNames&&a.styleNames.join('+'))||'未填'}</div>
+    </div>
+    ${dbl?`<div style="background:#fff7e6;border:1px solid #f6d68a;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#92400e">
+      🎉 今天是<strong>${RW().doubleDay.label||'双倍积分日'}</strong>，本单积分自动 ×${dblMul}</div>`:''}
+    <div class="form-grid">
+      <div><label class="form-label">原价 ¥</label><input id="qs-original" type="number" value="${quotedPrice.toFixed(0)}" oninput="recalcQS()"></div>
+      <div><label class="form-label">会员折扣</label>
+        <div style="padding:10px 0;font-size:13px" id="qs-tier">${tier?tier.name+' ×'+tier.discount+'（自动）':'无'}</div>
+      </div>
+    </div>
+
+    ${myCoupons.length?`<label class="form-label">🎫 使用优惠券</label>
+    <select id="qs-coupon" onchange="_qsState.couponId=this.value;recalcQS()" style="margin-bottom:10px">
+      <option value="">不使用</option>
+      ${myCoupons.map(cp=>`<option value="${cp.id}">${cp.name}（${cp.kind==='discount'?(cp.value*10).toFixed(1)+'折':'抵¥'+cp.value}，${cp.expireDate}到期）</option>`).join('')}
+    </select>`:''}
+
+    ${canDeduct?`<label class="form-label">⭐ 积分抵现（${dcfg.pointsPerYuan}分=1元，最多抵 ${dcfg.maxPercent}%）</label>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+      <input id="qs-use-pts" type="number" min="0" step="${dcfg.pointsPerYuan}" value="0" placeholder="使用积分数" oninput="recalcQS()" style="flex:1">
+      <button class="btn sm" onclick="qsMaxPoints()">用满</button>
+      <button class="btn sm" onclick="document.getElementById('qs-use-pts').value=0;recalcQS()">清空</button>
+    </div>
+    <div id="qs-ded-tip" class="text-muted" style="font-size:12px;margin-bottom:10px"></div>`
+    :(cust&&dcfg.enabled?`<div class="text-muted" style="font-size:12px;margin-bottom:10px">⭐ 积分 ${bal} 分，不足 ${dcfg.minPoints} 分暂不可抵现</div>`:'')}
+
+    <div id="qs-breakdown" style="background:#fffaf8;border-radius:var(--radius-sm);padding:12px;margin:12px 0;font-size:13px"></div>
+
+    <label class="form-label">支付方式</label>
+    <div id="qs-pay" style="display:flex;gap:8px;flex-wrap:wrap">
+      ${Object.entries(PAY_METHODS).map(([k,v])=>`<label class="qs-pay-opt" data-k="${k}" onclick="selectQSPay('${k}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:${k==='cash'?'var(--primary-light)':'#fff'}"><span style="font-size:16px">${v.icon}</span>${v.label}</label>`).join('')}
+    </div>
+    <div id="qs-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;color:var(--text-light)">
+      <span>本次将获得积分：<strong id="qs-pts" style="color:var(--warning)">${earnPts}</strong> 分${dbl?' 🎉':''}</span>
+      <span id="qs-after-bal" style="display:none">扣卡后余额：<strong>¥<span id="qs-bal-num">0</span></strong></span>
+    </div>
+    <span id="qs-final" style="display:none">¥${(quotedPrice*discountRate).toFixed(0)}</span>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="submitQuickSettle()">✅ 确认结算</button>
+  `);
+  recalcQS();
+  selectQSPay('cash');
+}
+/* 计算结算明细：原价 → 会员折扣 → 优惠券 → 积分抵现 → 实付 */
+function qsCompute(){
+  const a=DB.appointments.find(x=>x.id===_qsState.apptId)||{};
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const orig=parseFloat((document.getElementById('qs-original')||{}).value)||0;
+  const rate=_qsState.discount||1;
+  const afterTier=+(orig*rate).toFixed(2);
+  // 优惠券
+  let couponCut=0,coupon=null;
+  if(_qsState.couponId){
+    coupon=DB.coupons.find(c=>c.id===_qsState.couponId)||null;
+    if(coupon)couponCut=coupon.kind==='discount'?+(afterTier*(1-coupon.value)).toFixed(2):Math.min(+coupon.value,afterTier);
+  }
+  const afterCoupon=Math.max(0,+(afterTier-couponCut).toFixed(2));
+  // 积分抵现
+  let usePts=0,ptsCut=0,dedNote='';
+  const el=document.getElementById('qs-use-pts');
+  if(cust&&el){
+    const want=Math.max(0,parseInt(el.value)||0);
+    const res=calcPointsDeduct(cust.id,afterCoupon,want);
+    ptsCut=res.deductAmount;usePts=res.usablePoints;
+    dedNote=res.reason||`可抵上限 ¥${res.maxAmount.toFixed(2)}，本次抵扣 ¥${ptsCut.toFixed(2)}（消耗 ${usePts} 分）`;
+  }
+  const final=Math.max(0,+(afterCoupon-ptsCut).toFixed(2));
+  const dbl=isDoubleDay(a.date);
+  const earn=Math.floor(final*(_qsState.rate||1))*(dbl?(+RW().doubleDay.multiplier||2):1);
+  return {orig,rate,afterTier,coupon,couponCut,afterCoupon,usePts,ptsCut,dedNote,final,earn,dbl,cust};
+}
+function recalcQS(){
+  const r=qsCompute();
+  _qsState.usePoints=r.usePts;
+  const bd=document.getElementById('qs-breakdown');
+  if(bd)bd.innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">原价</span><span>¥${r.orig.toFixed(2)}</span></div>
+    ${r.rate<1?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">会员折扣 ×${r.rate}</span><span style="color:var(--success)">-¥${(r.orig-r.afterTier).toFixed(2)}</span></div>`:''}
+    ${r.couponCut>0?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">🎫 ${r.coupon.name}</span><span style="color:var(--success)">-¥${r.couponCut.toFixed(2)}</span></div>`:''}
+    ${r.ptsCut>0?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">⭐ 积分抵现 ${r.usePts} 分</span><span style="color:var(--success)">-¥${r.ptsCut.toFixed(2)}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border);margin-top:6px;padding-top:8px">
+      <strong>实付金额</strong><strong style="font-size:19px;color:var(--primary-dark)">¥${r.final.toFixed(2)}</strong>
+    </div>`;
+  const fe=document.getElementById('qs-final');if(fe)fe.textContent='¥'+r.final.toFixed(2);
+  const dt=document.getElementById('qs-ded-tip');if(dt)dt.textContent=r.dedNote;
+  const pe=document.getElementById('qs-pts');if(pe)pe.textContent=r.earn;
+  if(_qsState.pay==='card')selectQSPay('card');
+}
+function qsMaxPoints(){
+  const r=qsCompute();
+  const cust=r.cust;if(!cust)return;
+  const d=RW().deduct;
+  const cap=Math.min(+cust.points||0,Math.floor(r.afterCoupon*(+d.maxPercent||20)/100*(+d.pointsPerYuan||100)));
+  document.getElementById('qs-use-pts').value=Math.max(0,cap);
+  recalcQS();
+}
+function selectQSPay(k){
+  _qsState.pay=k;
+  document.querySelectorAll('.qs-pay-opt').forEach(o=>{
+    o.style.background=o.dataset.k===k?'var(--primary-light)':'#fff';
+    o.style.borderColor=o.dataset.k===k?'var(--primary-dark)':'var(--border)';
+  });
+  const tip=document.getElementById('qs-card-tip');
+  const ab=document.getElementById('qs-after-bal');
+  if(k==='card'){
+    const a=DB.appointments.find(x=>x.id===_qsState.apptId);
+    const cust=a&&a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+    const bal=cust?(+cust.membershipBalance||0):0;
+    const final=parseFloat(document.getElementById('qs-final').textContent.replace(/[¥,]/g,''))||0;
+    tip.style.display='';
+    if(!cust){tip.innerHTML='<span class="text-danger">⚠️ 该预约无客户档案，无法扣卡</span>';ab.style.display='none';return;}
+    if(bal<=0){tip.innerHTML='<span class="text-danger">⚠️ 客户未开卡或余额为 0</span>';ab.style.display='none';return;}
+    if(bal<final){
+      tip.innerHTML=`<span class="text-danger">⚠️ 余额不足（剩 ¥${bal.toFixed(2)}，需 ¥${final.toFixed(2)}）</span>`;
+      ab.style.display='none';return;
+    }
+    tip.innerHTML=`💳 当前储值余额 <strong>¥${bal.toFixed(2)}</strong>`;
+    ab.style.display='';document.getElementById('qs-bal-num').textContent=(bal-final).toFixed(2);
+  }else if(tip){tip.style.display='none';ab.style.display='none';}
+}
+function submitQuickSettle(){
+  const apptId=_qsState.apptId;
+  const a=DB.appointments.find(x=>x.id===apptId);
+  if(!a){toast('预约不存在');return;}
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const R=qsCompute();
+  const orig=R.orig, final=R.final;
+  if(orig<=0){toast('请填写原价');return;}
+  const pay=_qsState.pay;
+  if(pay==='card'){
+    if(!cust){toast('该预约无客户档案，无法扣卡');return;}
+    if((+cust.membershipBalance)<final){toast('余额不足，无法扣卡');return;}
+  }
+  const itm=a.item?DB.items.find(i=>i.name===a.item):null;
+  const date=a.date||ymd(new Date());
+  const itemName=itm?itm.name:(a.styleNames&&a.styleNames.join('+'))||a.item||'预约消费';
+  DB.transactions.unshift({
+    id:genId('tx'),date,type:'收入',amount:final,
+    name:itemName,
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'appointment',apptId:a.id,payMethod:pay
+  });
+  if(pay==='card'&&cust){
+    cust.membershipBalance=(+cust.membershipBalance)-final;
+    DB.transactions.unshift({
+      id:genId('tx'),date,type:'扣卡',amount:final,
+      name:itemName,customerId:cust.id,customerName:cust.name,
+      createdAt:Date.now(),source:'card_deduct',
+      payMethod:'card',refApptId:a.id,
+      balanceAfter:(+cust.membershipBalance).toFixed(2)
+    });
+    DB.memberships.unshift({
+      id:genId('ms'),date,customerId:cust.id,customerName:cust.name,
+      type:'扣减',amount:-final,note:itemName,
+      balanceAfter:(+cust.membershipBalance).toFixed(2)
+    });
+  }
+  // 核销优惠券
+  if(R.coupon&&R.couponCut>0){
+    R.coupon.status='used';R.coupon.usedAt=Date.now();R.coupon.usedApptId=a.id;
+    const rd=DB.redeems.find(x=>x.id===R.coupon.fromRedeem);
+    if(rd&&rd.status==='unused'){rd.status='used';rd.usedAt=Date.now();}
+  }
+  // 扣减抵现积分
+  if(cust&&R.usePts>0&&R.ptsCut>0){
+    spendPoints(cust.id,R.usePts,'deduct',`积分抵现 ¥${R.ptsCut.toFixed(2)}（${itemName}）`);
+  }
+  // 发放消费积分（grantPoints 内自动应用双倍日 + 自动升级会员）
+  let earned=0;
+  if(cust){
+    earned=grantPoints(cust.id,Math.floor(final*(_qsState.rate||1)),'consume',`消费 ${itemName} ¥${final.toFixed(2)}`,{date});
+    // 新客首次消费 → 结算待处理推荐奖励
+    const n=autoSettleReferralOnConsume(cust.id);
+    if(n)setTimeout(()=>toast(`🎉 推荐奖励已到账（${n} 笔）`),1200);
+  }
+  a.status='completed';
+  a.finalPrice=final;
+  a.originalPrice=orig;
+  a.pointsUsed=R.usePts;
+  a.pointsDeduct=R.ptsCut;
+  a.couponId=R.coupon?R.coupon.id:'';
+  a.couponCut=R.couponCut;
+  a.pointsEarned=earned;
+  a.payMethod=pay;
+  a.completedAt=Date.now();
+  if(!a.technicianId){
+    for(const t of activeTechs()){if(getShift(t.id,a.date)){a.technicianId=t.id;break;}}
+  }
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  renderRoute();
+  const bits=[`已结算 ¥${final.toFixed(2)}`];
+  if(earned)bits.push(`+${earned}积分${R.dbl?' 🎉双倍':''}`);
+  if(R.ptsCut>0)bits.push(`积分抵${R.ptsCut.toFixed(2)}元`);
+  if(R.couponCut>0)bits.push(`券减${R.couponCut.toFixed(2)}元`);
+  if(pay==='card')bits.push(`扣卡 ¥${final.toFixed(2)}`);
+  toast(bits.join(' · '));
+}
+
+/* =============================================================
+   排班管理（美甲师管理 + 周视图 + 月历全局视图 + 日时间轴）
+   ============================================================= */
+let SCH={view:'week',week:getWeekStart(new Date()),month:'',day:ymd(new Date())};
+SCH.month=SCH.day.slice(0,7);
+
+function techById(id){return DB.technicians.find(t=>t.id===id)||null;}
+function activeTechs(){return DB.technicians.filter(t=>t.active!==false);}
+function getShift(techId,date){return DB.shifts.find(s=>s.technicianId===techId&&s.date===date)||null;}
+function setShift(techId,date,type){
+  const i=DB.shifts.findIndex(s=>s.technicianId===techId&&s.date===date);
+  if(!type){if(i>=0)DB.shifts.splice(i,1);}
+  else if(i>=0)DB.shifts[i].type=type;
+  else DB.shifts.push({id:genId('sh'),technicianId:techId,date,type});
+  saveDB();syncChannel();
+}
+function shiftsOfDate(date){return DB.shifts.filter(s=>s.date===date&&s.type!=='rest');}
+function apptsOfDate(date){return DB.appointments.filter(a=>a.date===date&&a.status!=='cancelled');}
+
+function renderSchedule(el){
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>💇‍♀️ 美甲师管理 (${DB.technicians.length})</span>
+        <button class="btn sm" onclick="openTechEdit()">＋ 添加美甲师</button>
+      </div>
+      <div id="tech-list" class="mt-2"></div>
+    </div>
+    <div class="card mt-2">
+      <div class="card-title">
+        <span>🗓️ 排班表</span>
+        <div class="sch-tabs">
+          <div class="sch-tab ${SCH.view==='week'?'active':''}" onclick="switchSchView('week')">周视图</div>
+          <div class="sch-tab ${SCH.view==='month'?'active':''}" onclick="switchSchView('month')">月视图</div>
+          <div class="sch-tab ${SCH.view==='day'?'active':''}" onclick="switchSchView('day')">时间轴</div>
+        </div>
+      </div>
+      <div id="sch-body" class="mt-2"></div>
+    </div>
+  `;
+  renderTechList();
+  renderSchBody();
+}
+
+function switchSchView(v){SCH.view=v;renderRoute();}
+
+function renderTechList(){
+  const t=document.getElementById('tech-list');if(!t)return;
+  if(!DB.technicians.length){t.innerHTML='<div class="empty"><div class="icon">💅</div>还没有美甲师，点击右上角添加</div>';return;}
+  t.innerHTML=DB.technicians.map(x=>{
+    const off=x.active===false;
+    return `<div class="tech-row" style="${off?'opacity:.5':''}">
+      <div class="tech-avatar" style="background:${x.color||'#f7c5c5'}">${(x.name||'?').slice(0,1)}</div>
+      <div style="flex:1;min-width:0">
+        <div><strong>${x.name}</strong>${off?'<span class="tag" style="margin-left:6px">已停用</span>':''}</div>
+        <div class="text-muted" style="font-size:12px">${x.role||'美甲师'}${x.phone?' · '+x.phone:''}${x.skills&&x.skills.length?' · '+x.skills.join('/'):''}</div>
+      </div>
+      <button class="btn sm" onclick="openTechEdit('${x.id}')">编辑</button>
+    </div>`;
+  }).join('');
+}
+
+function openTechEdit(id){
+  const t=id?techById(id):null;
+  const usedColors=DB.technicians.map(x=>x.color);
+  const defColor=t?t.color:(TECH_COLORS.find(c=>!usedColors.includes(c))||TECH_COLORS[DB.technicians.length%TECH_COLORS.length]);
+  showModal(t?'编辑美甲师':'添加美甲师',`
+    <div class="form-grid">
+      <div class="form-item"><label>姓名 *</label><input id="tk-name" value="${t?t.name:''}" placeholder="如：佳佳"></div>
+      <div class="form-item"><label>职位</label><input id="tk-role" value="${t?(t.role||''):'美甲师'}" placeholder="美甲师/美睫师/店长"></div>
+      <div class="form-item"><label>手机号</label><input id="tk-phone" value="${t?(t.phone||''):''}"></div>
+      <div class="form-item"><label>擅长项目（逗号分隔）</label><input id="tk-skills" value="${t&&t.skills?t.skills.join(','):''}" placeholder="法式,猫眼,美睫"></div>
+    </div>
+    <div class="form-item mt-1"><label>代表色</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="tk-colors">
+        ${TECH_COLORS.map(c=>`<div onclick="document.querySelectorAll('#tk-colors>div').forEach(d=>d.style.borderColor='transparent');this.style.borderColor='#c4797b';window._tkColor='${c}'"
+          style="width:30px;height:30px;border-radius:50%;background:${c};border:3px solid ${c===defColor?'#c4797b':'transparent'};cursor:pointer"></div>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="tk-active" ${!t||t.active!==false?'checked':''} style="width:auto"> 在职（停用后不出现在排班表）
+    </label></div>
+  `,`
+    ${t?`<button class="btn danger" onclick="deleteTech('${t.id}')">删除</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="saveTech('${id||''}')">保存</button>
+  `);
+  window._tkColor=defColor;
+}
+
+function saveTech(id){
+  const name=document.getElementById('tk-name').value.trim();
+  if(!name){toast('请填写姓名');return;}
+  const data={
+    name,
+    role:document.getElementById('tk-role').value.trim()||'美甲师',
+    phone:document.getElementById('tk-phone').value.trim(),
+    skills:document.getElementById('tk-skills').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+    color:window._tkColor||TECH_COLORS[0],
+    active:document.getElementById('tk-active').checked
+  };
+  if(id){Object.assign(techById(id),data);}
+  else DB.technicians.push(Object.assign({id:genId('tech')},data));
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已保存');
+}
+
+function deleteTech(id){
+  if(!confirm('删除该美甲师？其排班记录也会一并删除'))return;
+  DB.technicians=DB.technicians.filter(t=>t.id!==id);
+  DB.shifts=DB.shifts.filter(s=>s.technicianId!==id);
+  DB.appointments.forEach(a=>{if(a.technicianId===id)a.technicianId='';});
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已删除');
+}
+
+function renderSchBody(){
+  const b=document.getElementById('sch-body');if(!b)return;
+  if(SCH.view==='week')renderSchWeek(b);
+  else if(SCH.view==='month')renderSchMonth(b);
+  else renderSchDay(b);
+}
+
+/* ---- 周视图：美甲师 × 7天 ---- */
+function renderSchWeek(b){
+  const techs=activeTechs();
+  const dates=getWeekDates(SCH.week).map(x=>x.date);
+  const today=ymd(new Date());
+  const WD=['一','二','三','四','五','六','日'];
+  if(!techs.length){b.innerHTML='<div class="empty"><div class="icon">🗓️</div>请先添加美甲师</div>';return;}
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn sm" onclick="shiftWeek(-1)">‹ 上周</button>
+        <strong style="font-size:14px">${dates[0].slice(5)} ~ ${dates[6].slice(5)}</strong>
+        <button class="btn sm" onclick="shiftWeek(1)">下周 ›</button>
+        <button class="btn sm" onclick="SCH.week=getWeekStart(new Date());renderRoute()">本周</button>
+      </div>
+      <button class="btn sm primary" onclick="openBatchShift()">⚡ 批量排班</button>
+    </div>
+    <div class="sch-scroll"><table class="sch-week">
+      <tr><th style="width:110px">美甲师</th>${dates.map((d,i)=>`<th class="${d===today?'today':''}">周${WD[i]}<br><span style="font-weight:400">${d.slice(5)}</span></th>`).join('')}</tr>
+      ${techs.map(t=>`<tr>
+        <td class="tech-col"><div style="display:flex;align-items:center;gap:7px"><span class="tech-dot" style="background:${t.color}"></span><div><div style="font-weight:600;font-size:13px">${t.name}</div><div style="font-size:11px;color:#999">${t.role||''}</div></div></div></td>
+        ${dates.map(d=>{
+          const s=getShift(t.id,d);
+          const st=s?SHIFT_TYPES[s.type]:null;
+          return `<td><div class="sch-cell ${st?'':'empty'}" style="${st?`background:${st.color};color:${st.textColor}`:''}" onclick="openShiftPicker('${t.id}','${d}')">
+            ${st?`<div class="s-name">${st.label}</div><div class="s-time">${st.start==='-'?'—':st.start+'-'+st.end}</div>`:'＋'}
+          </div></td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </table></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px">
+      ${Object.entries(SHIFT_TYPES).map(([k,v])=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:${v.color};display:inline-block"></span>${v.label} ${v.start==='-'?'':v.start+'-'+v.end}</span>`).join('')}
+    </div>
+  `;
+}
+function shiftWeek(n){
+  const d=new Date(SCH.week);d.setDate(d.getDate()+n*7);
+  SCH.week=ymd(d);renderRoute();
+}
+
+function openShiftPicker(techId,date){
+  const t=techById(techId);const cur=getShift(techId,date);
+  showModal(`${t.name} · ${date}`,`
+    <div id="shift-opts">
+      ${Object.entries(SHIFT_TYPES).map(([k,v])=>`
+        <div class="shift-opt ${cur&&cur.type===k?'sel':''}" style="background:${v.color};color:${v.textColor}" onclick="setShift('${techId}','${date}','${k}');document.querySelector('.modal-mask').remove();renderRoute();toast('已排班')">
+          <span style="font-weight:700;font-size:15px">${v.short}</span>
+          <div style="flex:1"><div style="font-weight:600">${v.label}</div><div style="font-size:11px;opacity:.8">${v.start==='-'?'不上班':v.start+' - '+v.end}</div></div>
+          ${cur&&cur.type===k?'<span>✓</span>':''}
+        </div>`).join('')}
+    </div>
+  `,`
+    ${cur?`<button class="btn danger" onclick="setShift('${techId}','${date}','');document.querySelector('.modal-mask').remove();renderRoute();toast('已清空')">清空排班</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+  `);
+}
+
+function openBatchShift(){
+  const techs=activeTechs();const dates=getWeekDates(SCH.week).map(x=>x.date);
+  const WD=['一','二','三','四','五','六','日'];
+  showModal('⚡ 批量排班（本周）',`
+    <div class="form-item"><label>选择美甲师</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${techs.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer">
+          <input type="checkbox" class="bs-tech" value="${t.id}" checked style="width:auto"><span class="tech-dot" style="background:${t.color}"></span>${t.name}</label>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label>选择日期</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${dates.map((d,i)=>`<label style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px">
+          <input type="checkbox" class="bs-date" value="${d}" ${i<5?'checked':''} style="width:auto">周${WD[i]}<span style="color:#999;font-size:10px">${d.slice(5)}</span></label>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label>班次</label>
+      <select id="bs-type">${Object.entries(SHIFT_TYPES).map(([k,v])=>`<option value="${k}" ${k==='fullday'?'selected':''}>${v.label} ${v.start==='-'?'':v.start+'-'+v.end}</option>`).join('')}</select>
+    </div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="applyBatchShift()">应用</button>
+  `);
+}
+function applyBatchShift(){
+  const ts=[...document.querySelectorAll('.bs-tech:checked')].map(x=>x.value);
+  const ds=[...document.querySelectorAll('.bs-date:checked')].map(x=>x.value);
+  const type=document.getElementById('bs-type').value;
+  if(!ts.length||!ds.length){toast('请至少选择一位美甲师和一个日期');return;}
+  ts.forEach(t=>ds.forEach(d=>setShift(t,d,type)));
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast(`已排 ${ts.length*ds.length} 个班次`);
+}
+
+/* ---- 月视图：全局排班一览 ---- */
+function renderSchMonth(b){
+  const [y,m]=SCH.month.split('-').map(Number);
+  const first=new Date(y,m-1,1);
+  const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  const today=ymd(new Date());
+  const cells=[];
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells.push(d);}
+  const WD=['一','二','三','四','五','六','日'];
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn sm" onclick="shiftMonth(-1)">‹</button>
+      <strong style="font-size:14px">${y}年${m}月</strong>
+      <button class="btn sm" onclick="shiftMonth(1)">›</button>
+      <button class="btn sm" onclick="SCH.month=ymd(new Date()).slice(0,7);renderRoute()">本月</button>
+      <span class="text-muted" style="font-size:12px;margin-left:auto">点击日期查看当天时间轴</span>
+    </div>
+    <div class="sch-scroll"><div class="sch-month">
+      ${WD.map(w=>`<div class="mh">周${w}</div>`).join('')}
+      ${cells.map(d=>{
+        const ds=ymd(d);const out=d.getMonth()!==m-1;
+        const ss=shiftsOfDate(ds);
+        const ac=apptsOfDate(ds).length;
+        return `<div class="md ${out?'out':''} ${ds===today?'today':''}" onclick="SCH.day='${ds}';SCH.view='day';renderRoute()">
+          <div class="dnum">${d.getDate()}</div>
+          ${ss.slice(0,3).map(s=>{
+            const t=techById(s.technicianId);const st=SHIFT_TYPES[s.type];
+            if(!t||!st)return '';
+            return `<div class="mchip" style="background:${st.color};color:${st.textColor}">${st.short}·${t.name}</div>`;
+          }).join('')}
+          ${ss.length>3?`<div class="mchip" style="background:#f3f4f6;color:#6b7280">+${ss.length-3}人</div>`:''}
+          ${ac?`<div style="font-size:10px;color:var(--primary-dark);margin-top:1px">📅${ac}单</div>`:''}
+        </div>`;
+      }).join('')}
+    </div></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px">
+      ${Object.entries(SHIFT_TYPES).filter(([k])=>k!=='rest').map(([k,v])=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:${v.color};display:inline-block"></span>${v.label}</span>`).join('')}
+    </div>
+  `;
+}
+function shiftMonth(n){
+  const [y,m]=SCH.month.split('-').map(Number);
+  const d=new Date(y,m-1+n,1);
+  SCH.month=ymd(d).slice(0,7);renderRoute();
+}
+
+/* ---- 日时间轴：各美甲师班次 + 预约占用 ---- */
+function renderSchDay(b){
+  const date=SCH.day;
+  const techs=activeTechs();
+  const H0=9,H1=21,SPAN=H1-H0;
+  const ticks=[];for(let h=H0;h<H1;h++)ticks.push(h);
+  const appts=apptsOfDate(date);
+  const pos=(t)=>{const {h,m}=parseHM(t);return ((h+m/60-H0)/SPAN)*100;};
+  const unassigned=appts.filter(a=>!a.technicianId||!techById(a.technicianId));
+  if(!techs.length){b.innerHTML='<div class="empty"><div class="icon">🗓️</div>请先添加美甲师</div>';return;}
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn sm" onclick="shiftDay(-1)">‹ 前一天</button>
+      <input type="date" value="${date}" style="width:auto" onchange="SCH.day=this.value;renderRoute()">
+      <button class="btn sm" onclick="shiftDay(1)">后一天 ›</button>
+      <button class="btn sm" onclick="SCH.day=ymd(new Date());renderRoute()">今天</button>
+      <span class="text-muted" style="font-size:12px;margin-left:auto">当日 ${appts.length} 个预约 · ${shiftsOfDate(date).length} 人上班</span>
+    </div>
+    <div class="sch-scroll"><div class="tl-wrap" style="--tlstep:${100/SPAN}%">
+      <div class="tl-head"><div class="tl-name">时间</div><div class="tl-track">${ticks.map(h=>`<div class="tl-tick">${String(h).padStart(2,'0')}:00</div>`).join('')}</div></div>
+      ${techs.map(t=>{
+        const s=getShift(t.id,date);const st=s?SHIFT_TYPES[s.type]:null;
+        const my=appts.filter(a=>a.technicianId===t.id);
+        let blk='';
+        if(st&&st.start!=='-'){
+          const L=pos(st.start),W=pos(st.end)-L;
+          blk=`<div class="tl-block" style="left:${L}%;width:${W}%;background:${st.color};color:${st.textColor}">${st.label} ${st.start}-${st.end}</div>`;
+        }else if(st){
+          blk=`<div class="tl-block" style="left:2px;background:#f3f4f6;color:#6b7280;padding:0 8px">休息</div>`;
+        }
+        const ab=my.map(a=>{
+          const st0=a.startTime||'10:00';
+          const L=pos(st0);
+          const W=Math.max((a.endTime?pos(a.endTime)-L:(1/SPAN)*100),5);
+          return `<div class="tl-appt" style="left:${L}%;width:${W}%" onclick="event.stopPropagation();editAppt('${a.id}')" title="${a.name||''} ${a.item||''}">${st0} ${a.name||''}</div>`;
+        }).join('');
+        return `<div class="tl-row">
+          <div class="tl-name"><span class="tech-dot" style="background:${t.color}"></span><span style="font-weight:600">${t.name}</span></div>
+          <div class="tl-track" onclick="openShiftPicker('${t.id}','${date}')" style="cursor:pointer">${blk}${ab}</div>
+        </div>`;
+      }).join('')}
+    </div></div>
+    ${unassigned.length?`<div class="mt-2" style="padding:10px 12px;background:var(--bg-2);border-radius:var(--radius-sm)">
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">⚠️ 未指派美甲师的预约（${unassigned.length}）</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${unassigned.map(a=>`<span class="tag" style="cursor:pointer" onclick="editAppt('${a.id}')">${a.startTime||''} ${a.name||''}</span>`).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+function shiftDay(n){
+  const d=new Date(SCH.day);d.setDate(d.getDate()+n);
+  SCH.day=ymd(d);renderRoute();
 }
 
 /* 客户档案 */
@@ -1464,6 +2784,360 @@ function addPointsManual(){
   c.points=Math.max(0,(+c.points||0)+change);
   DB.points_log.unshift({id:genId('pl'),date:ymd(new Date()),customerId:c.id,name:c.name,change,reason,balance:c.points});
   saveDB();syncChannel();renderCurrentRoute();toast('已调整');
+}
+
+/* =============================================================
+   打卡送礼（积分营销中心）—— 全部规则可自定义，saveDB 后自动同步手机/iPad
+   ============================================================= */
+let RWTAB='rules';
+function renderRewards(el){
+  const pendShares=DB.shares.filter(s=>s.status==='pending').length;
+  const pendRedeem=DB.redeems.filter(r=>r.status==='unused').length;
+  const tabs=[
+    ['rules','⚙️ 规则设置',0],
+    ['shop','🎁 兑换商城',DB.rewardItems.filter(i=>i.enabled).length],
+    ['redeem','🎫 兑换核销',pendRedeem],
+    ['audit','📸 分享审核',pendShares],
+    ['log','📋 活动记录',0]
+  ];
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>🎁 打卡送礼 · 积分营销中心</span>
+        <span class="text-muted" style="font-size:12px">${isDoubleDay()?'🎉 今天是'+(RW().doubleDay.label||'双倍积分日'):'设置全部自动同步到手机/iPad'}</span>
+      </div>
+      <div class="sch-tabs" style="flex-wrap:wrap">
+        ${tabs.map(([k,label,n])=>`<div class="sch-tab ${RWTAB===k?'active':''}" onclick="RWTAB='${k}';renderRoute()">${label}${n?` <span style="background:var(--danger);color:#fff;border-radius:9px;padding:0 5px;font-size:10px">${n}</span>`:''}</div>`).join('')}
+      </div>
+      <div id="rw-body" class="mt-2"></div>
+    </div>
+  `;
+  ({rules:rwRules,shop:rwShop,redeem:rwRedeem,audit:rwAudit,log:rwLog})[RWTAB](document.getElementById('rw-body'));
+}
+
+function rwCard(title,desc,enabled,path,inner){
+  return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:${enabled?'#fff':'#fbf8f8'}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${title}</div>
+        <div class="text-muted" style="font-size:11.5px;margin-top:2px">${desc}</div>
+      </div>
+      <label class="rw-switch"><input type="checkbox" ${enabled?'checked':''} onchange="rwSet('${path}.enabled',this.checked)"><span></span></label>
+    </div>
+    <div style="margin-top:${enabled?'12px':'0'};${enabled?'':'display:none'}">${inner}</div>
+  </div>`;
+}
+function rwNum(label,path,val,suffix,width){
+  return `<div style="display:flex;align-items:center;gap:6px;font-size:13px">
+    <span style="color:var(--text-light)">${label}</span>
+    <input type="number" value="${val}" style="width:${width||80}px;padding:6px 8px" onchange="rwSet('${path}',+this.value)">
+    ${suffix?`<span style="color:var(--text-light);font-size:12px">${suffix}</span>`:''}
+  </div>`;
+}
+function rwSet(path,val){
+  const parts=path.split('.');
+  let o=DB.settings.rewards;
+  for(let i=0;i<parts.length-1;i++)o=o[parts[i]];
+  o[parts[parts.length-1]]=val;
+  saveDB();syncChannel();
+  renderRoute();
+  toast('已保存并同步');
+}
+
+function rwRules(b){
+  const r=RW();
+  const WD=['周日','周一','周二','周三','周四','周五','周六'];
+  b.innerHTML=`
+    ${rwCard('1️⃣ 推荐新客 · 老带新',`老顾客带新朋友到店消费，双方各得积分`,r.referral.enabled,'referral',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('推荐人得','referral.referrerPoints',r.referral.referrerPoints,'分')}
+        ${rwNum('新客得','referral.refereePoints',r.referral.refereePoints,'分')}
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;cursor:pointer">
+        <input type="checkbox" ${r.referral.requireConsume?'checked':''} style="width:auto" onchange="rwSet('referral.requireConsume',this.checked)">
+        新客首次消费后才发放（防刷单）
+      </label>
+    `)}
+
+    ${rwCard('2️⃣ 社交分享奖励','顾客在小红书/抖音发布带店铺定位的美甲图或视频',r.share.enabled,'share',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('每次奖励','share.points',r.share.points,'分')}
+        ${rwNum('每月上限','share.maxPerMonth',r.share.maxPerMonth,'次')}
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;cursor:pointer">
+        <input type="checkbox" ${r.share.needAudit?'checked':''} style="width:auto" onchange="rwSet('share.needAudit',this.checked)">
+        需店家审核后到账（推荐开启）
+      </label>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-light)">支持平台：${(r.share.platforms||[]).map(p=>`<span class="tag" style="margin-right:4px">${p}</span>`).join('')}</div>
+    `)}
+
+    ${rwCard('3️⃣ 会员注册 / 每日签到','培养顾客到店习惯，连续签到额外奖励',r.signin.enabled,'signin',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('每日签到','signin.dailyPoints',r.signin.dailyPoints,'分')}
+        ${rwNum('首次开卡','signin.firstMemberPoints',r.signin.firstMemberPoints,'分')}
+      </div>
+      <div style="margin-top:10px;font-size:12.5px;color:var(--text-light)">连续签到奖励：</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px" id="rw-streak">
+        ${(r.signin.streakBonus||[]).map((s,i)=>`<div style="display:flex;align-items:center;gap:4px;background:var(--bg-2);padding:6px 10px;border-radius:20px;font-size:12px">
+          连签 <input type="number" value="${s.days}" style="width:52px;padding:3px 5px" onchange="rwStreak(${i},'days',+this.value)"> 天 得
+          <input type="number" value="${s.points}" style="width:60px;padding:3px 5px" onchange="rwStreak(${i},'points',+this.value)"> 分
+          <span style="cursor:pointer;color:var(--danger)" onclick="rwStreak(${i},'del')">×</span>
+        </div>`).join('')}
+        <button class="btn sm" onclick="rwStreak(-1,'add')">＋ 加一档</button>
+      </div>
+    `)}
+
+    ${rwCard('4️⃣ 积分抵扣现金','结算时可用积分直接抵现，设上限防止亏本',r.deduct.enabled,'deduct',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        ${rwNum('','deduct.pointsPerYuan',r.deduct.pointsPerYuan,'分 = 1 元',80)}
+        ${rwNum('单笔最多抵','deduct.maxPercent',r.deduct.maxPercent,'% 的消费额',70)}
+        ${rwNum('起用门槛','deduct.minPoints',r.deduct.minPoints,'分')}
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;font-size:12px;color:var(--text-light)">
+        举例：消费 ¥500，最多可抵 <strong>¥${(500*r.deduct.maxPercent/100).toFixed(0)}</strong>（需 ${Math.round(500*r.deduct.maxPercent/100*r.deduct.pointsPerYuan)} 分）
+      </div>
+    `)}
+
+    ${rwCard('9️⃣ 积分自动升级会员','积分累计到门槛自动升级会员等级',r.levelUp.enabled,'levelUp',`
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${(r.levelUp.rules||[]).map((rule,i)=>{
+          const t=MEMBER_TIERS[String(rule.amount)];
+          return `<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;background:var(--bg-2);padding:8px 10px;border-radius:6px">
+            累计 <input type="number" value="${rule.points}" style="width:80px;padding:4px 6px" onchange="rwLevel(${i},'points',+this.value)"> 分 → 升级为
+            <select style="width:auto;padding:4px 6px" onchange="rwLevel(${i},'amount',+this.value)">
+              ${Object.entries(MEMBER_TIERS).map(([amt,tier])=>`<option value="${amt}" ${+amt===+rule.amount?'selected':''}>${tier.name}（享${(tier.discount*10).toFixed(1)}折）</option>`).join('')}
+            </select>
+            <span style="cursor:pointer;color:var(--danger);margin-left:auto" onclick="rwLevel(${i},'del')">删除</span>
+          </div>`;
+        }).join('')}
+        <button class="btn sm" style="width:fit-content" onclick="rwLevel(-1,'add')">＋ 加一档</button>
+      </div>
+    `)}
+
+    ${rwCard('🔟 积分有效期','积分过期作废，提前提醒顾客使用',r.expire.enabled,'expire',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('有效期','expire.months',r.expire.months,'个月')}
+        ${rwNum('提前','expire.remindDays',r.expire.remindDays,'天提醒')}
+      </div>
+      ${(()=>{const l=expiringSoonList();return l.length?`<div style="margin-top:10px;padding:8px 10px;background:#fffbeb;border-radius:6px;font-size:12px">
+        ⏰ 即将过期：${l.slice(0,5).map(x=>`${x.name} ${x.points}分(${ymd(new Date(x.soonest))})`).join('、')}${l.length>5?` 等 ${l.length} 人`:''}
+        <button class="btn sm" style="margin-left:8px" onclick="notifyExpiring()">一键提醒</button>
+      </div>`:'<div style="margin-top:10px;font-size:12px;color:var(--text-light)">暂无即将过期的积分</div>';})()}
+    `)}
+
+    ${rwCard('1️⃣1️⃣ 双倍积分日','固定日子刺激顾客到店消费',r.doubleDay.enabled,'doubleDay',`
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px">
+        <select style="width:auto;padding:6px 8px" onchange="rwSet('doubleDay.mode',this.value)">
+          <option value="weekday" ${r.doubleDay.mode==='weekday'?'selected':''}>每周固定一天</option>
+          <option value="monthday" ${r.doubleDay.mode==='monthday'?'selected':''}>每月固定一号</option>
+        </select>
+        ${r.doubleDay.mode==='weekday'?`
+          <select style="width:auto;padding:6px 8px" onchange="rwSet('doubleDay.weekday',+this.value)">
+            ${WD.map((w,i)=>`<option value="${i}" ${+r.doubleDay.weekday===i?'selected':''}>${w}</option>`).join('')}
+          </select>`:`
+          <input type="number" min="1" max="31" value="${r.doubleDay.monthDay}" style="width:64px;padding:6px 8px" onchange="rwSet('doubleDay.monthDay',+this.value)"> 号`}
+        ${rwNum('积分','doubleDay.multiplier',r.doubleDay.multiplier,'倍',60)}
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:${isDoubleDay()?'#fef3c7':'var(--bg-2)'};border-radius:6px;font-size:12px">
+        当前设置：<strong>${doubleDayLabel()}</strong> 积分 ×${r.doubleDay.multiplier}${isDoubleDay()?' · 🎉 <strong>今天就是！</strong>':''}
+      </div>
+    `)}
+  `;
+}
+function rwStreak(i,field,val){
+  const arr=DB.settings.rewards.signin.streakBonus||[];
+  if(field==='add')arr.push({days:60,points:300});
+  else if(field==='del')arr.splice(i,1);
+  else arr[i][field]=val;
+  DB.settings.rewards.signin.streakBonus=arr;
+  saveDB();syncChannel();renderRoute();toast('已保存');
+}
+function rwLevel(i,field,val){
+  const arr=DB.settings.rewards.levelUp.rules||[];
+  if(field==='add')arr.push({points:5000,amount:500});
+  else if(field==='del')arr.splice(i,1);
+  else arr[i][field]=val;
+  arr.sort((a,b)=>a.points-b.points);
+  DB.settings.rewards.levelUp.rules=arr;
+  saveDB();syncChannel();renderRoute();toast('已保存');
+}
+function notifyExpiring(){
+  const l=expiringSoonList();
+  if(!l.length){toast('暂无需要提醒的客户');return;}
+  l.forEach(x=>{
+    const c=DB.customers.find(y=>y.id===x.customerId);
+    DB.notifications.unshift({
+      id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),
+      customerName:x.name,type:'积分到期',
+      content:`亲爱的${x.name}，您有 ${x.points} 积分将于 ${ymd(new Date(x.soonest))} 到期，记得来店里兑换好礼哦～`,
+      phone:c?c.phone:'',createdAt:Date.now()
+    });
+  });
+  saveDB();syncChannel();renderRoute();
+  toast(`已生成 ${l.length} 条提醒，可在通知中心一键发送`);
+}
+
+/* ---- 兑换商城管理 ---- */
+function rwShop(b){
+  b.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span class="text-muted" style="font-size:12.5px">客户在手机上可用积分兑换以下奖品，可自由增删改</span>
+      <button class="btn sm primary" onclick="openRewardItem()">＋ 添加奖品</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">
+      ${DB.rewardItems.map(it=>{
+        const t=REWARD_TYPES[it.type]||REWARD_TYPES.service;
+        return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;background:${it.enabled?'#fff':'#fbf8f8'};${it.enabled?'':'opacity:.55'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:28px">${it.icon||'🎁'}</div>
+            <span class="tag" style="background:${t.color};color:${t.text}">${t.label}</span>
+          </div>
+          <div style="font-weight:600;margin-top:6px">${it.name}</div>
+          <div class="text-muted" style="font-size:11.5px;min-height:16px">${it.desc||''}</div>
+          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="color:var(--warning);font-size:16px">${it.points} 分</strong>
+            <span class="text-muted" style="font-size:11px">${it.stock<0?'不限量':'剩 '+it.stock}</span>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:6px">
+            <button class="btn sm" style="flex:1" onclick="openRewardItem('${it.id}')">编辑</button>
+            <button class="btn sm ${it.enabled?'':'primary'}" onclick="toggleRewardItem('${it.id}')">${it.enabled?'下架':'上架'}</button>
+          </div>
+        </div>`;
+      }).join('')||'<div class="empty"><div class="icon">🎁</div>还没有奖品</div>'}
+    </div>
+  `;
+}
+function toggleRewardItem(id){
+  const it=DB.rewardItems.find(x=>x.id===id);if(!it)return;
+  it.enabled=!it.enabled;saveDB();syncChannel();renderRoute();
+  toast(it.enabled?'已上架':'已下架');
+}
+function openRewardItem(id){
+  const it=id?DB.rewardItems.find(x=>x.id===id):null;
+  showModal(it?'编辑奖品':'添加奖品',`
+    <div class="form-grid">
+      <div><label class="form-label">奖品名称 *</label><input id="ri-name" value="${it?it.name:''}" placeholder="如：免费手部护理"></div>
+      <div><label class="form-label">图标 emoji</label><input id="ri-icon" value="${it?(it.icon||'🎁'):'🎁'}" placeholder="🎁"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">类型</label>
+        <select id="ri-type" onchange="document.getElementById('ri-valid-wrap').style.display=this.value==='coupon'?'':'none'">
+          ${Object.entries(REWARD_TYPES).map(([k,v])=>`<option value="${k}" ${it&&it.type===k?'selected':''}>${v.label}</option>`).join('')}
+        </select>
+      </div>
+      <div><label class="form-label">所需积分 *</label><input id="ri-points" type="number" value="${it?it.points:300}"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">价值 (¥ / 折扣如0.8)</label><input id="ri-value" type="number" step="0.01" value="${it?it.value:0}"></div>
+      <div><label class="form-label">库存（-1 = 不限量）</label><input id="ri-stock" type="number" value="${it?it.stock:-1}"></div>
+    </div>
+    <div class="form-item mt-2" id="ri-valid-wrap" style="${it&&it.type==='coupon'?'':'display:none'}">
+      <label class="form-label">优惠券有效天数</label><input id="ri-valid" type="number" value="${it?(it.validDays||60):60}">
+    </div>
+    <div class="form-item mt-2"><label class="form-label">说明</label><input id="ri-desc" value="${it?(it.desc||''):''}" placeholder="一句话卖点"></div>
+  `,`
+    ${it?`<button class="btn danger" onclick="delRewardItem('${it.id}')">删除</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="saveRewardItem('${id||''}')">保存</button>
+  `);
+}
+function saveRewardItem(id){
+  const name=document.getElementById('ri-name').value.trim();
+  if(!name){toast('请填写名称');return;}
+  const data={
+    name,icon:document.getElementById('ri-icon').value.trim()||'🎁',
+    type:document.getElementById('ri-type').value,
+    points:+document.getElementById('ri-points').value||0,
+    value:+document.getElementById('ri-value').value||0,
+    stock:+document.getElementById('ri-stock').value,
+    validDays:+document.getElementById('ri-valid').value||60,
+    desc:document.getElementById('ri-desc').value.trim(),
+    enabled:true
+  };
+  if(id)Object.assign(DB.rewardItems.find(x=>x.id===id),data);
+  else DB.rewardItems.push(Object.assign({id:genId('rw')},data));
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已保存并同步');
+}
+function delRewardItem(id){
+  if(!confirm('删除该奖品？已兑换记录不受影响'))return;
+  DB.rewardItems=DB.rewardItems.filter(x=>x.id!==id);
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已删除');
+}
+
+/* ---- 兑换核销 ---- */
+function rwRedeem(b){
+  const arr=DB.redeems.slice(0,100);
+  b.innerHTML=arr.length?`
+    <div class="text-muted" style="font-size:12.5px;margin-bottom:10px">客户在手机上兑换后会生成 6 位核销码，到店报码即可核销</div>
+    ${arr.map(r=>{
+      const t=REWARD_TYPES[r.itemType]||REWARD_TYPES.service;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;${r.status==='used'?'opacity:.55':''}">
+        <div style="flex:1;min-width:0">
+          <div><strong>${r.customerName}</strong> 兑换 <strong>${r.itemName}</strong> <span class="tag" style="background:${t.color};color:${t.text}">${t.label}</span></div>
+          <div class="text-muted" style="font-size:12px">${r.date} · 消耗 ${r.points} 分 · 核销码 <strong style="letter-spacing:2px;font-size:14px;color:var(--primary-dark)">${r.code}</strong></div>
+        </div>
+        ${r.status==='used'?'<span class="tag success">已核销</span>':`<button class="btn sm primary" onclick="doUseRedeem('${r.id}')">核销</button>`}
+      </div>`;
+    }).join('')}
+  `:'<div class="empty"><div class="icon">🎫</div>还没有兑换记录</div>';
+}
+function doUseRedeem(id){
+  if(!confirm('确认核销？核销后不可撤销'))return;
+  useRedeem(id);renderRoute();toast('已核销');
+}
+
+/* ---- 分享审核 ---- */
+function rwAudit(b){
+  const pend=DB.shares.filter(s=>s.status==='pending');
+  const done=DB.shares.filter(s=>s.status!=='pending').slice(0,30);
+  b.innerHTML=`
+    ${pend.length?`<div style="font-weight:600;font-size:13px;margin-bottom:8px">⏳ 待审核 (${pend.length})</div>
+    ${pend.map(s=>`<div style="padding:12px;border:1px solid var(--warning);border-radius:var(--radius-sm);margin-bottom:8px;background:#fffbeb">
+      <div><strong>${s.customerName}</strong> 在 <span class="tag">${s.platform}</span> 分享</div>
+      <div style="font-size:12px;margin-top:4px;word-break:break-all"><a href="${s.url}" target="_blank" style="color:var(--primary-dark)">${s.url}</a></div>
+      ${s.note?`<div class="text-muted" style="font-size:11.5px;margin-top:3px">${s.note}</div>`:''}
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn sm primary" onclick="auditShare('${s.id}',true);renderRoute();toast('已通过 +${s.points}分')">✅ 通过 +${s.points}分</button>
+        <button class="btn sm danger" onclick="auditShare('${s.id}',false);renderRoute();toast('已驳回')">驳回</button>
+      </div>
+    </div>`).join('')}`:'<div class="empty"><div class="icon">📸</div>暂无待审核的分享</div>'}
+    ${done.length?`<div style="font-weight:600;font-size:13px;margin:16px 0 8px">历史</div>
+    ${done.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px">
+      <span>${s.date} ${s.customerName} · ${s.platform}</span>
+      <span class="tag ${s.status==='approved'?'success':'danger'}">${s.status==='approved'?'+'+s.points+'分':'已驳回'}</span>
+    </div>`).join('')}`:''}
+  `;
+}
+
+/* ---- 活动记录（签到 / 推荐 / 积分流水） ---- */
+function rwLog(b){
+  const today=ymd(new Date());
+  const todaySign=DB.signins.filter(s=>s.date===today);
+  const refs=DB.referrals.slice(0,30);
+  b.innerHTML=`
+    <div class="row" style="margin-bottom:14px">
+      <div class="col"><div class="stat-mini"><div class="v">${todaySign.length}</div><div class="l">今日签到人次</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.referrals.filter(r=>r.status==='done').length}</div><div class="l">成功推荐</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.redeems.length}</div><div class="l">累计兑换</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.shares.filter(s=>s.status==='approved').length}</div><div class="l">通过分享</div></div></div>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px">🤝 推荐关系</div>
+    ${refs.length?refs.map(r=>`<div style="display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px">
+      <span><strong>${r.referrerName}</strong> 推荐了 <strong>${r.refereeName}</strong> <span class="text-muted">· ${r.date}</span></span>
+      ${r.status==='done'?`<span class="tag success">已发放 ${r.referrerPoints}/${r.refereePoints}分</span>`:`<span class="tag warning" style="cursor:pointer" onclick="settleReferral('${r.id}');saveDB();renderRoute();toast('已发放')">待新客消费（点击手动发放）</span>`}
+    </div>`).join(''):'<div class="text-muted" style="font-size:12.5px">暂无推荐记录</div>'}
+    <div style="font-weight:600;font-size:13px;margin:16px 0 8px">📅 最近签到</div>
+    ${DB.signins.slice(0,20).map(s=>{
+      const c=DB.customers.find(x=>x.id===s.customerId);
+      return `<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span>${s.date} · ${c?c.name:'(已删除)'}</span><span class="text-success">+${s.points}分</span>
+      </div>`;
+    }).join('')||'<div class="text-muted" style="font-size:12.5px">暂无签到记录</div>'}
+  `;
 }
 
 /* 营销管理 */
@@ -2008,12 +3682,18 @@ function renderCustomerPage(){
   if(hash==='#customer/appoint')tab='appoint';
   else if(hash==='#customer/mine')tab='mine';
   else if(hash==='#customer/member')tab='member';
+  else if(hash==='#customer/gift')tab='gift';
   else if(hash==='#customer/home')tab='home';
 
   let body='';
   if(tab==='home')body=customerHome();
-  else if(tab==='appoint')body=customerAppointForm();
+  else if(tab==='appoint'){
+    if(!_cuStyles.length)_cuStyles=[{id:genId('st'),name:'',image:''}];
+    body=customerAppointForm();
+    setTimeout(renderCuStyleRows,0);
+  }
   else if(tab==='mine')body=customerMyAppoints();
+  else if(tab==='gift')body=customerGift();
   else if(tab==='member')body=customerMember();
 
   app.innerHTML=`
@@ -2030,6 +3710,10 @@ function renderCustomerPage(){
       </div>
       <div class="tab-item ${tab==='home'?'active':''}" onclick="location.hash='#customer/home'">
         <div class="icon">🏠</div>我的主页
+      </div>
+      <div class="tab-item ${tab==='gift'?'active':''}" onclick="location.hash='#customer/gift'">
+        <div class="icon">🎁</div>打卡送礼
+        ${customerCurrentId&&RW().signin.enabled&&!todaySignedIn(customerCurrentId)?'<span class="tab-dot"></span>':''}
       </div>
       <div class="tab-item ${tab==='member'?'active':''}" onclick="location.hash='#customer/member'">
         <div class="icon">💳</div>会员中心
@@ -2076,17 +3760,30 @@ function customerHome(){
       <div class="c">每日 ${DB.settings.openTime}:00 - ${DB.settings.closeTime}:00</div>
     </div>
 
+    ${RW().signin.enabled?`<div class="card" style="box-shadow:var(--shadow-2);background:linear-gradient(135deg,#fff7f5,#fff)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:34px">${todaySignedIn(c.id)?'✅':'🎁'}</div>
+        <div style="flex:1">
+          <strong>${todaySignedIn(c.id)?'今日已签到':'今天还没签到哦'}</strong>
+          <div class="text-muted" style="font-size:12px">已连续签到 ${signinStreak(c.id)} 天${isDoubleDay()?' · 🎉 今天是'+(RW().doubleDay.label||'双倍积分日'):''}</div>
+        </div>
+        <button class="btn sm ${todaySignedIn(c.id)?'':'primary'}" onclick="${todaySignedIn(c.id)?"location.hash='#customer/gift'":'cuDoSignin()'}">
+          ${todaySignedIn(c.id)?'去看看':'签到 +'+RW().signin.dailyPoints}
+        </button>
+      </div>
+    </div>`:''}
+
     <div class="card" style="box-shadow:var(--shadow-2)">
-      <div class="card-title">🎁 积分兑换</div>
+      <div class="card-title">
+        <span>🎁 积分兑换</span>
+        <span style="font-size:12px;color:var(--primary)" onclick="location.hash='#customer/gift'">全部 ›</span>
+      </div>
       <p style="margin-bottom:8px">⭐ 您的积分：<strong style="color:var(--warning);font-size:18px">${c.points||0}</strong></p>
       <ul style="font-size:12.5px;line-height:1.9;color:#666">
-        <li>100分 兑换 卸甲服务 (¥30)</li>
-        <li>300分 兑换 单色补色 (¥80)</li>
-        <li>500分 兑换 免费手部护理</li>
-        <li>800分 兑换 限量款贴纸包</li>
-        <li>100分 = 1元 现金抵扣（上限20%）</li>
+        ${DB.rewardItems.filter(i=>i.enabled).slice(0,5).map(i=>`<li>${i.points}分 兑换 ${i.name}${i.value&&i.type!=='coupon'?' (¥'+i.value+')':''}</li>`).join('')||'<li>暂无奖品</li>'}
+        ${RW().deduct.enabled?`<li>${RW().deduct.pointsPerYuan}分 = 1元 现金抵扣（上限${RW().deduct.maxPercent}%）</li>`:''}
       </ul>
-      <p class="text-muted mt-2" style="font-size:12px">到店出示即可兑换</p>
+      <button class="btn sm primary" style="width:100%;margin-top:10px" onclick="location.hash='#customer/gift'">去兑换 →</button>
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">
@@ -2149,17 +3846,59 @@ function customerAppointForm(){
         <p class="text-muted" style="font-size:11px;margin-top:4px">营业时间 ${DB.settings.openTime}-${DB.settings.closeTime},结束时间由店家根据款式确定</p>
       </div>
       <div class="form-item">
-        <label class="form-label">想做的款式</label>
-        <input id="cu-item" placeholder="如：猫眼甲、法式..." list="cu-items-list">
-        <datalist id="cu-items-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+        <label class="form-label">想做的款式（可添加多个 · 每款可传图）</label>
+        <div id="cu-styles" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button type="button" class="btn sm" style="margin-top:8px" onclick="addCuStyleRow()">＋ 添加一个款式</button>
+        <p class="text-muted mt-1" style="font-size:11px">💡 每行填写款式名称（如 猫眼甲），再点 📷 上传参考图（最多 ${DB.settings.imageMaxCount||6} 张，可编辑删除）</p>
       </div>
       <div class="form-item">
         <label class="form-label">备注</label>
-        <textarea id="cu-note" placeholder="可补充图片链接(DY/XHS)或特别要求"></textarea>
+        <textarea id="cu-note" placeholder="可补充链接或特别要求"></textarea>
       </div>
       <button class="btn primary" style="width:100%;padding:14px" onclick="submitCustomerAppoint()">✅ 提交预约</button>
     </div>
   `;
+}
+
+let _cuStyles=[]; // [{name,image}]
+function addCuStyleRow(prefill){
+  const id=genId('st');
+  const row={id,name:prefill&&prefill.name||'',image:prefill&&prefill.image||''};
+  _cuStyles.push(row);
+  renderCuStyleRows();
+}
+function removeCuStyleRow(id){
+  _cuStyles=_cuStyles.filter(r=>r.id!==id);
+  renderCuStyleRows();
+}
+function renderCuStyleRows(){
+  const box=document.getElementById('cu-styles');if(!box)return;
+  const max=DB.settings.imageMaxCount||6;
+  const totalImgs=_cuStyles.filter(r=>r.image).length;
+  box.innerHTML=_cuStyles.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;padding:8px;background:var(--bg-2);border-radius:8px" data-id="${r.id}">
+      <input class="cu-st-name" data-id="${r.id}" value="${r.name}" placeholder="款式 ${i+1}（如 猫眼甲）" style="flex:1" list="cu-items-list">
+      <datalist id="cu-items-list">${DB.items.map(it=>`<option value="${it.name}">`).join('')}</datalist>
+      <input type="file" accept="image/*" style="display:none" data-id="${r.id}" onchange="onCuStyleImg(event,'${r.id}')">
+      <button type="button" class="btn sm" onclick="this.previousElementSibling.click()" title="上传图片" style="flex:none">${r.image?'🖼️':'📷'}</button>
+      ${r.image?`<button type="button" class="btn sm danger" onclick="removeCuStyleImg('${r.id}')">×</button>`:''}
+      <button type="button" class="btn sm danger" onclick="removeCuStyleRow('${r.id}')">删</button>
+    </div>
+    ${r.image?`<div style="margin-left:8px"><img src="${r.image}" style="width:60px;height:60px;object-fit:cover;border-radius:6px"></div>`:''}
+  `).join('');
+  // 控制上传按钮可用
+  const canAdd=totalImgs<max;
+  box.querySelectorAll('input[type=file]').forEach(f=>f.disabled=!canAdd&&!_cuStyles.find(r=>r.id===f.dataset.id).image);
+}
+async function onCuStyleImg(ev,rowId){
+  const file=ev.target.files[0];if(!file)return;
+  try{
+    const base64=await compressImage(file);
+    const row=_cuStyles.find(r=>r.id===rowId);if(row){row.image=base64;renderCuStyleRows();}
+  }catch(e){toast('图片处理失败');}
+}
+function removeCuStyleImg(rowId){
+  const row=_cuStyles.find(r=>r.id===rowId);if(row){row.image='';renderCuStyleRows();}
 }
 
 function renderCuDaySlots(){
@@ -2194,51 +3933,162 @@ function submitCustomerAppoint(){
   const phone=document.getElementById('cu-phone').value.trim();
   const date=document.getElementById('cu-date').value;
   const time=document.getElementById('cu-time').value;
-  const item=document.getElementById('cu-item').value.trim();
   const note=document.getElementById('cu-note').value.trim();
   if(!name||!phone||!date||!time){toast('请完整填写姓名/手机/日期/时间');return;}
-  const duration=item?((DB.items.find(i=>i.name===item)||{}).duration||60):60;
-  const eH=parseInt(time.split(':')[0])+Math.floor(duration/60);
-  const eM=parseInt(time.split(':')[1])+(duration%60);
+  // 收集款式
+  const styles=_cuStyles.map(r=>({name:(r.name||'').trim(),image:r.image||''})).filter(r=>r.name||r.image);
+  if(!styles.length){toast('请至少填写一个款式名称');return;}
+  const totalDur=styles.reduce((s,r)=>s+((DB.items.find(i=>i.name===r.name)||{}).duration||60),0);
+  const eH=parseInt(time.split(':')[0])+Math.floor(totalDur/60);
+  const eM=parseInt(time.split(':')[1])+(totalDur%60);
   const endTime=String(Math.floor((eH*60+eM)/60)%24).padStart(2,'0')+':'+String((eH*60+eM)%60).padStart(2,'0');
 
   // 找客户或创建
   let customer=DB.customers.find(c=>c.name===name&&c.phone===phone);
+  const isNewCustomer=!customer;
   if(!customer){
     customer={id:genId('c'),name,phone,points:0,createdAt:Date.now()};
     DB.customers.push(customer);
   }
   customerCurrentId=customer.id;
   localStorage.setItem('hemanli_customer_id',customer.id);
-  const appt={id:genId('a'),date,startTime:time,endTime,customerId:customer.id,name,phone,item,note,status:'pending',createdAt:Date.now(),source:'customer'};
+  // 邀请码绑定（来自 ?ref=xxx 邀请链接）
+  if(isNewCustomer){
+    const ref=getUrlRef();
+    if(ref){
+      const r=applyReferral(customer.id,ref);
+      if(r.ok)setTimeout(()=>toast('🎉 '+r.msg),1600);
+    }
+  }
+  const appt={
+    id:genId('a'),date,startTime:time,endTime,
+    customerId:customer.id,name,phone,
+    styleNames:styles.map(s=>s.name),
+    item:styles.map(s=>s.name).join('+'),
+    images:styles.map(s=>s.image).filter(Boolean),
+    imagesByName:styles.filter(s=>s.image).map(s=>({name:s.name,image:s.image})),
+    quotedPrice:0,deposit:0,depositPaid:false,payMethod:'cash',
+    technicianId:'',
+    note,status:'pending',createdAt:Date.now(),source:'customer'
+  };
   DB.appointments.unshift(appt);
   saveDB();syncChannel();
   if(CLOUD.ready&&CLOUD.mode==='client'){CLOUD.pushAppt(appt);if(!CLOUD.apptWatcher)CLOUD.watchAppts(list=>applyApptsForClient(list));}
-  toast('预约成功！店家稍后会确认');
+  toast('预约成功！店家稍后会确认并报价');
+  _cuStyles=[];
   setTimeout(()=>{location.hash='#customer/mine';},800);
 }
 
 function customerMyAppoints(){
   const my=DB.customers.find(x=>x.id===customerCurrentId);
   if(!my)return '<div class="empty"><div class="icon">📋</div>请先预约一次即可查看</div>';
-  const arr=DB.appointments.filter(a=>a.customerId===my.id||(a.phone===my.phone&&a.name===my.name)).sort((a,b)=>b.date.localeCompare(a.date)||b.startTime.localeCompare(a.startTime));
-  if(arr.length===0)return '<div class="empty"><div class="icon">📋</div>还没有预约记录</div>';
-  return arr.map(a=>{
+  const all=DB.appointments.filter(a=>a.customerId===my.id||(a.phone===my.phone&&a.name===my.name));
+  if(!all.length)return '<div class="empty"><div class="icon">📋</div>还没有预约记录</div>';
+  const groups={
+    quoted:all.filter(a=>a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid),
+    pending:all.filter(a=>a.status==='pending'&&(!a.quotedPrice||a.depositPaid===false&&a.quotedPrice===0)),
+    confirmed:all.filter(a=>a.status==='confirmed'||(a.status==='pending'&&a.depositPaid)),
+    done:all.filter(a=>a.status==='completed'||a.status==='cancelled')
+  };
+  const labels={quoted:'💰 待付定金',pending:'⏳ 待报价',confirmed:'✅ 已预约',done:'📦 历史'};
+  const keys=['quoted','pending','confirmed','done'];
+  const counts=Object.fromEntries(keys.map(k=>[k,groups[k].length]));
+  let active=window._myTab||(counts.quoted?'quoted':counts.pending?'pending':counts.confirmed?'confirmed':'done');
+  window._myTab=active;
+  const arr=groups[active].sort((a,b)=>b.date.localeCompare(a.date)||b.startTime.localeCompare(a.startTime));
+  const renderCard=a=>{
+    const imgs=(a.imagesByName&&a.imagesByName.length)?a.imagesByName:(a.images||[]).map(u=>({name:'',image:u}));
     const statusMap={pending:['待确认','warning'],confirmed:['已确认','primary'],completed:['已完成','success'],cancelled:['已取消','danger']};
     const [s,c]=statusMap[a.status]||['',''];
-    return `<div class="swipe-wrap" data-id="${a.id}">
-      <div class="swipe-action" onclick="cancelMyAppt('${a.id}')">取消</div>
-      <div class="swipe-content">
-        <div style="display:flex;justify-content:space-between">
-          <strong>${a.item||'(款式待定)'}</strong>
-          <span class="tag ${c}">${s}</span>
-        </div>
-        <div class="text-muted mt-1" style="font-size:12px">📅 ${a.date} ⏰ ${a.startTime}-${a.endTime}</div>
-        ${a.note?'<div class="text-muted mt-1" style="font-size:11px">备注：'+a.note+'</div>':''}
-        ${a.status==='pending'?'<p class="text-muted mt-1" style="font-size:11px">⏳ 等待店家确认</p>':a.status==='confirmed'?'<p class="text-success mt-1" style="font-size:11px">✓ 预约已确认，请准时到店</p>':''}
+    const canEdit=a.status==='pending'&&!a.depositPaid;
+    const canPayDeposit=a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid;
+    const canCancel=a.status!=='cancelled'&&a.status!=='completed';
+    return `<div class="card" style="margin-bottom:12px;box-shadow:var(--shadow-2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <strong>${a.styleNames&&a.styleNames.length?a.styleNames.join(' + '):a.item||'(款式待定)'}</strong>
+        <span class="tag ${c}">${s}</span>
+      </div>
+      <div class="text-muted" style="font-size:12px">📅 ${a.date} ⏰ ${a.startTime}-${a.endTime}</div>
+      ${imgs.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${imgs.slice(0,4).map(o=>`<img src="${o.image}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="showImgPreview('${o.image}')">`).join('')}${imgs.length>4?`<div style="width:60px;height:60px;background:var(--bg-2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:12px">+${imgs.length-4}</div>`:''}</div>`:''}
+      ${a.note?`<div class="text-muted mt-1" style="font-size:11px">备注：${a.note}</div>`:''}
+      ${a.quotedPrice?`<div style="margin-top:8px;padding:10px 12px;background:#fffaf8;border-radius:8px;font-size:13px">
+        <div>💵 报价：<strong style="color:var(--primary-dark);font-size:16px">¥${(+a.quotedPrice).toFixed(0)}</strong>${a.deposit?` · 定金 ¥${a.deposit}`:''}</div>
+        ${a.depositPaid?'<div class="text-success" style="font-size:11px;margin-top:3px">✓ 定金已付</div>':'<div class="text-muted" style="font-size:11px;margin-top:3px">⏳ 待付定金</div>'}
+      </div>`:''}
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        ${canPayDeposit?`<button class="btn sm primary" onclick="payDeposit('${a.id}')">💰 支付定金 ¥${a.deposit||Math.round((+a.quotedPrice)*0.3)}</button>`:''}
+        ${canEdit?`<button class="btn sm" onclick="customerAppointEdit('${a.id}')">✏️ 修改</button>`:''}
+        ${canCancel?`<button class="btn sm danger" onclick="cancelMyAppt('${a.id}')">取消</button>`:''}
       </div>
     </div>`;
-  }).join('');
+  };
+  return `
+    <div class="sch-tabs" style="margin-bottom:14px">
+      ${keys.map(k=>`<div class="sch-tab ${active===k?'active':''}" onclick="window._myTab='${k}';renderCustomerPage()">${labels[k]} (${counts[k]})</div>`).join('')}
+    </div>
+    ${arr.length?arr.map(renderCard).join(''):'<div class="empty"><div class="icon">📭</div>暂无</div>'}
+  `;
+}
+
+function showImgPreview(url){
+  showModal('图片预览',`<div style="text-align:center"><img src="${url}" style="max-width:100%;max-height:70vh;border-radius:8px"></div>`);
+}
+
+function payDeposit(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a)return;
+  const dep=a.deposit||Math.round((+a.quotedPrice)*0.3);
+  if(!confirm(`确认支付定金 ¥${dep}？（支付后将自动通知店家确认预约）`))return;
+  a.deposit=dep;
+  a.depositPaid=true;
+  a.depositPaidAt=Date.now();
+  a.status='confirmed';
+  DB.transactions.unshift({
+    id:genId('tx'),date:ymd(new Date()),type:'定金',
+    amount:dep,name:'预约定金-'+(a.styleNames&&a.styleNames.join('+')||a.item),
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'customer_deposit',apptId:a.id,payMethod:'wechat'
+  });
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  toast('已支付定金，期待您的光临 ✨');
+  renderCustomerPage();
+}
+
+function customerAppointEdit(id){
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  _cuStyles=[];
+  const names=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:['']);
+  const byName=(a.imagesByName||[]).reduce((m,o)=>{m[o.name]=o.image;return m;},{});
+  const others=(a.images||[]).filter(u=>!Object.values(byName).includes(u));
+  names.forEach((n,i)=>{
+    _cuStyles.push({id:genId('st'),name:n,image:byName[n]||(i===0?others[0]||'':'')});
+  });
+  if(!_cuStyles.length)_cuStyles=[{id:genId('st'),name:'',image:''}];
+  showModal('✏️ 修改预约',customerAppointForm().replace(/<button[^>]*onclick="submitCustomerAppoint\(\)">[^<]+<\/button>/,`<button class="btn primary" style="width:100%;padding:14px" onclick="saveCustomerAppointEdit('${a.id}')">💾 保存修改</button>`),``);
+}
+function saveCustomerAppointEdit(id){
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  const name=document.getElementById('cu-name').value.trim();
+  const phone=document.getElementById('cu-phone').value.trim();
+  const date=document.getElementById('cu-date').value;
+  const time=document.getElementById('cu-time').value;
+  const note=document.getElementById('cu-note').value.trim();
+  if(!name||!phone||!date||!time){toast('请完整填写姓名/手机/日期/时间');return;}
+  const styles=_cuStyles.map(r=>({name:(r.name||'').trim(),image:r.image||''})).filter(r=>r.name||r.image);
+  if(!styles.length){toast('请至少填写一个款式名称');return;}
+  a.name=name;a.phone=phone;a.date=date;a.startTime=time;
+  a.styleNames=styles.map(s=>s.name);
+  a.item=styles.map(s=>s.name).join('+');
+  a.images=styles.map(s=>s.image).filter(Boolean);
+  a.imagesByName=styles.filter(s=>s.image).map(s=>({name:s.name,image:s.image}));
+  a.note=note;
+  // 若已报价被修改 → 重新进入待报价
+  a.quotedPrice=0;a.deposit=0;a.depositPaid=false;
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  toast('已保存修改，店家将重新报价');
+  renderCustomerPage();
 }
 
 function cancelMyAppt(id){
@@ -2248,6 +4098,333 @@ function cancelMyAppt(id){
 }
 function deleteMyAppt(id){
   // 客户端无法删除，只能取消
+}
+
+/* =============================================================
+   客户端「打卡送礼」页：签到 / 兑换 / 推荐 / 晒图 / 明细
+   ============================================================= */
+let GTAB='signin';
+function customerGift(){
+  const c=DB.customers.find(x=>x.id===customerCurrentId);
+  if(!c)return `
+    <div style="text-align:center;padding:44px 20px">
+      <div style="font-size:52px">🎁</div>
+      <h2 style="margin:10px 0 6px">打卡送礼</h2>
+      <p class="text-muted mb-3">签到攒积分、兑好礼、邀好友<br>先完成一次预约即可解锁</p>
+      <button class="btn primary" onclick="location.hash='#customer/appoint'" style="padding:12px 28px">去预约 →</button>
+    </div>`;
+
+  const rw=RW();
+  const pts=+c.points||0;
+  const soon=(expiringSoonList()||[]).find(x=>x.customerId===c.id);
+  const tabs=[['signin','📅 签到'],['shop','🎁 兑好礼'],['mine','🎫 我的券'],['invite','👭 邀好友'],['log','📋 明细']];
+
+  let body='';
+  if(GTAB==='signin')body=cuGiftSignin(c);
+  else if(GTAB==='shop')body=cuGiftShop(c);
+  else if(GTAB==='mine')body=cuGiftMine(c);
+  else if(GTAB==='invite')body=cuGiftInvite(c);
+  else body=cuGiftLog(c);
+
+  return `
+    <div class="user-card">
+      <div class="user-row"><div class="user-name">🎁 ${c.name} 的积分中心</div></div>
+      <div style="font-size:38px;font-weight:700;line-height:1.2;margin-top:4px">${pts}<span style="font-size:14px;font-weight:400;opacity:.85"> 分</span></div>
+      <div style="font-size:11.5px;opacity:.9;margin-top:2px">
+        ${isDoubleDay()?`🎉 今天是${rw.doubleDay.label||'双倍积分日'}，消费积分 ×${rw.doubleDay.multiplier}`:'积分可抵现金、换服务、换优惠券'}
+      </div>
+    </div>
+    ${soon?`<div class="tip-block" style="border-left-color:var(--danger);background:#fff5f5">
+      <div class="t">⏰ 积分即将过期</div>
+      <div class="c">您有 <strong style="color:var(--danger)">${soon.points}</strong> 分将在 <strong>${ymd(new Date(soon.soonest))}</strong> 过期，记得尽快使用～</div>
+    </div>`:''}
+    <div class="cu-gtabs">
+      ${tabs.map(([k,l])=>`<div class="cu-gtab ${GTAB===k?'active':''}" onclick="GTAB='${k}';renderCustomerPage()">${l}</div>`).join('')}
+    </div>
+    ${body}
+  `;
+}
+
+/* --- Tab 1：每日签到 --- */
+function cuGiftSignin(c){
+  const cfg=RW().signin;
+  if(!cfg.enabled)return '<div class="empty"><div class="icon">📅</div>签到活动暂未开启</div>';
+  const done=todaySignedIn(c.id);
+  const streak=signinStreak(c.id);
+  // 近 7 天签到点
+  const dots=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=ymd(d);
+    dots.push({ds,label:['日','一','二','三','四','五','六'][d.getDay()],
+      on:DB.signins.some(s=>s.customerId===c.id&&s.date===ds),today:i===0});
+  }
+  const bonus=(cfg.streakBonus||[]).slice().sort((a,b)=>a.days-b.days);
+  const next=bonus.find(b=>b.days>streak);
+  const thisMonth=DB.signins.filter(s=>s.customerId===c.id&&s.date.startsWith(ymd(new Date()).slice(0,7))).length;
+
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2);text-align:center">
+      <div class="card-title" style="justify-content:center">📅 每日签到 · 每天 +${cfg.dailyPoints} 分</div>
+      <div style="display:flex;justify-content:space-between;gap:4px;margin:14px 0 16px">
+        ${dots.map(d=>`
+          <div style="flex:1;text-align:center">
+            <div class="cu-dot ${d.on?'on':''} ${d.today?'today':''}">${d.on?'✓':''}</div>
+            <div style="font-size:10.5px;color:${d.today?'var(--primary)':'#aaa'};margin-top:4px">${d.today?'今天':d.label}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn ${done?'':'primary'}" style="width:100%;padding:14px;font-size:15px" ${done?'disabled':''} onclick="cuDoSignin()">
+        ${done?'✅ 今日已签到':'🖐 立即签到 +'+cfg.dailyPoints+'分'}
+      </button>
+      <div style="display:flex;justify-content:space-around;margin-top:14px">
+        <div><div style="font-size:20px;font-weight:700;color:var(--primary)">${streak}</div><div class="text-muted" style="font-size:11px">连续签到(天)</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--primary)">${thisMonth}</div><div class="text-muted" style="font-size:11px">本月签到(天)</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--warning)">${DB.signins.filter(s=>s.customerId===c.id).length}</div><div class="text-muted" style="font-size:11px">累计签到(天)</div></div>
+      </div>
+      ${next?`<div class="text-muted" style="font-size:12px;margin-top:10px">再连签 <strong style="color:var(--primary)">${next.days-streak}</strong> 天，额外奖励 <strong style="color:var(--warning)">${next.points}</strong> 分 🎉</div>`:''}
+    </div>
+
+    ${bonus.length?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">🏆 连签奖励阶梯</div>
+      ${bonus.map(b=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border)">
+        <span>连续签到 <strong>${b.days}</strong> 天</span>
+        <span style="color:${streak>=b.days?'var(--success)':'var(--warning)'};font-weight:600">${streak>=b.days?'已达成 ✓':'+'+b.points+' 分'}</span>
+      </div>`).join('')}
+    </div>`:''}
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">⭐ 还能这样赚积分</div>
+      <div class="cu-way" onclick="GTAB='invite';renderCustomerPage()">
+        <span style="font-size:24px">👭</span>
+        <div style="flex:1"><strong>邀请好友到店</strong><div class="text-muted" style="font-size:11.5px">双方各得 ${RW().referral.referrerPoints} 分</div></div>
+        <span style="color:var(--primary)">去邀请 ›</span>
+      </div>
+      <div class="cu-way" onclick="GTAB='invite';renderCustomerPage()">
+        <span style="font-size:24px">📸</span>
+        <div style="flex:1"><strong>晒图到小红书/抖音</strong><div class="text-muted" style="font-size:11.5px">每次 +${RW().share.points} 分，每月最多 ${RW().share.maxPerMonth} 次</div></div>
+        <span style="color:var(--primary)">去晒图 ›</span>
+      </div>
+      <div class="cu-way" onclick="location.hash='#customer/appoint'">
+        <span style="font-size:24px">💅</span>
+        <div style="flex:1"><strong>到店消费</strong><div class="text-muted" style="font-size:11.5px">消费即累积积分${isDoubleDay()?'，今日双倍！':''}</div></div>
+        <span style="color:var(--primary)">去预约 ›</span>
+      </div>
+    </div>
+  `;
+}
+function cuDoSignin(){
+  const r=doSignin(customerCurrentId);
+  toast(r.msg);
+  if(r.ok)renderCustomerPage();
+}
+
+/* --- Tab 2：积分商城 --- */
+function cuGiftShop(c){
+  const list=DB.rewardItems.filter(i=>i.enabled);
+  if(!list.length)return '<div class="empty"><div class="icon">🎁</div>暂无可兑换奖品</div>';
+  const pts=+c.points||0;
+  const d=RW().deduct;
+  return `
+    ${d.enabled?`<div class="tip-block">
+      <div class="t">💰 积分抵现金</div>
+      <div class="c">${d.pointsPerYuan} 积分 = 1 元，单次最多抵 ${d.maxPercent}% 消费额<br>
+      您当前 ${pts} 分 ≈ 可抵 <strong style="color:var(--warning)">¥${(pts/d.pointsPerYuan).toFixed(2)}</strong>（结算时告知店家即可）</div>
+    </div>`:''}
+    <div class="cu-shop">
+      ${list.map(it=>{
+        const t=REWARD_TYPES[it.type]||REWARD_TYPES.service;
+        const can=pts>=it.points&&it.stock!==0;
+        return `<div class="cu-goods">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:30px">${it.icon||'🎁'}</div>
+            <span class="tag" style="background:${t.color};color:${t.text};font-size:10px">${t.label}</span>
+          </div>
+          <div style="font-weight:600;margin-top:6px;font-size:13.5px">${it.name}</div>
+          <div class="text-muted" style="font-size:11px;min-height:15px">${it.desc||''}${it.value?` · 价值¥${it.type==='coupon'&&it.value<1?(it.value*10).toFixed(1)+'折':it.value}`:''}</div>
+          <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="color:var(--warning);font-size:15px">${it.points}分</strong>
+            <span class="text-muted" style="font-size:10.5px">${it.stock<0?'不限量':'剩'+it.stock}</span>
+          </div>
+          <button class="btn sm ${can?'primary':''}" style="width:100%;margin-top:8px" ${can?'':'disabled'} onclick="cuRedeem('${it.id}')">
+            ${it.stock===0?'已兑完':can?'立即兑换':'还差'+(it.points-pts)+'分'}
+          </button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function cuRedeem(itemId){
+  const it=DB.rewardItems.find(x=>x.id===itemId);
+  if(!it)return;
+  if(!confirm(`确认用 ${it.points} 积分兑换「${it.name}」？`))return;
+  const r=redeemReward(customerCurrentId,itemId);
+  if(!r.ok){toast(r.msg);return;}
+  showModal('🎉 兑换成功',`
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:46px">${it.icon||'🎁'}</div>
+      <div style="font-weight:600;font-size:16px;margin:8px 0 4px">${it.name}</div>
+      <p class="text-muted" style="font-size:12.5px">到店向店家出示以下核销码</p>
+      <div style="font-size:34px;letter-spacing:6px;font-weight:700;color:var(--primary-dark);background:#fff7f5;border:2px dashed var(--primary);border-radius:10px;padding:14px;margin:12px 0">${r.code}</div>
+      <p class="text-muted" style="font-size:12px">也可在「我的券」中随时查看</p>
+    </div>`,
+    `<button class="btn primary" onclick="this.closest('.modal-mask').remove();GTAB='mine';renderCustomerPage()">查看我的券</button>`);
+  renderCustomerPage();
+}
+
+/* --- Tab 3：我的兑换券 --- */
+function cuGiftMine(c){
+  const mine=DB.redeems.filter(r=>r.customerId===c.id);
+  const cps=DB.coupons.filter(x=>x.customerId===c.id);
+  if(!mine.length&&!cps.length)return '<div class="empty"><div class="icon">🎫</div>还没有兑换记录<br><span style="font-size:12px">去「兑好礼」看看吧</span></div>';
+  const today=ymd(new Date());
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">🎫 我的兑换券（${mine.filter(r=>r.status==='unused').length} 张待使用）</div>
+      ${mine.map(r=>{
+        const used=r.status==='used';
+        return `<div class="cu-ticket ${used?'used':''}">
+          <div style="flex:1">
+            <div style="font-weight:600">${r.itemName}</div>
+            <div class="text-muted" style="font-size:11.5px">${r.date} 兑换 · 消耗 ${r.points} 分</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:19px;letter-spacing:2px;font-weight:700;color:${used?'#bbb':'var(--primary-dark)'}">${r.code}</div>
+            <div style="font-size:11px;color:${used?'#bbb':'var(--success)'}">${used?'已核销':'待使用'}</div>
+          </div>
+        </div>`;
+      }).join('')||'<p class="text-muted">暂无</p>'}
+    </div>
+    ${cps.length?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">💳 优惠券包</div>
+      ${cps.map(p=>{
+        const dead=p.status==='used'||p.expireDate<today;
+        return `<div class="cu-ticket ${dead?'used':''}">
+          <div style="flex:1">
+            <div style="font-weight:600">${p.name}</div>
+            <div class="text-muted" style="font-size:11.5px">有效期至 ${p.expireDate}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:17px;font-weight:700;color:${dead?'#bbb':'var(--warning)'}">${p.kind==='discount'?(p.value*10).toFixed(1)+'折':'¥'+p.value}</div>
+            <div style="font-size:11px;color:${dead?'#bbb':'var(--success)'}">${p.status==='used'?'已使用':(p.expireDate<today?'已过期':'可使用')}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+  `;
+}
+
+/* --- Tab 4：邀好友 + 晒图 --- */
+function cuGiftInvite(c){
+  const rf=RW().referral, sh=RW().share;
+  const code=genReferralCode(c);
+  saveLocalOnly&&saveLocalOnly();
+  const link=location.origin+location.pathname+'?ref='+code+'#customer/appoint';
+  const mine=DB.referrals.filter(r=>r.referrerId===c.id);
+  const month=ymd(new Date()).slice(0,7);
+  const myShares=DB.shares.filter(s=>s.customerId===c.id);
+  const usedThisMonth=myShares.filter(s=>s.date.startsWith(month)&&s.status!=='rejected').length;
+
+  return `
+    ${rf.enabled?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">👭 邀请好友，双方各得 ${rf.referrerPoints} 分</div>
+      <p class="text-muted" style="font-size:12.5px;margin-bottom:10px">
+        把您的专属邀请码或链接发给闺蜜，她首次${rf.requireConsume?'到店消费':'预约'}后，你们双方各得 <strong style="color:var(--warning)">${rf.referrerPoints}</strong> / <strong style="color:var(--warning)">${rf.refereePoints}</strong> 积分。
+      </p>
+      <div style="background:#fff7f5;border:2px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">
+        <div class="text-muted" style="font-size:11.5px">我的专属邀请码</div>
+        <div style="font-size:26px;letter-spacing:3px;font-weight:700;color:var(--primary-dark);margin-top:2px">${code}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" style="flex:1" onclick="cuCopy('${code}')">复制邀请码</button>
+        <button class="btn sm primary" style="flex:1" onclick="cuCopy('${link.replace(/'/g,"\\'")}')">复制邀请链接</button>
+      </div>
+      ${mine.length?`<div style="margin-top:14px">
+        <div class="text-muted" style="font-size:12px;margin-bottom:6px">已邀请 ${mine.length} 人，到账 ${mine.filter(r=>r.status==='done').length} 人</div>
+        ${mine.map(r=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px">
+          <span>${r.refereeName}<span class="text-muted" style="font-size:11px"> · ${r.date}</span></span>
+          <span style="color:${r.status==='done'?'var(--success)':'var(--warning)'}">${r.status==='done'?'+'+r.referrerPoints+'分 已到账':'待她首次消费'}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+
+    ${sh.enabled?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">📸 晒图领积分 · 每次 +${sh.points} 分</div>
+      <p class="text-muted" style="font-size:12.5px;margin-bottom:10px">
+        在${(sh.platforms||[]).join(' / ')}发布带本店定位的美甲图或视频，把链接贴过来即可领积分。
+        本月已用 <strong>${usedThisMonth}</strong>/${sh.maxPerMonth} 次。
+      </p>
+      <div class="form-group"><label>发布平台</label>
+        <select id="cu-sh-plat">${(sh.platforms||[]).map(p=>`<option>${p}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>作品链接</label>
+        <input id="cu-sh-url" placeholder="粘贴小红书 / 抖音分享链接">
+      </div>
+      <div class="form-group"><label>备注（可选）</label>
+        <input id="cu-sh-note" placeholder="例如：发布于 3 月 8 日">
+      </div>
+      <button class="btn primary" style="width:100%" ${usedThisMonth>=sh.maxPerMonth?'disabled':''} onclick="cuSubmitShare()">
+        ${usedThisMonth>=sh.maxPerMonth?'本月已达上限':'提交领取 +'+sh.points+'分'}
+      </button>
+      ${myShares.length?`<div style="margin-top:14px">
+        ${myShares.slice(0,6).map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-size:12.5px">
+          <span>${s.platform}<span class="text-muted" style="font-size:11px"> · ${s.date}</span></span>
+          <span style="color:${s.status==='approved'?'var(--success)':s.status==='rejected'?'var(--danger)':'var(--warning)'}">
+            ${s.status==='approved'?'+'+s.points+'分 已通过':s.status==='rejected'?'未通过':'审核中'}
+          </span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+  `;
+}
+function cuCopy(txt){
+  const done=()=>toast('已复制，去粘贴给好友吧～');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>cuCopyFallback(txt,done));}
+  else cuCopyFallback(txt,done);
+}
+function cuCopyFallback(txt,done){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');done();}catch(e){prompt('请手动复制：',txt);}
+  ta.remove();
+}
+function cuSubmitShare(){
+  const plat=document.getElementById('cu-sh-plat').value;
+  const url=document.getElementById('cu-sh-url').value.trim();
+  const note=document.getElementById('cu-sh-note').value.trim();
+  if(!url){toast('请粘贴作品链接');return;}
+  const r=submitShare(customerCurrentId,plat,url,note);
+  toast(r.msg);
+  if(r.ok)renderCustomerPage();
+}
+
+/* --- Tab 5：积分明细 --- */
+function cuGiftLog(c){
+  const logs=DB.points_log.filter(l=>l.customerId===c.id).slice(0,60);
+  const cfg=RW().expire;
+  if(!logs.length)return '<div class="empty"><div class="icon">📋</div>还没有积分记录</div>';
+  const gained=logs.filter(l=>l.change>0).reduce((s,l)=>s+l.change,0);
+  const spent=logs.filter(l=>l.change<0).reduce((s,l)=>s-l.change,0);
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div style="display:flex;justify-content:space-around;text-align:center;padding:4px 0 10px">
+        <div><div style="font-size:20px;font-weight:700;color:var(--success)">+${gained}</div><div class="text-muted" style="font-size:11px">累计获得</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--danger)">-${spent}</div><div class="text-muted" style="font-size:11px">累计使用</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--warning)">${c.points||0}</div><div class="text-muted" style="font-size:11px">当前可用</div></div>
+      </div>
+      ${cfg.enabled?`<div class="text-muted" style="font-size:11.5px;text-align:center;border-top:1px dashed var(--border);padding-top:8px">积分自获得起 ${cfg.months} 个月内有效，过期前 ${cfg.remindDays} 天会提醒您</div>`:''}
+    </div>
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">📋 积分明细</div>
+      ${logs.map(l=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px">${l.reason||POINT_SOURCES[l.source]||'积分变动'}</div>
+            <div class="text-muted" style="font-size:11px">${l.date}${l.expireAt&&l.change>0?' · '+(l.expired?'已过期':'有效期至 '+ymd(new Date(l.expireAt))):''}</div>
+          </div>
+          <strong style="color:${l.change>0?'var(--success)':'var(--danger)'};font-size:15px">${l.change>0?'+':''}${l.change}</strong>
+        </div>`).join('')}
+    </div>
+  `;
 }
 
 function customerMember(){
@@ -2274,16 +4451,19 @@ function customerMember(){
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">
-      <div class="card-title">⭐ 我的积分</div>
+      <div class="card-title">
+        <span>⭐ 我的积分</span>
+        <span style="font-size:12px;color:var(--primary)" onclick="location.hash='#customer/gift'">打卡送礼 ›</span>
+      </div>
       <p style="font-size:30px;color:var(--warning);font-weight:700;margin-bottom:8px">${c.points||0}</p>
       <p class="text-muted">积分可兑换：</p>
       <ul style="font-size:12.5px;line-height:1.9;margin-top:8px">
-        <li>100分 = 卸甲服务</li>
-        <li>300分 = 单色补色</li>
-        <li>500分 = 手部护理</li>
-        <li>800分 = 限量贴纸包</li>
-        <li>100分 = 1元现金抵扣</li>
+        ${DB.rewardItems.filter(i=>i.enabled).map(i=>`<li>${i.points}分 = ${i.name}</li>`).join('')||'<li>暂无奖品</li>'}
+        ${RW().deduct.enabled?`<li>${RW().deduct.pointsPerYuan}分 = 1元现金抵扣</li>`:''}
       </ul>
+      ${RW().levelUp.enabled?`<div class="text-muted" style="font-size:11.5px;border-top:1px dashed var(--border);margin-top:10px;padding-top:8px">
+        积分自动升级：${[...RW().levelUp.rules].sort((a,b)=>a.points-b.points).map(r=>`${r.points}分→${(MEMBER_TIERS[String(r.amount)]||{}).name||r.amount}`).join(' · ')}
+      </div>`:''}
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">
@@ -2328,6 +4508,116 @@ function showModal(title,content,footer){
   mask.onclick=e=>{if(e.target===mask)mask.remove();};
   document.getElementById('modal-container').appendChild(mask);
   return mask;
+}
+
+/* =============================================================
+   报价（F3）：按款式分别定价，价格记忆快填，定金计算
+   ============================================================= */
+function openQuoteAppt(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a){toast('预约不存在');return;}
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const tier=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount]:null;
+  const discountRate=tier?tier.discount:1;
+  const items=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:['款式']);
+  const existedQuote=a.quotes||[];
+  const rows=items.map((n,i)=>{
+    const rec=existedQuote[i]||{};
+    const mem=recallPrices(n,5);
+    const fallback=DB.items.find(x=>x.name===n);
+    const suggestedPrice=rec.price||(fallback?fallback.price:0);
+    return {idx:i,name:n,suggestedPrice,discountRate,mem,rec};
+  });
+  const subtotal=rows.reduce((s,r)=>s+(+document.getElementById?0:(+r.rec.price||r.suggestedPrice||0)),0);
+  showModal(`💰 报价 · ${a.name||''}`,`
+    <div style="background:var(--bg-2);padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:12.5px">
+      <div>👤 ${a.name||''} ${a.phone||''} ${tier?`<span class="tag ${tier.tag}" style="margin-left:6px">${tier.name} ×${tier.discount}</span>`:''}</div>
+      <div>📅 ${a.date} ${a.startTime||''}-${a.endTime||''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="qrows">
+      ${rows.map(r=>`
+        <div style="padding:10px;border:1px solid var(--border);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <strong>${r.idx+1}. ${r.name}</strong>
+            ${r.mem.length?`<span style="font-size:11px;color:var(--text-light)">最近报价: ¥${r.mem.map(m=>m.price).join(' / ')}</span>`:''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="number" class="qp" data-idx="${r.idx}" value="${r.rec.price||r.suggestedPrice||0}" placeholder="¥" style="width:90px" oninput="recalcQuote()">
+            ${r.mem.length?`<select onchange="document.querySelector('.qp[data-idx=&quot;${r.idx}&quot;]').value=this.value;this.value='';recalcQuote()" style="width:auto;font-size:12px">
+              <option value="">📌 快捷输入…</option>
+              ${r.mem.map(m=>`<option value="${m.price}">¥${m.price} (${ymd(new Date(m.ts))})</option>`).join('')}
+            </select>`:''}
+            <span style="font-size:11px;color:var(--text-light)">折后：<strong id="qpf-${r.idx}">¥${((r.rec.price||r.suggestedPrice||0)*r.discountRate).toFixed(0)}</strong></span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:14px;padding:12px;background:#fffaf8;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;color:var(--text-light)">原价合计</div>
+        <div style="font-size:11px;color:#999">${tier?tier.name+' ×'+tier.discount+' 折扣已自动应用':'(非会员无折扣)'}</div>
+      </div>
+      <strong style="font-size:22px;color:var(--primary-dark)" id="qtotal">¥0</strong>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">定金 (¥)</label><input id="q-deposit" type="number" value="${DB.settings.depositAmount||50}" oninput="recalcQuote()"></div>
+      <div><label class="form-label">到期时间</label><input id="q-expire" type="datetime-local"></div>
+    </div>
+    <div class="text-muted" style="font-size:11px;margin-top:6px" id="q-tip"></div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="submitQuote('${a.id}')">✅ 发送报价</button>
+  `);
+  recalcQuote();
+}
+function recalcQuote(){
+  const rows=[...document.querySelectorAll('.qp')];
+  const tierTxt=document.querySelector('#qrows').parentElement.querySelector('.text-light,.text-muted')||null;
+  let rate=1;
+  const a=DB.appointments.find(x=>x.id===window._quotingAppt);
+  const cust=a&&a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  if(cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount])rate=MEMBER_TIERS[cust.membershipAmount].discount;
+  let orig=0,final=0;
+  rows.forEach(inp=>{
+    const p=parseFloat(inp.value)||0;
+    orig+=p;
+    const out=document.getElementById('qpf-'+inp.dataset.idx);
+    if(out)out.textContent='¥'+(p*rate).toFixed(0);
+  });
+  final=orig*rate;
+  document.getElementById('qtotal').textContent='¥'+final.toFixed(0);
+  const dep=parseFloat(document.getElementById('q-deposit')?.value)||0;
+  const tip=document.getElementById('q-tip');
+  if(tip){
+    if(dep>final){tip.innerHTML='<span class="text-danger">⚠️ 定金超过总金额，请调整</span>';}
+    else if(dep>0){tip.innerHTML=`客户需支付定金 <strong>¥${dep.toFixed(0)}</strong>，尾款到店付 <strong>¥${(final-dep).toFixed(0)}</strong>`;}
+  }
+}
+function submitQuote(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a)return;
+  const rows=[...document.querySelectorAll('.qp')];
+  const names=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:[]);
+  const quotes=rows.map((inp,i)=>({name:names[i]||('款式'+(i+1)),price:parseFloat(inp.value)||0}));
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const rate=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount].discount:1;
+  const origTotal=quotes.reduce((s,q)=>s+q.price,0);
+  const final=+(origTotal*rate).toFixed(0);
+  const deposit=Math.min(parseFloat(document.getElementById('q-deposit').value)||0,final);
+  const expire=document.getElementById('q-expire').value;
+  a.quotes=quotes;
+  a.quotedPrice=final;
+  a.quotedOriginal=origTotal;
+  a.deposit=deposit;
+  a.depositPaid=false;
+  a.status='pending'; // 等客户付定金
+  a.quotedAt=Date.now();
+  if(expire)a.quoteExpire=expire;
+  // 价格记忆
+  quotes.forEach(q=>{if(q.price>0)rememberPrice(q.name,q.price);});
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  renderRoute();
+  toast('已报价 ¥'+final+'（定金 ¥'+deposit+'），客户将在手机上看到');
 }
 
 function openNewAppointment(){
@@ -2420,11 +4710,21 @@ function openApptEditor(a){
     <label class="form-label mt-1">款式</label>
     <input id="ea-item" value="${a.item||''}" list="ea-list">
     <datalist id="ea-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+    <label class="form-label mt-1">指派美甲师</label>
+    <select id="ea-tech">
+      <option value="">未指派</option>
+      ${activeTechs().map(t=>{
+        const s=getShift(t.id,a.date);
+        const tip=s?(SHIFT_TYPES[s.type]?'（'+SHIFT_TYPES[s.type].label+'）':''):'（当日未排班）';
+        return `<option value="${t.id}" ${a.technicianId===t.id?'selected':''}>${t.name}${tip}</option>`;
+      }).join('')}
+    </select>
     <label class="form-label mt-1">备注</label>
     <textarea id="ea-note">${a.note||''}</textarea>
   `,`
     <button class="btn danger" onclick="DB.appointments=DB.appointments.filter(x=>x.id!=='${a.id}');saveDB();syncChannel();this.closest('.modal-mask').remove();renderCurrentRoute();toast('已删除')">删除</button>
     <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    ${(a.status!=='completed'&&a.status!=='cancelled')?`<button class="btn primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="document.querySelector('.modal-mask').remove();openQuickSettle('${a.id}')">💰 快速结算</button>`:''}
     <button class="btn primary" id="ea-save">保存</button>
   `);
   document.getElementById('ea-save').onclick=()=>{
@@ -2434,6 +4734,7 @@ function openApptEditor(a){
     a.startTime=document.getElementById('ea-time').value;
     a.endTime=document.getElementById('ea-end').value;
     a.item=document.getElementById('ea-item').value.trim();
+    a.technicianId=document.getElementById('ea-tech').value;
     a.note=document.getElementById('ea-note').value.trim();
     // 同步客户
     if(a.customerId){

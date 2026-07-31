@@ -376,7 +376,52 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
   .workspace-content{padding:14px;}
   .form-grid,.form-grid-3{grid-template-columns:1fr;}
   .modal{width:94vw;max-height:90vh;}
+  .sch-week{min-width:720px;}
+  .sch-month{min-width:640px;}
+  .tl-wrap{min-width:760px;}
 }
+
+/* ============ 排班管理 ============ */
+.sch-tabs{display:flex;gap:6px;background:var(--bg-2);padding:4px;border-radius:var(--radius-sm);width:fit-content;}
+.sch-tab{padding:6px 16px;border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-light);transition:.15s;}
+.sch-tab.active{background:#fff;color:var(--primary-dark);font-weight:600;box-shadow:var(--shadow-2);}
+.sch-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.sch-week{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+.sch-week th,.sch-week td{border:1px solid var(--border);padding:0;text-align:center;}
+.sch-week th{background:var(--bg-2);padding:8px 4px;font-weight:600;font-size:12px;color:var(--text-light);}
+.sch-week th.today{background:var(--primary-light);color:var(--primary-dark);}
+.sch-week td.tech-col{width:110px;text-align:left;padding:8px 10px;background:#fffdfd;}
+.sch-cell{min-height:52px;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:.15s;}
+.sch-cell:hover{filter:brightness(.96);}
+.sch-cell .s-name{font-weight:600;font-size:12px;}
+.sch-cell .s-time{font-size:10px;opacity:.75;}
+.sch-cell.empty{color:#d9cfcf;font-size:18px;background:#fff;}
+.tech-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none;}
+.tech-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;margin-bottom:8px;}
+.tech-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7a4a4a;font-size:14px;flex:none;}
+.shift-opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:2px solid transparent;cursor:pointer;margin-bottom:8px;}
+.shift-opt.sel{border-color:var(--primary-dark);}
+/* 月历 */
+.sch-month{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.sch-month .mh{background:var(--bg-2);text-align:center;padding:8px 0;font-size:12px;color:var(--text-light);font-weight:600;}
+.sch-month .md{background:#fff;min-height:84px;padding:5px 5px 6px;cursor:pointer;transition:.15s;}
+.sch-month .md:hover{background:var(--bg-2);}
+.sch-month .md.out{background:#fbf8f8;opacity:.45;}
+.sch-month .md.today .dnum{background:var(--primary-dark);color:#fff;}
+.sch-month .dnum{font-size:12px;font-weight:600;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;margin-bottom:3px;}
+.mchip{font-size:10px;line-height:1.5;border-radius:4px;padding:1px 4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 时间轴 */
+.tl-wrap{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;background:#fff;}
+.tl-head,.tl-row{display:flex;}
+.tl-head{background:var(--bg-2);border-bottom:1px solid var(--border);}
+.tl-name{width:110px;flex:none;padding:8px 10px;font-size:12px;border-right:1px solid var(--border);display:flex;align-items:center;gap:6px;}
+.tl-track{flex:1;position:relative;height:52px;background-image:repeating-linear-gradient(to right,var(--border) 0 1px,transparent 1px var(--tlstep));}
+.tl-head .tl-track{height:30px;background-image:none;display:flex;}
+.tl-tick{flex:1;font-size:10px;color:var(--text-light);text-align:left;padding:8px 0 0 3px;border-left:1px solid var(--border);}
+.tl-row{border-bottom:1px solid var(--border);}
+.tl-row:last-child{border-bottom:none;}
+.tl-block{position:absolute;top:6px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;}
+.tl-appt{position:absolute;top:28px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;background:var(--primary);color:#fff;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -397,6 +442,7 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
         <div class="nav-item active" data-route="dashboard"><span class="icon">🏠</span>工作台 <span class="badge" id="badge-noti" style="display:none">0</span></div>
         <div class="nav-item" data-route="appointment"><span class="icon">📅</span>预约管理 <span class="badge" id="badge-appoint" style="display:none">0</span></div>
         <div class="nav-item" data-route="order"><span class="icon">💰</span>报价开单</div>
+        <div class="nav-item" data-route="schedule"><span class="icon">🗓️</span>排班管理</div>
       </div>
       <div class="nav-group">
         <div class="nav-group-title">客户管理</div>
@@ -449,13 +495,98 @@ const DB_KEY='hemanli_db_v1';
 /* 云端同步基于 Supabase（免费、无需配置域名白名单）。
    工作台把 Provider 配置保存在 DB.settings.cloud 中，重载页面自动连接；
    客户端配置通过扫码链接 ?sb_url=...&sb_key=... 自动携带，无需手动填写。 */
-const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],technicians:[],shifts:[],priceMemory:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,depositAmount:50,imageMaxCount:6,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
 
 const MEMBER_TIERS={
   '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
   '500':{name:'银卡',amount:500,discount:0.9,tag:'silver',pointsRate:1.2,expireMonths:12,color:'#a8a8a8'},
   '1000':{name:'金卡',amount:1000,discount:0.8,tag:'gold',pointsRate:1.5,expireMonths:12,color:'#d4a85a'}
 };
+
+/* 班次类型（排班用） */
+const SHIFT_TYPES={
+  morning:{label:'早班',short:'早',start:'09:00',end:'14:00',color:'#fef3c7',textColor:'#92400e'},
+  afternoon:{label:'中班',short:'中',start:'14:00',end:'18:00',color:'#dbeafe',textColor:'#1e40af'},
+  evening:{label:'晚班',short:'晚',start:'18:00',end:'21:00',color:'#ede9fe',textColor:'#5b21b6'},
+  fullday:{label:'全天',short:'全',start:'09:00',end:'21:00',color:'#dcfce7',textColor:'#166534'},
+  rest:{label:'休息',short:'休',start:'-',end:'-',color:'#f3f4f6',textColor:'#6b7280'}
+};
+const TECH_COLORS=['#f7c5c5','#c5e8f7','#d5f7c5','#f7e6c5','#e6c5f7','#c5f7f0','#f7d5c5','#f7c5e6'];
+const PAY_METHODS={cash:{label:'现金',icon:'💵'},wechat:{label:'微信',icon:'💚'},card:{label:'储值卡扣卡',icon:'💳'}};
+
+/* 图片压缩工具：客户端 File → Canvas 缩放到 800px → JPEG 0.6 → base64 dataURL */
+function compressImage(file,maxSide=800,quality=0.6){
+  return new Promise((resolve,reject)=>{
+    if(!file||!file.type||!file.type.startsWith('image/')){reject(new Error('不是图片'));return;}
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h&&w>maxSide){h=h*(maxSide/w);w=maxSide;}
+        else if(h>maxSide){w=w*(maxSide/h);h=maxSide;}
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.round(w);canvas.height=Math.round(h);
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const data=canvas.toDataURL('image/jpeg',quality);
+        resolve(data);
+      };
+      img.onerror=()=>reject(new Error('图片解码失败'));
+      img.src=ev.target.result;
+    };
+    reader.onerror=()=>reject(new Error('文件读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+/* 估算 base64 dataURL 字节数（用于 localStorage 容量检查） */
+function approxBytes(dataUrl){
+  if(!dataUrl)return 0;
+  const i=dataUrl.indexOf(',');
+  const b64=i>=0?dataUrl.slice(i+1):dataUrl;
+  return Math.ceil(b64.length*0.75);
+}
+/* 读取多个 File → 压缩后 base64 数组 */
+async function compressImageBatch(files,maxCount){
+  const list=Array.from(files).slice(0,maxCount);
+  const out=[];
+  for(const f of list){
+    try{out.push(await compressImage(f));}catch(e){console.warn('跳过:',f.name,e);}
+  }
+  return out;
+}
+/* 价格记忆：写入（同名覆盖去重，限 100 条） */
+function rememberPrice(itemName,price){
+  if(!itemName||!price)return;
+  const key=(itemName||'').trim();
+  if(!key)return;
+  DB.priceMemory=DB.priceMemory.filter(p=>p.itemName!==key);
+  DB.priceMemory.unshift({itemName:key,price:+price,ts:Date.now()});
+  if(DB.priceMemory.length>100)DB.priceMemory=DB.priceMemory.slice(0,100);
+}
+/* 查找与 itemName 相关的历史价格（用于报价快捷输入） */
+function recallPrices(itemName,limit=5){
+  if(!itemName)return DB.priceMemory.slice(0,limit);
+  const key=itemName.trim();
+  return DB.priceMemory.filter(p=>p.itemName===key||p.itemName.includes(key)||key.includes(p.itemName)).slice(0,limit);
+}
+/* 周一日期工具：返回 YYYY-MM-DD 字符串 */
+function getWeekStart(d){
+  const dt=new Date(d);
+  const day=dt.getDay()||7; // 周日=0 转为 7
+  dt.setDate(dt.getDate()-day+1);
+  return ymd(dt);
+}
+function getWeekDates(weekStartStr){
+  const out=[];
+  const base=new Date(weekStartStr);
+  for(let i=0;i<7;i++){
+    const d=new Date(base);d.setDate(base.getDate()+i);
+    out.push({date:ymd(d),day:i,dayLabel:'周'+['一','二','三','四','五','六','日'][i]});
+  }
+  return out;
+}
 
 function loadDB(){
   try{
@@ -464,12 +595,58 @@ function loadDB(){
       const merged=Object.assign({},SCHEMA,data);
       merged.settings=Object.assign({},SCHEMA.settings,data.settings||{});
       merged.settings.cloud=Object.assign({},SCHEMA.settings.cloud,(data.settings&&data.settings.cloud)||{});
+      merged.technicians=merged.technicians||[];
+      merged.shifts=merged.shifts||[];
+      merged.priceMemory=merged.priceMemory||[];
+      // 字段迁移：shift→type、level→role
+      merged.shifts.forEach(s=>{if(!s.type&&s.shift)s.type=s.shift;});
+      merged.technicians.forEach(t=>{if(!t.role)t.role=t.level||'美甲师';if(t.active===undefined)t.active=true;if(!t.skills)t.skills=[];});
+      // 老数据兼容：为已有预约补默认值
+      if(merged.appointments){
+        merged.appointments.forEach(a=>{
+          if(a.images===undefined)a.images=[];
+          if(a.styleNames===undefined)a.styleNames=[];
+          if(a.quotedPrice===undefined)a.quotedPrice=0;
+          if(a.deposit===undefined)a.deposit=0;
+          if(a.depositPaid===undefined)a.depositPaid=false;
+          if(!a.payMethod)a.payMethod='cash';
+          if(a.technicianId===undefined)a.technicianId='';
+          if(!a.item&&a.styleNames&&a.styleNames[0])a.item=a.styleNames.join('+');
+        });
+      }
       return merged;
     }
   }catch(e){}
   const init=Object.assign({},SCHEMA);
   // 初始化示例数据
   init.memberships=[{id:'m300',amount:300,discount:0.95,name:'储值卡',pointsRate:1.0,expireMonths:12},{id:'m500',amount:500,discount:0.9,name:'银卡',pointsRate:1.2,expireMonths:12},{id:'m1000',amount:1000,discount:0.8,name:'金卡',pointsRate:1.5,expireMonths:12}];
+  // 示例美甲师
+  init.technicians=[
+    {id:'t_jiajia',name:'佳佳',role:'高级美甲师',skills:['法式','猫眼','手绘'],phone:'',color:'#f7c5c5',active:true,createdAt:Date.now()},
+    {id:'t_siyuan',name:'思远',role:'美睫师',skills:['美睫','日式加固'],phone:'',color:'#c5e8f7',active:true,createdAt:Date.now()}
+  ];
+  // 示例班次：本周 5 天排班
+  const weekStart=getWeekStart(new Date());
+  const dates=getWeekDates(weekStart);
+  init.shifts=[
+    {id:'s_d1_jiajia',technicianId:'t_jiajia',date:dates[0].date,type:'morning'},
+    {id:'s_d2_jiajia',technicianId:'t_jiajia',date:dates[1].date,type:'afternoon'},
+    {id:'s_d3_jiajia',technicianId:'t_jiajia',date:dates[2].date,type:'fullday'},
+    {id:'s_d4_jiajia',technicianId:'t_jiajia',date:dates[3].date,type:'rest'},
+    {id:'s_d5_jiajia',technicianId:'t_jiajia',date:dates[4].date,type:'fullday'},
+    {id:'s_d1_siyuan',technicianId:'t_siyuan',date:dates[0].date,type:'afternoon'},
+    {id:'s_d2_siyuan',technicianId:'t_siyuan',date:dates[1].date,type:'fullday'},
+    {id:'s_d3_siyuan',technicianId:'t_siyuan',date:dates[2].date,type:'rest'},
+    {id:'s_d4_siyuan',technicianId:'t_siyuan',date:dates[3].date,type:'evening'},
+    {id:'s_d5_siyuan',technicianId:'t_siyuan',date:dates[4].date,type:'morning'}
+  ];
+  // 示例价格记忆
+  init.priceMemory=[
+    {itemName:'本甲单色',price:80,ts:Date.now()-86400000*5},
+    {itemName:'本甲猫眼',price:150,ts:Date.now()-86400000*4},
+    {itemName:'甲片款式',price:280,ts:Date.now()-86400000*3},
+    {itemName:'复杂款手绘',price:580,ts:Date.now()-86400000*2}
+  ];
   init.items=[
     {id:'i1',name:'本甲单色',price:80,duration:60,category:'本甲',hot:false},
     {id:'i2',name:'本甲法式',price:120,duration:90,category:'本甲',hot:true},
@@ -569,7 +746,7 @@ const CLOUD={
     this.apptPoll=setInterval(async()=>{const list=await this.fetchAppts(phone);cb(list);},5000);
   },
   stopPoll(){if(this.apptPoll){clearInterval(this.apptPoll);this.apptPoll=null;}},
-  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,appointments:[]}},
+  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,technicians:DB.technicians,shifts:DB.shifts,priceMemory:DB.priceMemory,appointments:[]}},
   async pushDB(){
     if(!this.ready)return false;
     try{const{error}=await this.sb.from("sync").upsert({id:"main",data:this.dbFragment()});if(error){console.warn("pushDB",error);return false;}return true;}catch(e){return false;}
@@ -776,6 +953,7 @@ function renderRoute(){
     appointment:'预约管理',
     order:'报价开单',
     customer:'客户档案',
+    schedule:'排班管理',
     member:'会员管理',
     points:'积分中心',
     marketing:'营销管理',
@@ -790,6 +968,7 @@ function renderRoute(){
     dashboard:renderDashboard,
     appointment:renderAppointment,
     order:renderOrder,
+    schedule:renderSchedule,
     customer:renderCustomer,
     member:renderMember,
     points:renderPoints,
@@ -1226,6 +1405,323 @@ function deleteFinance(id){
   if(!confirm('删除？'))return;
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+
+/* =============================================================
+   排班管理（美甲师管理 + 周视图 + 月历全局视图 + 日时间轴）
+   ============================================================= */
+let SCH={view:'week',week:getWeekStart(new Date()),month:'',day:ymd(new Date())};
+SCH.month=SCH.day.slice(0,7);
+
+function techById(id){return DB.technicians.find(t=>t.id===id)||null;}
+function activeTechs(){return DB.technicians.filter(t=>t.active!==false);}
+function getShift(techId,date){return DB.shifts.find(s=>s.technicianId===techId&&s.date===date)||null;}
+function setShift(techId,date,type){
+  const i=DB.shifts.findIndex(s=>s.technicianId===techId&&s.date===date);
+  if(!type){if(i>=0)DB.shifts.splice(i,1);}
+  else if(i>=0)DB.shifts[i].type=type;
+  else DB.shifts.push({id:genId('sh'),technicianId:techId,date,type});
+  saveDB();syncChannel();
+}
+function shiftsOfDate(date){return DB.shifts.filter(s=>s.date===date&&s.type!=='rest');}
+function apptsOfDate(date){return DB.appointments.filter(a=>a.date===date&&a.status!=='cancelled');}
+
+function renderSchedule(el){
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>💇‍♀️ 美甲师管理 (${DB.technicians.length})</span>
+        <button class="btn sm" onclick="openTechEdit()">＋ 添加美甲师</button>
+      </div>
+      <div id="tech-list" class="mt-2"></div>
+    </div>
+    <div class="card mt-2">
+      <div class="card-title">
+        <span>🗓️ 排班表</span>
+        <div class="sch-tabs">
+          <div class="sch-tab ${SCH.view==='week'?'active':''}" onclick="switchSchView('week')">周视图</div>
+          <div class="sch-tab ${SCH.view==='month'?'active':''}" onclick="switchSchView('month')">月视图</div>
+          <div class="sch-tab ${SCH.view==='day'?'active':''}" onclick="switchSchView('day')">时间轴</div>
+        </div>
+      </div>
+      <div id="sch-body" class="mt-2"></div>
+    </div>
+  `;
+  renderTechList();
+  renderSchBody();
+}
+
+function switchSchView(v){SCH.view=v;renderRoute();}
+
+function renderTechList(){
+  const t=document.getElementById('tech-list');if(!t)return;
+  if(!DB.technicians.length){t.innerHTML='<div class="empty"><div class="icon">💅</div>还没有美甲师，点击右上角添加</div>';return;}
+  t.innerHTML=DB.technicians.map(x=>{
+    const off=x.active===false;
+    return `<div class="tech-row" style="${off?'opacity:.5':''}">
+      <div class="tech-avatar" style="background:${x.color||'#f7c5c5'}">${(x.name||'?').slice(0,1)}</div>
+      <div style="flex:1;min-width:0">
+        <div><strong>${x.name}</strong>${off?'<span class="tag" style="margin-left:6px">已停用</span>':''}</div>
+        <div class="text-muted" style="font-size:12px">${x.role||'美甲师'}${x.phone?' · '+x.phone:''}${x.skills&&x.skills.length?' · '+x.skills.join('/'):''}</div>
+      </div>
+      <button class="btn sm" onclick="openTechEdit('${x.id}')">编辑</button>
+    </div>`;
+  }).join('');
+}
+
+function openTechEdit(id){
+  const t=id?techById(id):null;
+  const usedColors=DB.technicians.map(x=>x.color);
+  const defColor=t?t.color:(TECH_COLORS.find(c=>!usedColors.includes(c))||TECH_COLORS[DB.technicians.length%TECH_COLORS.length]);
+  showModal(t?'编辑美甲师':'添加美甲师',`
+    <div class="form-grid">
+      <div class="form-item"><label>姓名 *</label><input id="tk-name" value="${t?t.name:''}" placeholder="如：佳佳"></div>
+      <div class="form-item"><label>职位</label><input id="tk-role" value="${t?(t.role||''):'美甲师'}" placeholder="美甲师/美睫师/店长"></div>
+      <div class="form-item"><label>手机号</label><input id="tk-phone" value="${t?(t.phone||''):''}"></div>
+      <div class="form-item"><label>擅长项目（逗号分隔）</label><input id="tk-skills" value="${t&&t.skills?t.skills.join(','):''}" placeholder="法式,猫眼,美睫"></div>
+    </div>
+    <div class="form-item mt-1"><label>代表色</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="tk-colors">
+        ${TECH_COLORS.map(c=>`<div onclick="document.querySelectorAll('#tk-colors>div').forEach(d=>d.style.borderColor='transparent');this.style.borderColor='#c4797b';window._tkColor='${c}'"
+          style="width:30px;height:30px;border-radius:50%;background:${c};border:3px solid ${c===defColor?'#c4797b':'transparent'};cursor:pointer"></div>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+      <input type="checkbox" id="tk-active" ${!t||t.active!==false?'checked':''} style="width:auto"> 在职（停用后不出现在排班表）
+    </label></div>
+  `,`
+    ${t?`<button class="btn danger" onclick="deleteTech('${t.id}')">删除</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="saveTech('${id||''}')">保存</button>
+  `);
+  window._tkColor=defColor;
+}
+
+function saveTech(id){
+  const name=document.getElementById('tk-name').value.trim();
+  if(!name){toast('请填写姓名');return;}
+  const data={
+    name,
+    role:document.getElementById('tk-role').value.trim()||'美甲师',
+    phone:document.getElementById('tk-phone').value.trim(),
+    skills:document.getElementById('tk-skills').value.split(/[,，]/).map(s=>s.trim()).filter(Boolean),
+    color:window._tkColor||TECH_COLORS[0],
+    active:document.getElementById('tk-active').checked
+  };
+  if(id){Object.assign(techById(id),data);}
+  else DB.technicians.push(Object.assign({id:genId('tech')},data));
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已保存');
+}
+
+function deleteTech(id){
+  if(!confirm('删除该美甲师？其排班记录也会一并删除'))return;
+  DB.technicians=DB.technicians.filter(t=>t.id!==id);
+  DB.shifts=DB.shifts.filter(s=>s.technicianId!==id);
+  DB.appointments.forEach(a=>{if(a.technicianId===id)a.technicianId='';});
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已删除');
+}
+
+function renderSchBody(){
+  const b=document.getElementById('sch-body');if(!b)return;
+  if(SCH.view==='week')renderSchWeek(b);
+  else if(SCH.view==='month')renderSchMonth(b);
+  else renderSchDay(b);
+}
+
+/* ---- 周视图：美甲师 × 7天 ---- */
+function renderSchWeek(b){
+  const techs=activeTechs();
+  const dates=getWeekDates(SCH.week).map(x=>x.date);
+  const today=ymd(new Date());
+  const WD=['一','二','三','四','五','六','日'];
+  if(!techs.length){b.innerHTML='<div class="empty"><div class="icon">🗓️</div>请先添加美甲师</div>';return;}
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn sm" onclick="shiftWeek(-1)">‹ 上周</button>
+        <strong style="font-size:14px">${dates[0].slice(5)} ~ ${dates[6].slice(5)}</strong>
+        <button class="btn sm" onclick="shiftWeek(1)">下周 ›</button>
+        <button class="btn sm" onclick="SCH.week=getWeekStart(new Date());renderRoute()">本周</button>
+      </div>
+      <button class="btn sm primary" onclick="openBatchShift()">⚡ 批量排班</button>
+    </div>
+    <div class="sch-scroll"><table class="sch-week">
+      <tr><th style="width:110px">美甲师</th>${dates.map((d,i)=>`<th class="${d===today?'today':''}">周${WD[i]}<br><span style="font-weight:400">${d.slice(5)}</span></th>`).join('')}</tr>
+      ${techs.map(t=>`<tr>
+        <td class="tech-col"><div style="display:flex;align-items:center;gap:7px"><span class="tech-dot" style="background:${t.color}"></span><div><div style="font-weight:600;font-size:13px">${t.name}</div><div style="font-size:11px;color:#999">${t.role||''}</div></div></div></td>
+        ${dates.map(d=>{
+          const s=getShift(t.id,d);
+          const st=s?SHIFT_TYPES[s.type]:null;
+          return `<td><div class="sch-cell ${st?'':'empty'}" style="${st?`background:${st.color};color:${st.textColor}`:''}" onclick="openShiftPicker('${t.id}','${d}')">
+            ${st?`<div class="s-name">${st.label}</div><div class="s-time">${st.start==='-'?'—':st.start+'-'+st.end}</div>`:'＋'}
+          </div></td>`;
+        }).join('')}
+      </tr>`).join('')}
+    </table></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px">
+      ${Object.entries(SHIFT_TYPES).map(([k,v])=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:${v.color};display:inline-block"></span>${v.label} ${v.start==='-'?'':v.start+'-'+v.end}</span>`).join('')}
+    </div>
+  `;
+}
+function shiftWeek(n){
+  const d=new Date(SCH.week);d.setDate(d.getDate()+n*7);
+  SCH.week=ymd(d);renderRoute();
+}
+
+function openShiftPicker(techId,date){
+  const t=techById(techId);const cur=getShift(techId,date);
+  showModal(`${t.name} · ${date}`,`
+    <div id="shift-opts">
+      ${Object.entries(SHIFT_TYPES).map(([k,v])=>`
+        <div class="shift-opt ${cur&&cur.type===k?'sel':''}" style="background:${v.color};color:${v.textColor}" onclick="setShift('${techId}','${date}','${k}');document.querySelector('.modal-mask').remove();renderRoute();toast('已排班')">
+          <span style="font-weight:700;font-size:15px">${v.short}</span>
+          <div style="flex:1"><div style="font-weight:600">${v.label}</div><div style="font-size:11px;opacity:.8">${v.start==='-'?'不上班':v.start+' - '+v.end}</div></div>
+          ${cur&&cur.type===k?'<span>✓</span>':''}
+        </div>`).join('')}
+    </div>
+  `,`
+    ${cur?`<button class="btn danger" onclick="setShift('${techId}','${date}','');document.querySelector('.modal-mask').remove();renderRoute();toast('已清空')">清空排班</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+  `);
+}
+
+function openBatchShift(){
+  const techs=activeTechs();const dates=getWeekDates(SCH.week).map(x=>x.date);
+  const WD=['一','二','三','四','五','六','日'];
+  showModal('⚡ 批量排班（本周）',`
+    <div class="form-item"><label>选择美甲师</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${techs.map(t=>`<label style="display:flex;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--border);border-radius:20px;cursor:pointer">
+          <input type="checkbox" class="bs-tech" value="${t.id}" checked style="width:auto"><span class="tech-dot" style="background:${t.color}"></span>${t.name}</label>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label>选择日期</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${dates.map((d,i)=>`<label style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px">
+          <input type="checkbox" class="bs-date" value="${d}" ${i<5?'checked':''} style="width:auto">周${WD[i]}<span style="color:#999;font-size:10px">${d.slice(5)}</span></label>`).join('')}
+      </div>
+    </div>
+    <div class="form-item mt-1"><label>班次</label>
+      <select id="bs-type">${Object.entries(SHIFT_TYPES).map(([k,v])=>`<option value="${k}" ${k==='fullday'?'selected':''}>${v.label} ${v.start==='-'?'':v.start+'-'+v.end}</option>`).join('')}</select>
+    </div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="applyBatchShift()">应用</button>
+  `);
+}
+function applyBatchShift(){
+  const ts=[...document.querySelectorAll('.bs-tech:checked')].map(x=>x.value);
+  const ds=[...document.querySelectorAll('.bs-date:checked')].map(x=>x.value);
+  const type=document.getElementById('bs-type').value;
+  if(!ts.length||!ds.length){toast('请至少选择一位美甲师和一个日期');return;}
+  ts.forEach(t=>ds.forEach(d=>setShift(t,d,type)));
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast(`已排 ${ts.length*ds.length} 个班次`);
+}
+
+/* ---- 月视图：全局排班一览 ---- */
+function renderSchMonth(b){
+  const [y,m]=SCH.month.split('-').map(Number);
+  const first=new Date(y,m-1,1);
+  const start=new Date(first);start.setDate(1-((first.getDay()+6)%7));
+  const today=ymd(new Date());
+  const cells=[];
+  for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells.push(d);}
+  const WD=['一','二','三','四','五','六','日'];
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn sm" onclick="shiftMonth(-1)">‹</button>
+      <strong style="font-size:14px">${y}年${m}月</strong>
+      <button class="btn sm" onclick="shiftMonth(1)">›</button>
+      <button class="btn sm" onclick="SCH.month=ymd(new Date()).slice(0,7);renderRoute()">本月</button>
+      <span class="text-muted" style="font-size:12px;margin-left:auto">点击日期查看当天时间轴</span>
+    </div>
+    <div class="sch-scroll"><div class="sch-month">
+      ${WD.map(w=>`<div class="mh">周${w}</div>`).join('')}
+      ${cells.map(d=>{
+        const ds=ymd(d);const out=d.getMonth()!==m-1;
+        const ss=shiftsOfDate(ds);
+        const ac=apptsOfDate(ds).length;
+        return `<div class="md ${out?'out':''} ${ds===today?'today':''}" onclick="SCH.day='${ds}';SCH.view='day';renderRoute()">
+          <div class="dnum">${d.getDate()}</div>
+          ${ss.slice(0,3).map(s=>{
+            const t=techById(s.technicianId);const st=SHIFT_TYPES[s.type];
+            if(!t||!st)return '';
+            return `<div class="mchip" style="background:${st.color};color:${st.textColor}">${st.short}·${t.name}</div>`;
+          }).join('')}
+          ${ss.length>3?`<div class="mchip" style="background:#f3f4f6;color:#6b7280">+${ss.length-3}人</div>`:''}
+          ${ac?`<div style="font-size:10px;color:var(--primary-dark);margin-top:1px">📅${ac}单</div>`:''}
+        </div>`;
+      }).join('')}
+    </div></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px">
+      ${Object.entries(SHIFT_TYPES).filter(([k])=>k!=='rest').map(([k,v])=>`<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:14px;border-radius:3px;background:${v.color};display:inline-block"></span>${v.label}</span>`).join('')}
+    </div>
+  `;
+}
+function shiftMonth(n){
+  const [y,m]=SCH.month.split('-').map(Number);
+  const d=new Date(y,m-1+n,1);
+  SCH.month=ymd(d).slice(0,7);renderRoute();
+}
+
+/* ---- 日时间轴：各美甲师班次 + 预约占用 ---- */
+function renderSchDay(b){
+  const date=SCH.day;
+  const techs=activeTechs();
+  const H0=9,H1=21,SPAN=H1-H0;
+  const ticks=[];for(let h=H0;h<H1;h++)ticks.push(h);
+  const appts=apptsOfDate(date);
+  const pos=(t)=>{const {h,m}=parseHM(t);return ((h+m/60-H0)/SPAN)*100;};
+  const unassigned=appts.filter(a=>!a.technicianId||!techById(a.technicianId));
+  if(!techs.length){b.innerHTML='<div class="empty"><div class="icon">🗓️</div>请先添加美甲师</div>';return;}
+  b.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn sm" onclick="shiftDay(-1)">‹ 前一天</button>
+      <input type="date" value="${date}" style="width:auto" onchange="SCH.day=this.value;renderRoute()">
+      <button class="btn sm" onclick="shiftDay(1)">后一天 ›</button>
+      <button class="btn sm" onclick="SCH.day=ymd(new Date());renderRoute()">今天</button>
+      <span class="text-muted" style="font-size:12px;margin-left:auto">当日 ${appts.length} 个预约 · ${shiftsOfDate(date).length} 人上班</span>
+    </div>
+    <div class="sch-scroll"><div class="tl-wrap" style="--tlstep:${100/SPAN}%">
+      <div class="tl-head"><div class="tl-name">时间</div><div class="tl-track">${ticks.map(h=>`<div class="tl-tick">${String(h).padStart(2,'0')}:00</div>`).join('')}</div></div>
+      ${techs.map(t=>{
+        const s=getShift(t.id,date);const st=s?SHIFT_TYPES[s.type]:null;
+        const my=appts.filter(a=>a.technicianId===t.id);
+        let blk='';
+        if(st&&st.start!=='-'){
+          const L=pos(st.start),W=pos(st.end)-L;
+          blk=`<div class="tl-block" style="left:${L}%;width:${W}%;background:${st.color};color:${st.textColor}">${st.label} ${st.start}-${st.end}</div>`;
+        }else if(st){
+          blk=`<div class="tl-block" style="left:2px;background:#f3f4f6;color:#6b7280;padding:0 8px">休息</div>`;
+        }
+        const ab=my.map(a=>{
+          const st0=a.startTime||'10:00';
+          const L=pos(st0);
+          const W=Math.max((a.endTime?pos(a.endTime)-L:(1/SPAN)*100),5);
+          return `<div class="tl-appt" style="left:${L}%;width:${W}%" onclick="event.stopPropagation();editAppt('${a.id}')" title="${a.name||''} ${a.item||''}">${st0} ${a.name||''}</div>`;
+        }).join('');
+        return `<div class="tl-row">
+          <div class="tl-name"><span class="tech-dot" style="background:${t.color}"></span><span style="font-weight:600">${t.name}</span></div>
+          <div class="tl-track" onclick="openShiftPicker('${t.id}','${date}')" style="cursor:pointer">${blk}${ab}</div>
+        </div>`;
+      }).join('')}
+    </div></div>
+    ${unassigned.length?`<div class="mt-2" style="padding:10px 12px;background:var(--bg-2);border-radius:var(--radius-sm)">
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:6px">⚠️ 未指派美甲师的预约（${unassigned.length}）</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${unassigned.map(a=>`<span class="tag" style="cursor:pointer" onclick="editAppt('${a.id}')">${a.startTime||''} ${a.name||''}</span>`).join('')}
+      </div>
+    </div>`:''}
+  `;
+}
+function shiftDay(n){
+  const d=new Date(SCH.day);d.setDate(d.getDate()+n);
+  SCH.day=ymd(d);renderRoute();
 }
 
 /* 客户档案 */
@@ -2400,6 +2896,15 @@ function openApptEditor(a){
     <label class="form-label mt-1">款式</label>
     <input id="ea-item" value="${a.item||''}" list="ea-list">
     <datalist id="ea-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+    <label class="form-label mt-1">指派美甲师</label>
+    <select id="ea-tech">
+      <option value="">未指派</option>
+      ${activeTechs().map(t=>{
+        const s=getShift(t.id,a.date);
+        const tip=s?(SHIFT_TYPES[s.type]?'（'+SHIFT_TYPES[s.type].label+'）':''):'（当日未排班）';
+        return `<option value="${t.id}" ${a.technicianId===t.id?'selected':''}>${t.name}${tip}</option>`;
+      }).join('')}
+    </select>
     <label class="form-label mt-1">备注</label>
     <textarea id="ea-note">${a.note||''}</textarea>
   `,`
@@ -2414,6 +2919,7 @@ function openApptEditor(a){
     a.startTime=document.getElementById('ea-time').value;
     a.endTime=document.getElementById('ea-end').value;
     a.item=document.getElementById('ea-item').value.trim();
+    a.technicianId=document.getElementById('ea-tech').value;
     a.note=document.getElementById('ea-note').value.trim();
     // 同步客户
     if(a.customerId){

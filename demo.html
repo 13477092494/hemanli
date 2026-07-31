@@ -419,9 +419,10 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
    数据层 - localStorage包装
    ============================================================= */
 const DB_KEY='hemanli_db_v1';
-/* 云端默认环境 ID（工作台加载即自动连接、二维码自动携带）。如连接失败多为填成了 APPID，请改为控制台里带 -1g 后缀的「环境 ID」 */
-const CLOUD_ENV_DEFAULT='hml-d4grv6png088e8414';
-const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',envId:'',enabled:false}}};
+/* 云端同步基于 Supabase（免费、无需配置域名白名单）。
+   工作台把 Provider 配置保存在 DB.settings.cloud 中，重载页面自动连接；
+   客户端配置通过扫码链接 ?sb_url=...&sb_key=... 自动携带，无需手动填写。 */
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
 
 const MEMBER_TIERS={
   '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
@@ -453,6 +454,26 @@ function loadDB(){
     {id:'i8',name:'卸甲',price:30,duration:20,category:'护理',hot:false},
     {id:'i9',name:'贴钻每个',price:5,duration:10,category:'加项',hot:false,pointsMultiple:2}
   ];
+  /* ===== demo 演示数据：仅当本地无数据(首次打开)时注入，不影响真实数据 ===== */
+  const _t=Date.now(),_d=n=>{const x=new Date(_t+n*86400000);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
+  init.customers=[
+    {id:'c_demo1',name:'林小满',phone:'13800000001',points:120,createdAt:_t-30*86400000,membershipAmount:500,membershipExpire:_d(80)},
+    {id:'c_demo2',name:'苏念',phone:'13800000002',points:30,createdAt:_t-10*86400000},
+    {id:'c_demo3',name:'阿May',phone:'13800000003',points:0,createdAt:_t-2*86400000}
+  ];
+  init.appointments=[
+    {id:'a_demo1',name:'林小满',phone:'13800000001',customerId:'c_demo1',date:_d(1),startTime:'10:00',endTime:'11:30',item:'甲片款式',price:280,status:'confirmed',source:'workbench',createdAt:_t-86400000},
+    {id:'a_demo2',name:'苏念',phone:'13800000002',customerId:'c_demo2',date:_d(0),startTime:'14:00',endTime:'15:00',item:'本甲猫眼',price:150,status:'pending',source:'customer',createdAt:_t-3600000},
+    {id:'a_demo3',name:'阿May',phone:'13800000003',customerId:'c_demo3',date:_d(-3),startTime:'16:00',endTime:'17:00',item:'本甲单色',price:80,status:'completed',source:'workbench',createdAt:_t-4*86400000}
+  ];
+  init.transactions=[
+    {id:'t_demo1',date:_d(0),type:'收入',amount:280,category:'美甲',note:'甲片款式·林小满',createdAt:_t-3600000},
+    {id:'t_demo2',date:_d(-2),type:'收入',amount:150,category:'美甲',note:'本甲猫眼·苏念',createdAt:_t-2*86400000}
+  ];
+  init.points_log=[
+    {id:'pl_demo1',customerId:'c_demo1',customerName:'林小满',change:120,reason:'消费累计',date:_d(0),createdAt:_t-3600000},
+    {id:'pl_demo2',customerId:'c_demo2',customerName:'苏念',change:30,reason:'新客赠送',date:_d(-10),createdAt:_t-10*86400000}
+  ];
   return init;
 }
 function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));if(CLOUD.ready&&CLOUD.mode==='workbench'){CLOUD.pushDB();}}
@@ -475,95 +496,97 @@ channel.onmessage=e=>{
 };
 
 /* =============================================================
-   云端同步层 (腾讯云开发 CloudBase)
-   - 预约：每条预约一个文档存入集合 appointments；工作台 watch 全部，客户端按手机号过滤只看自己 → 隐私隔离
-   - 其它数据：存入集合 sync 文档 main（工作台间同步 + 备份），客户端不读取
-   - 环境 ID 通过 URL (?env=xxx) 给客户端，通过设置在工作台配置
+   云端同步层 (Supabase)
+   - 预约：每条预约 upsert 到表 appointments（id 唯一）；工作台 watch 全部，客户端按手机号过滤只看自己 → 隐私隔离
+   - 其它数据：upsert 到表 sync 文档 main（工作台间同步 + 备份），客户端不读取
+   - 客户端配置通过扫码链接 ?sb_url=...&sb_key=... 自动携带，无需手动填写
    ============================================================= */
 const CLOUD={
-  envId:'',app:null,db:null,ready:false,mode:null,
-  apptWatcher:null,dbWatcher:null,pollTimer:null,dbPollTimer:null,
-  status:'off',_scriptLoading:null,
+  url:"",key:"",sb:null,ready:false,mode:null,status:"off",
+  apptChannel:null,dbChannel:null,apptPoll:null,dbPoll:null,_scriptLoading:null,
   loadScript(){
-    if(window.tcb)return Promise.resolve(true);
+    if(window.supabase)return Promise.resolve(true);
     if(this._scriptLoading)return this._scriptLoading;
     this._scriptLoading=new Promise(res=>{
-      const s=document.createElement('script');
-      s.src='https://imgcache.qq.com/qcloud/tcbjs/1.10.4/tcb.js';
-      s.onload=()=>res(true);
-      s.onerror=()=>res(false);
-      document.head.appendChild(s);
+      const sc=document.createElement("script");
+      sc.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+      sc.onload=()=>res(true);
+      sc.onerror=()=>res(false);
+      document.head.appendChild(sc);
     });
     return this._scriptLoading;
   },
-  async init(envId,mode){
-    this.envId=envId;this.mode=mode;this.status='connecting';
+  async init(config,mode){
+    this.url=config.url;this.key=config.key;this.mode=mode;this.status="connecting";
+    if(!this.url||!this.key){this.status="error";return{ok:false,msg:"缺少 Supabase URL 或 Key"};}
     const ok=await this.loadScript();
-    if(!ok){this.status='error';return{ok:false,msg:'SDK加载失败（网络或被拦截）'}};
+    if(!ok){this.status="error";return{ok:false,msg:"SDK 加载失败（网络或被拦截）"};}
     try{
-      this.app=tcb.init({env:envId});
-      await this.app.auth({persistence:'local'}).anonymousAuthProvider().signIn();
-      this.db=this.app.database();
-      this.ready=true;this.status='online';
+      this.sb=supabase.createClient(this.url,this.key);
+      await this.sb.from("sync").select("id").limit(1);
+      this.ready=true;this.status="online";
       return{ok:true};
-    }catch(e){this.status='error';return{ok:false,msg:(e&&e.message)||String(e)};}
+    }catch(e){this.status="error";return{ok:false,msg:(e&&e.message)||String(e)};}
   },
-  /* 预约文档 */
   async pushAppt(a){
     if(!this.ready)return false;
-    try{await this.db.collection('appointments').doc(a.id).set(Object.assign({},a,{_phone:a.phone||''}));return true;}catch(e){console.warn('pushAppt',e);return false;}
+    try{const{error}=await this.sb.from("appointments").upsert({id:a.id,phone:a.phone||"",data:a});if(error){console.warn("pushAppt",error);return false;}return true;}catch(e){return false;}
   },
   async removeAppt(id){
     if(!this.ready)return false;
-    try{await this.db.collection('appointments').doc(id).remove();return true;}catch(e){console.warn('removeAppt',e);return false;}
+    try{await this.sb.from("appointments").delete().eq("id",id);return true;}catch(e){return false;}
   },
-  watchAppts(cb){
+  async fetchAppts(phone){
+    if(!this.ready)return [];
+    try{
+      let q=this.sb.from("appointments").select("data");
+      if(phone)q=q.eq("phone",phone);
+      const{data,error}=await q;
+      if(error)return [];
+      return (data||[]).map(r=>r.data).filter(Boolean);
+    }catch(e){return [];}
+  },
+  watchAppts(cb,phone){
     if(!this.ready)return;
     try{
-      this.db.collection('appointments').watch({
-        onChange:snap=>{try{const list=(snap.docs||[]).map(d=>{const{_phone,...rest}=d;return rest;});cb(list);}catch(e){}},
-        onError:err=>{console.warn('appt watch err→poll',err);this.startApptPoll(cb);}
-      });
-    }catch(e){this.startApptPoll(cb);}
+      if(this.sb.channel){
+        this.apptChannel=this.sb.channel("hemanli-appoint")
+          .on("postgres_changes",{event:"*",schema:"public",table:"appointments"},async()=>{const list=await this.fetchAppts(phone);cb(list);})
+          .subscribe();
+      }
+    }catch(e){console.warn("appt realtime",e);}
+    this.startApptPoll(cb,phone);
   },
-  startApptPoll(cb){
+  startApptPoll(cb,phone){
     this.stopPoll();
-    this.pollTimer=setInterval(async()=>{
-      try{const r=await this.db.collection('appointments').get();const list=(r.data||[]).map(d=>{const{_phone,...rest}=d;return rest;});cb(list);}catch(e){}
-    },5000);
+    this.apptPoll=setInterval(async()=>{const list=await this.fetchAppts(phone);cb(list);},5000);
   },
-  stopPoll(){if(this.pollTimer){clearInterval(this.pollTimer);this.pollTimer=null;}},
-  /* 其它数据（工作台间同步） */
+  stopPoll(){if(this.apptPoll){clearInterval(this.apptPoll);this.apptPoll=null;}},
   dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,appointments:[]}},
   async pushDB(){
     if(!this.ready)return false;
-    try{await this.db.collection('sync').doc('main').set({data:this.dbFragment(),ts:Date.now()});return true;}catch(e){console.warn('pushDB',e);return false;}
+    try{const{error}=await this.sb.from("sync").upsert({id:"main",data:this.dbFragment()});if(error){console.warn("pushDB",error);return false;}return true;}catch(e){return false;}
   },
   async pullDB(){
     if(!this.ready)return null;
-    try{const r=await this.db.collection('sync').doc('main').get();const d=(r.data||[])[0];return d&&d.data?d.data:null;}catch(e){return null;}
+    try{const{data,error}=await this.sb.from("sync").select("data").eq("id","main").single();if(error)return null;return data?data.data:null;}catch(e){return null;}
   },
   watchDB(cb){
     if(!this.ready)return;
     try{
-      this.db.collection('sync').doc('main').watch({
-        onChange:snap=>{try{const d=snap.docs&&snap.docs[0];if(d&&d.data)cb(d.data);}catch(e){}},
-        onError:err=>{console.warn('db watch err→poll',err);this.startDBPoll(cb);}
-      });
-    }catch(e){this.startDBPoll(cb);}
-  },
-  startDBPoll(cb){
-    if(this.dbPollTimer)return;
-    this.dbPollTimer=setInterval(async()=>{const f=await this.pullDB();if(f)cb(f);},6000);
-  },
-  stop(){
-    try{this.apptWatcher&&this.apptWatcher.close();}catch(e){}
-    try{this.dbWatcher&&this.dbWatcher.close();}catch(e){}
-    this.stopPoll();if(this.dbPollTimer){clearInterval(this.dbPollTimer);this.dbPollTimer=null;}
+      if(this.sb.channel){
+        this.dbChannel=this.sb.channel("hemanli-sync")
+          .on("postgres_changes",{event:"*",schema:"public",table:"sync"},async()=>{const f=await this.pullDB();if(f)cb(f);})
+          .subscribe();
+      }
+    }catch(e){console.warn("db realtime",e);}
+    if(this.dbPoll)return;
+    this.dbPoll=setInterval(async()=>{const f=await this.pullDB();if(f)cb(f);},6000);
   }
 };
 function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=0.08;o.start();setTimeout(()=>o.stop(),200);}catch(e){}}
-function getUrlEnv(){try{const m=location.href.match(/[?&]env=([^&#]+)/);return m?decodeURIComponent(m[1]):'';}catch(e){return'';}}
+/* 从扫码链接读取 Supabase 配置：?sb_url=...&sb_key=... */
+function getUrlCloud(){try{const u=location.href.match(/[?&]sb_url=([^&#]+)/);const k=location.href.match(/[?&]sb_key=([^&#]+)/);return{url:u?decodeURIComponent(u[1]):'',key:k?decodeURIComponent(k[1]):''}}catch(e){return{url:'',key:''}}}
 function renderCurrentRouteSafe(){if(currentMode==='workspace')renderCurrentRoute();else renderCustomerPage();}
 function ensureCustomerFromAppt(a){
   if(!a.name&&!a.phone)return;
@@ -613,9 +636,10 @@ function applyDB(frag){
 }
 async function startWorkbenchCloud(){
   const cfg=DB.settings.cloud;
-  const envId=(cfg&&cfg.envId)||CLOUD_ENV_DEFAULT;
-  if(!envId)return;
-  const r=await CLOUD.init(envId,'workbench');
+  const url=(cfg&&cfg.url)||'';
+  const key=(cfg&&cfg.key)||'';
+  if(!url||!key)return;
+  const r=await CLOUD.init({url,key},'workbench');
   if(!r.ok){toast('云端连接失败：'+r.msg);renderCloudStatus&&renderCloudStatus();return;}
   const frag=await CLOUD.pullDB();
   if(frag)applyDB(frag);
@@ -623,31 +647,35 @@ async function startWorkbenchCloud(){
   await CLOUD.pushDB();
   CLOUD.watchAppts(list=>applyAppts(list));
   CLOUD.watchDB(frag=>applyDB(frag));
-  DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
+  DB.settings.cloud={provider:'supabase',url,key,enabled:true};
   saveLocalOnly();
   toast('☁️ 云端同步已连接');
   renderCloudStatus&&renderCloudStatus();
 }
 async function enableCloudSync(){
-  const inp=document.getElementById('cloud-env');
-  const envId=inp?inp.value.trim():'';
-  if(!envId){toast('请填写环境ID');return;}
-  const r=await CLOUD.init(envId,'workbench');
+  const u=document.getElementById('sb-url');
+  const k=document.getElementById('sb-key');
+  const url=u?u.value.trim():'';
+  const key=k?k.value.trim():'';
+  if(!url||!key){toast('请填写 Supabase 的 Project URL 和 anon public key');return;}
+  const r=await CLOUD.init({url,key},'workbench');
   if(!r.ok){toast('连接失败：'+r.msg);renderCloudStatus();return;}
   const frag=await CLOUD.pullDB();
   if(frag)applyDB(frag);else await CLOUD.pushDB();
   for(const a of DB.appointments){await CLOUD.pushAppt(a);}
   CLOUD.watchAppts(list=>applyAppts(list));
   CLOUD.watchDB(frag=>applyDB(frag));
-  DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
+  DB.settings.cloud={provider:'supabase',url,key,enabled:true};
   saveLocalOnly();
   toast('☁️ 云端同步已开启');
   drawQRCode();
   const cl=document.getElementById('client-link');if(cl)cl.value=clientShareUrl();
   renderCloudStatus();
 }
-async function enableCloudClient(env){
-  const r=await CLOUD.init(env,'client');
+async function enableCloudClient(){
+  const {url,key}=getUrlCloud();
+  if(!url||!key)return;
+  const r=await CLOUD.init({url,key},'client');
   if(!r.ok){console.warn('cloud client init failed',r.msg);return;}
   const me=DB.customers.find(c=>c.id===customerCurrentId);
   if(me&&me.phone)CLOUD.watchAppts(list=>applyApptsForClient(list));
@@ -1795,24 +1823,40 @@ function renderSettings(el){
 
     <div class="card">
       <div class="card-title">☁️ 云端同步（跨设备实时）</div>
-      <p class="text-muted" style="font-size:12px;margin-bottom:10px">开启后，客户手机扫码提交的预约会<strong>实时</strong>推送到你的工作台（手机/iPad/电脑互通）。环境ID不是密钥，可公开。</p>
-      <label class="form-label">腾讯云开发 环境ID</label>
-      <input id="cloud-env" placeholder="如 hemanli-1gabc1234" value="${DB.settings.cloud&&DB.settings.cloud.envId||CLOUD_ENV_DEFAULT||''}">
+      <p class="text-muted" style="font-size:12px;margin-bottom:10px">开启后，客户手机扫码提交的预约会<strong>实时</strong>推送到你的工作台（手机/iPad/电脑互通）。基于 Supabase，<strong>免费</strong>且无需配置域名白名单。</p>
+      <label class="form-label">Supabase Project URL</label>
+      <input id="sb-url" placeholder="https://xxxx.supabase.co" value="${DB.settings.cloud&&DB.settings.cloud.url||''}">
+      <label class="form-label mt-2">anon public key（公开安全，可放心填写）</label>
+      <input id="sb-key" placeholder="eyJhbGciOi..." value="${DB.settings.cloud&&DB.settings.cloud.key||''}">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
         <button class="btn primary" onclick="enableCloudSync()">连接并开启</button>
-        <button class="btn" onclick="if(CLOUD.ready){CLOUD.pushDB();DB.appointments.forEach(a=>CLOUD.pushAppt(a));toast('已上传到云端')}else toast('请先开启云端')">⬆️ 上传本地</button>
-        <button class="btn" onclick="(async()=>{if(!CLOUD.ready){toast('请先开启云端');return;}const f=await CLOUD.pullDB();if(f)applyDB(f);const r=await CLOUD.db.collection('appointments').get();(r.data||[]).forEach(d=>{const{_phone,...rest}=d;const ex=DB.appointments.find(x=>x.id===rest.id);if(ex)Object.assign(ex,rest);else{DB.appointments.unshift(rest);ensureCustomerFromAppt(rest);}});saveLocalOnly();renderCurrentRoute();toast('已从云端下载')})()">⬇️ 从云端下载</button>
+        <button class="btn" onclick="if(CLOUD.ready){DB.appointments.forEach(a=>CLOUD.pushAppt(a));CLOUD.pushDB();toast('已上传到云端')}else toast('请先开启云端')">⬆️ 上传本地</button>
+        <button class="btn" onclick="(async()=>{if(!CLOUD.ready){toast('请先开启云端');return;}const f=await CLOUD.pullDB();if(f)applyDB(f);const list=await CLOUD.fetchAppts();list.forEach(a=>{const ex=DB.appointments.find(x=>x.id===a.id);if(ex)Object.assign(ex,a);else{DB.appointments.unshift(a);ensureCustomerFromAppt(a);}});saveLocalOnly();renderCurrentRoute();toast('已从云端下载')})()">⬇️ 从云端下载</button>
       </div>
       <div id="cloud-status">状态：${DB.settings.cloud&&DB.settings.cloud.enabled?'✅ 已开启（重载页面后自动连接）':'未开启'}</div>
       <details style="margin-top:10px">
         <summary class="text-muted" style="font-size:12px;cursor:pointer">首次使用设置步骤</summary>
         <ol style="font-size:12px;color:#888;padding-left:18px;line-height:1.7">
-          <li>注册并登录 <a href="https://cloud.tencent.com/product/tcb" target="_blank">腾讯云开发</a>（免费），新建一个环境，复制「环境ID」。</li>
-          <li>环境 → 登录授权 → 开启<b>匿名登录</b>。</li>
-          <li>数据库 → 新建集合 <code>appointments</code> 和 <code>sync</code> → 权限设为「所有用户可读写」。</li>
-          <li>环境 → 安全配置 → 添加授权域名 <code>13477092494.github.io</code>（否则浏览器跨域会被拦）。</li>
-          <li>把环境ID填到上方，点「连接并开启」。客户扫码的二维码会自动带上环境ID。</li>
+          <li>注册并登录 <a href="https://supabase.com" target="_blank">Supabase</a>（免费），新建一个项目。</li>
+          <li>左侧 <b>SQL Editor</b> → <b>New query</b>，粘贴下方建表语句并执行（建 <code>appointments</code>/<code>sync</code> 两张表，已开放匿名读写并开启实时）。</li>
+          <li><b>Project Settings → API</b>，复制 <b>Project URL</b> 与 <b>anon public key</b>。</li>
+          <li>把这两项填到上方，点「连接并开启」。客户扫码的二维码会自动带上配置，无需手动发给客户。</li>
         </ol>
+        <pre style="font-size:11px;background:#f6f6f6;padding:10px;border-radius:6px;overflow:auto;white-space:pre">create table if not exists public.appointments(
+  id text primary key,
+  phone text default '',
+  data jsonb
+);
+create table if not exists public.sync(
+  id text primary key,
+  data jsonb
+);
+alter table public.appointments enable row level security;
+create policy "anon all appt" on public.appointments for all to anon using (true) with check (true);
+alter table public.sync enable row level security;
+create policy "anon all sync" on public.sync for all to anon using (true) with check (true);
+alter publication supabase_realtime add table public.appointments;
+alter publication supabase_realtime add table public.sync;</pre>
       </details>
     </div>
 
@@ -1869,8 +1913,14 @@ function importData(e){
   r.readAsText(file);
 }
 function clientShareUrl(){
-  const env=(DB.settings.cloud&&DB.settings.cloud.envId)||CLOUD_ENV_DEFAULT||getUrlEnv()||'';
-  return location.origin+location.pathname+(env?('?env='+encodeURIComponent(env)):'')+'#customer';
+  const base=DB.settings.cloud&&DB.settings.cloud.url||'';
+  const key=DB.settings.cloud&&DB.settings.cloud.key||'';
+  const u=getUrlCloud();
+  const url=base||u.url, k=key||u.key;
+  let q='';
+  if(url){q+='?sb_url='+encodeURIComponent(url);}
+  if(k){q+=(q?'&':'?')+'sb_key='+encodeURIComponent(k);}
+  return location.origin+location.pathname+q+'#customer';
 }
 function drawQRCode(){
   const url=clientShareUrl();
@@ -1895,9 +1945,9 @@ function initCustomer(){
   const saved=localStorage.getItem('hemanli_customer_id');
   customerCurrentId=saved;
   renderCustomerPage();
-  // 客户端自动连接云端（环境ID来自扫码链接 ?env=）
-  const env=getUrlEnv();
-  if(env){enableCloudClient(env);}
+  // 客户端自动连接云端（配置来自扫码链接 ?sb_url=...&sb_key=...）
+  const c=getUrlCloud();
+  if(c.url&&c.key){enableCloudClient();}
 }
 
 function renderCustomerPage(){
@@ -2569,36 +2619,5 @@ init();
   });
 })();
 </script>
-
-<script>
-(function(){
-  try{
-    if(!DB.appointments||DB.appointments.length===0){
-      var c1={id:genId("c"),name:"小美",phone:"13800001111",points:120,birthday:"1995-08-20",membershipAmount:500,membershipExpire:"2026-12-31",createdAt:Date.now()-86400000*30};
-      var c2={id:genId("c"),name:"阿琳",phone:"13900002222",points:60,birthday:"1998-02-14",membershipAmount:0,createdAt:Date.now()-86400000*20};
-      var c3={id:genId("c"),name:"婷婷",phone:"13700003333",points:300,membershipAmount:1000,membershipExpire:"2026-10-10",createdAt:Date.now()-86400000*10};
-      DB.customers=[c1,c2,c3];
-      function ymd(d){d=new Date(d);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-      var t0=Date.now();
-      DB.appointments=[
-        {id:genId("a"),date:ymd(t0),startTime:"10:00",endTime:"12:00",customerId:c1.id,name:c1.name,phone:c1.phone,item:"猫眼",note:"老客户",status:"confirmed",source:"shop",createdAt:t0},
-        {id:genId("a"),date:ymd(t0+86400000),startTime:"14:00",endTime:"16:00",customerId:c3.id,name:c3.name,phone:c3.phone,item:"甲片款式",status:"pending",source:"customer",createdAt:t0},
-        {id:genId("a"),date:ymd(t0+86400000*3),startTime:"11:00",endTime:"12:30",customerId:c2.id,name:c2.name,phone:c2.phone,item:"本甲法式",status:"confirmed",source:"shop",createdAt:t0}
-      ];
-      DB.transactions=[
-        {id:genId("t"),date:ymd(t0),type:"收入",amount:280,category:"服务",note:"猫眼-小美",createdAt:t0},
-        {id:genId("t"),date:ymd(t0),type:"支出",amount:60,category:"耗材",note:"光疗胶",createdAt:t0}
-      ];
-      DB.points_log=[
-        {id:genId("p"),customerId:c1.id,name:c1.name,type:"消费",points:120,reason:"猫眼服务",date:ymd(t0)},
-        {id:genId("p"),customerId:c3.id,name:c3.name,type:"充值",points:300,reason:"金卡充值",date:ymd(t0)}
-      ];
-      saveDB();
-      if(currentMode==="workspace"){renderCurrentRoute();}else{renderCustomerPage();}
-    }
-  }catch(e){console.warn("demo seed",e);}
-})();
-</script>
-
 </body>
 </html>

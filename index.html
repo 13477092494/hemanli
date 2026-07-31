@@ -637,6 +637,8 @@ async function enableCloudSync(){
   DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
   saveLocalOnly();
   toast('☁️ 云端同步已开启');
+  drawQRCode();
+  const cl=document.getElementById('client-link');if(cl)cl.value=clientShareUrl();
   renderCloudStatus();
 }
 async function enableCloudClient(env){

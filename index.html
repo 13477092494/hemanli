@@ -1681,12 +1681,23 @@ function renderOrder(el){
         </div>
         <div id="order-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
       </div>
+      ${RW().deduct.enabled?`<div style="margin-top:14px">
+        <label class="form-label">⭐ 积分抵现（${RW().deduct.pointsPerYuan}分=1元，最多抵 ${RW().deduct.maxPercent}%）</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="order-use-pts" type="number" min="0" step="${RW().deduct.pointsPerYuan}" value="0" placeholder="使用积分数" oninput="recalcOrder()" style="flex:1">
+          <button class="btn sm" onclick="orderMaxPoints()">用满</button>
+          <button class="btn sm" onclick="document.getElementById('order-use-pts').value=0;recalcOrder()">清空</button>
+        </div>
+        <div id="order-ded-tip" class="text-muted mt-1" style="font-size:12px"></div>
+      </div>`:''}
     </div>
       </div>
       <div class="card" style="margin-top:14px;background:#fffaf8">
+        ${isDoubleDay()?`<div style="background:#fff7e6;border:1px solid #f6d68a;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:12.5px;color:#92400e">🎉 今天是<strong>${RW().doubleDay.label||'双倍积分日'}</strong>，消费积分自动 ×${RW().doubleDay.multiplier}</div>`:''}
         <div class="row">
           <div class="col">原价：<span id="order-original">¥0</span></div>
           <div class="col">会员折扣：<span id="order-discount">无</span></div>
+          <div class="col">积分抵现：<span id="order-deduct">¥0</span></div>
           <div class="col text-success"><strong>应付：<span id="order-final">¥0</span></strong></div>
         </div>
         <div class="text-muted mt-1" style="font-size:12px" id="order-points-tip">本次消费将获得积分：0 分</div>
@@ -1760,21 +1771,48 @@ function recalcOrder(){
     final=original*tier.discount;
     discountText=getMembershipName(orderState.customer.membershipAmount)+' ×'+tier.discount;
   }
+  // 积分抵现
+  let ptsCut=0,usePts=0,dedNote='';
+  const upEl=document.getElementById('order-use-pts');
+  if(orderState.customer&&upEl){
+    const want=Math.max(0,parseInt(upEl.value)||0);
+    const res=calcPointsDeduct(orderState.customer.id,final,want);
+    ptsCut=res.deductAmount;usePts=res.usablePoints;
+    dedNote=res.reason||`客户 ${orderState.customer.points||0} 分 · 可抵上限 ¥${res.maxAmount.toFixed(2)} · 本次抵 ¥${ptsCut.toFixed(2)}（消耗 ${usePts} 分）`;
+    final=Math.max(0,+(final-ptsCut).toFixed(2));
+  }else if(upEl){dedNote='请先选择客户';}
+  const dtEl=document.getElementById('order-ded-tip');if(dtEl)dtEl.textContent=dedNote;
+  const dEl=document.getElementById('order-deduct');if(dEl)dEl.textContent='-¥'+ptsCut.toFixed(2);
+
   const pointsEl=document.getElementById('order-points-tip');
   if(pointsEl){
     let rate=1.0;
     if(orderState.customer&&orderState.customer.membershipAmount&&MEMBER_TIERS[orderState.customer.membershipAmount]){rate=MEMBER_TIERS[orderState.customer.membershipAmount].pointsRate;}
     if(orderState.item&&orderState.item.pointsMultiple)rate*=orderState.item.pointsMultiple;
-    const pts=Math.floor(original*rate);
-    pointsEl.textContent=`本次消费将获得积分：${pts} 分 (倍率 ×${rate.toFixed(1)})`;
+    const dbl=isDoubleDay(document.getElementById('order-date')?.value);
+    const mul=dbl?(+RW().doubleDay.multiplier||2):1;
+    const pts=Math.floor(original*rate)*mul;
+    pointsEl.textContent=`本次消费将获得积分：${pts} 分 (倍率 ×${rate.toFixed(1)}${dbl?' · 双倍日 ×'+mul:''})`;
   }
   document.getElementById('order-original').textContent='¥'+original.toFixed(0);
   document.getElementById('order-discount').textContent=discountText;
-  document.getElementById('order-final').textContent='¥'+final.toFixed(0);
+  document.getElementById('order-final').textContent='¥'+final.toFixed(2);
   if(orderState.pay==='card')selectPayMethod('card');
   else{
     const tip=document.getElementById('order-card-tip');if(tip)tip.style.display='none';
   }
+}
+function orderMaxPoints(){
+  const c=orderState.customer;
+  if(!c){toast('请先选择客户');return;}
+  const itemPrice=orderState.item?orderState.item.price:0;
+  const manual=parseFloat(document.getElementById('order-amount')?.value)||0;
+  let base=manual||itemPrice;
+  if(c.membershipAmount&&MEMBER_TIERS[c.membershipAmount])base*=MEMBER_TIERS[c.membershipAmount].discount;
+  const d=RW().deduct;
+  const cap=Math.min(+c.points||0,Math.floor(base*(+d.maxPercent||20)/100*(+d.pointsPerYuan||100)));
+  document.getElementById('order-use-pts').value=Math.max(0,cap);
+  recalcOrder();
 }
 function submitOrder(){
   const date=document.getElementById('order-date').value;
@@ -1801,6 +1839,18 @@ function submitOrder(){
   const customer=DB.customers.find(c=>c.id===customerId);
   let final=original;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){final=original*MEMBER_TIERS[customer.membershipAmount].discount;}
+  // 积分抵现
+  let usePts=0,ptsCut=0;
+  const upEl=document.getElementById('order-use-pts');
+  if(customer&&upEl){
+    const want=Math.max(0,parseInt(upEl.value)||0);
+    if(want>0){
+      const res=calcPointsDeduct(customer.id,final,want);
+      if(res.deductAmount<=0&&res.reason){toast(res.reason);return;}
+      usePts=res.usablePoints;ptsCut=res.deductAmount;
+      final=Math.max(0,+(final-ptsCut).toFixed(2));
+    }
+  }
   // 扣卡校验
   const payMethod=orderState.pay||'cash';
   if(payMethod==='card'){
@@ -1837,16 +1887,22 @@ function submitOrder(){
       balanceAfter:(+customer.membershipBalance).toFixed(2)
     });
   }
-  // 积分自动计算（基于原价）
+  // 积分自动计算（基于原价，grantPoints 内自动应用双倍日 + 自动升级会员）
   let ptsRate=1.0;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){ptsRate=MEMBER_TIERS[customer.membershipAmount].pointsRate;}
   if(item&&item.pointsMultiple)ptsRate*=item.pointsMultiple;
-  const earned=Math.floor(original*ptsRate);
+  let earned=0;
   if(customer){
-    customer.points=(+customer.points||0)+earned;
-    DB.points_log.unshift({id:genId('pl'),date,customerId:customer.id,name:customer.name,change:earned,reason:'消费 '+tx.name+' ¥'+final,balance:customer.points});
+    // 积分抵现
+    if(usePts>0&&ptsCut>0)spendPoints(customer.id,usePts,'deduct',`积分抵现 ¥${ptsCut.toFixed(2)}（${tx.name}）`);
+    earned=grantPoints(customer.id,Math.floor(original*ptsRate),'consume',`消费 ${tx.name} ¥${final.toFixed(2)}`,{date});
+    const n=autoSettleReferralOnConsume(customer.id);
+    if(n)setTimeout(()=>toast(`🎉 推荐奖励已到账（${n} 笔）`),1200);
   }
-  saveDB();syncChannel();toast(`开单成功 +${earned}积分${payMethod==='card'?' · 扣卡 ¥'+final.toFixed(2):''}`);
+  tx.earnedPoints=earned;tx.pointsUsed=usePts;tx.pointsDeduct=ptsCut;
+  saveDB();syncChannel();
+  toast(`开单成功 ¥${final.toFixed(2)}${earned?' · +'+earned+'积分'+(isDoubleDay(date)?' 🎉双倍':''):''}${ptsCut>0?' · 积分抵'+ptsCut.toFixed(2)+'元':''}${payMethod==='card'?' · 扣卡':''}`);
+  const upe=document.getElementById('order-use-pts');if(upe)upe.value=0;
   drawOrderList();
   populateOrderCustomers();
   recalcOrder();
@@ -1889,7 +1945,7 @@ function deleteFinance(id){
 /* =============================================================
    快速结算（从预约一键开单 + 扣卡 + 积分 + 完成预约）
    ============================================================= */
-let _qsState={pay:'cash',apptId:null,rate:1};
+let _qsState={pay:'cash',apptId:null,rate:1,discount:1,usePoints:0,couponId:''};
 function openQuickSettle(apptId){
   const a=DB.appointments.find(x=>x.id===apptId);
   if(!a){toast('预约不存在');return;}
@@ -1901,47 +1957,119 @@ function openQuickSettle(apptId){
   const discountRate=tier?tier.discount:1;
   const ptsRate=(tier?tier.pointsRate:1)*(itm&&itm.pointsMultiple?itm.pointsMultiple:1);
   _qsState.rate=ptsRate;
-  const earnPts=Math.floor(quotedPrice*ptsRate);
+  _qsState.discount=discountRate;
+  _qsState.usePoints=0;
+  _qsState.couponId='';
+  const dcfg=RW().deduct;
+  const dbl=isDoubleDay(a.date);
+  const dblMul=+RW().doubleDay.multiplier||2;
+  const earnPts=Math.floor(quotedPrice*ptsRate)*(dbl?dblMul:1);
+  const bal=cust?(+cust.points||0):0;
+  const today=ymd(new Date());
+  const myCoupons=cust?DB.coupons.filter(cp=>cp.customerId===cust.id&&cp.status==='unused'&&cp.expireDate>=today):[];
+  const canDeduct=cust&&dcfg.enabled&&bal>=(+dcfg.minPoints||0);
+
   showModal(`💰 快速结算 · ${a.name||''}`,`
     <div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px">
-      <div>👤 客户：<strong>${a.name||'(散客)'}</strong>${cust&&cust.phone?' · '+cust.phone:''}</div>
+      <div>👤 客户：<strong>${a.name||'(散客)'}</strong>${cust&&cust.phone?' · '+cust.phone:''}${cust?` · ⭐${bal}分`:''}</div>
       <div>📅 预约：${a.date} ${a.startTime||''}-${a.endTime||''}</div>
       <div>💅 项目：${a.item||(a.styleNames&&a.styleNames.join('+'))||'未填'}</div>
     </div>
+    ${dbl?`<div style="background:#fff7e6;border:1px solid #f6d68a;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:12px;font-size:12.5px;color:#92400e">
+      🎉 今天是<strong>${RW().doubleDay.label||'双倍积分日'}</strong>，本单积分自动 ×${dblMul}</div>`:''}
     <div class="form-grid">
       <div><label class="form-label">原价 ¥</label><input id="qs-original" type="number" value="${quotedPrice.toFixed(0)}" oninput="recalcQS()"></div>
       <div><label class="form-label">会员折扣</label>
         <div style="padding:10px 0;font-size:13px" id="qs-tier">${tier?tier.name+' ×'+tier.discount+'（自动）':'无'}</div>
       </div>
     </div>
-    <div style="display:flex;justify-content:space-between;padding:12px;background:#fffaf8;border-radius:var(--radius-sm);margin:12px 0">
-      <span>实付金额</span><strong style="font-size:18px;color:var(--primary-dark)" id="qs-final">¥${(quotedPrice*discountRate).toFixed(0)}</strong>
+
+    ${myCoupons.length?`<label class="form-label">🎫 使用优惠券</label>
+    <select id="qs-coupon" onchange="_qsState.couponId=this.value;recalcQS()" style="margin-bottom:10px">
+      <option value="">不使用</option>
+      ${myCoupons.map(cp=>`<option value="${cp.id}">${cp.name}（${cp.kind==='discount'?(cp.value*10).toFixed(1)+'折':'抵¥'+cp.value}，${cp.expireDate}到期）</option>`).join('')}
+    </select>`:''}
+
+    ${canDeduct?`<label class="form-label">⭐ 积分抵现（${dcfg.pointsPerYuan}分=1元，最多抵 ${dcfg.maxPercent}%）</label>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+      <input id="qs-use-pts" type="number" min="0" step="${dcfg.pointsPerYuan}" value="0" placeholder="使用积分数" oninput="recalcQS()" style="flex:1">
+      <button class="btn sm" onclick="qsMaxPoints()">用满</button>
+      <button class="btn sm" onclick="document.getElementById('qs-use-pts').value=0;recalcQS()">清空</button>
     </div>
+    <div id="qs-ded-tip" class="text-muted" style="font-size:12px;margin-bottom:10px"></div>`
+    :(cust&&dcfg.enabled?`<div class="text-muted" style="font-size:12px;margin-bottom:10px">⭐ 积分 ${bal} 分，不足 ${dcfg.minPoints} 分暂不可抵现</div>`:'')}
+
+    <div id="qs-breakdown" style="background:#fffaf8;border-radius:var(--radius-sm);padding:12px;margin:12px 0;font-size:13px"></div>
+
     <label class="form-label">支付方式</label>
     <div id="qs-pay" style="display:flex;gap:8px;flex-wrap:wrap">
       ${Object.entries(PAY_METHODS).map(([k,v])=>`<label class="qs-pay-opt" data-k="${k}" onclick="selectQSPay('${k}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:${k==='cash'?'var(--primary-light)':'#fff'}"><span style="font-size:16px">${v.icon}</span>${v.label}</label>`).join('')}
     </div>
     <div id="qs-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
     <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;color:var(--text-light)">
-      <span>本次将获得积分：<strong id="qs-pts">${earnPts}</strong> 分</span>
+      <span>本次将获得积分：<strong id="qs-pts" style="color:var(--warning)">${earnPts}</strong> 分${dbl?' 🎉':''}</span>
       <span id="qs-after-bal" style="display:none">扣卡后余额：<strong>¥<span id="qs-bal-num">0</span></strong></span>
     </div>
+    <span id="qs-final" style="display:none">¥${(quotedPrice*discountRate).toFixed(0)}</span>
   `,`
     <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
     <button class="btn primary" onclick="submitQuickSettle()">✅ 确认结算</button>
   `);
+  recalcQS();
   selectQSPay('cash');
 }
+/* 计算结算明细：原价 → 会员折扣 → 优惠券 → 积分抵现 → 实付 */
+function qsCompute(){
+  const a=DB.appointments.find(x=>x.id===_qsState.apptId)||{};
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const orig=parseFloat((document.getElementById('qs-original')||{}).value)||0;
+  const rate=_qsState.discount||1;
+  const afterTier=+(orig*rate).toFixed(2);
+  // 优惠券
+  let couponCut=0,coupon=null;
+  if(_qsState.couponId){
+    coupon=DB.coupons.find(c=>c.id===_qsState.couponId)||null;
+    if(coupon)couponCut=coupon.kind==='discount'?+(afterTier*(1-coupon.value)).toFixed(2):Math.min(+coupon.value,afterTier);
+  }
+  const afterCoupon=Math.max(0,+(afterTier-couponCut).toFixed(2));
+  // 积分抵现
+  let usePts=0,ptsCut=0,dedNote='';
+  const el=document.getElementById('qs-use-pts');
+  if(cust&&el){
+    const want=Math.max(0,parseInt(el.value)||0);
+    const res=calcPointsDeduct(cust.id,afterCoupon,want);
+    ptsCut=res.deductAmount;usePts=res.usablePoints;
+    dedNote=res.reason||`可抵上限 ¥${res.maxAmount.toFixed(2)}，本次抵扣 ¥${ptsCut.toFixed(2)}（消耗 ${usePts} 分）`;
+  }
+  const final=Math.max(0,+(afterCoupon-ptsCut).toFixed(2));
+  const dbl=isDoubleDay(a.date);
+  const earn=Math.floor(final*(_qsState.rate||1))*(dbl?(+RW().doubleDay.multiplier||2):1);
+  return {orig,rate,afterTier,coupon,couponCut,afterCoupon,usePts,ptsCut,dedNote,final,earn,dbl,cust};
+}
 function recalcQS(){
-  const orig=parseFloat(document.getElementById('qs-original').value)||0;
-  const tierTxt=document.getElementById('qs-tier').textContent;
-  let rate=1;
-  const m=tierTxt.match(/×([\d.]+)/);
-  if(m)rate=parseFloat(m[1]);
-  const final=orig*rate;
-  document.getElementById('qs-final').textContent='¥'+final.toFixed(0);
-  document.getElementById('qs-pts').textContent=Math.floor(orig*_qsState.rate);
+  const r=qsCompute();
+  _qsState.usePoints=r.usePts;
+  const bd=document.getElementById('qs-breakdown');
+  if(bd)bd.innerHTML=`
+    <div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">原价</span><span>¥${r.orig.toFixed(2)}</span></div>
+    ${r.rate<1?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">会员折扣 ×${r.rate}</span><span style="color:var(--success)">-¥${(r.orig-r.afterTier).toFixed(2)}</span></div>`:''}
+    ${r.couponCut>0?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">🎫 ${r.coupon.name}</span><span style="color:var(--success)">-¥${r.couponCut.toFixed(2)}</span></div>`:''}
+    ${r.ptsCut>0?`<div style="display:flex;justify-content:space-between;padding:2px 0"><span class="text-muted">⭐ 积分抵现 ${r.usePts} 分</span><span style="color:var(--success)">-¥${r.ptsCut.toFixed(2)}</span></div>`:''}
+    <div style="display:flex;justify-content:space-between;border-top:1px dashed var(--border);margin-top:6px;padding-top:8px">
+      <strong>实付金额</strong><strong style="font-size:19px;color:var(--primary-dark)">¥${r.final.toFixed(2)}</strong>
+    </div>`;
+  const fe=document.getElementById('qs-final');if(fe)fe.textContent='¥'+r.final.toFixed(2);
+  const dt=document.getElementById('qs-ded-tip');if(dt)dt.textContent=r.dedNote;
+  const pe=document.getElementById('qs-pts');if(pe)pe.textContent=r.earn;
   if(_qsState.pay==='card')selectQSPay('card');
+}
+function qsMaxPoints(){
+  const r=qsCompute();
+  const cust=r.cust;if(!cust)return;
+  const d=RW().deduct;
+  const cap=Math.min(+cust.points||0,Math.floor(r.afterCoupon*(+d.maxPercent||20)/100*(+d.pointsPerYuan||100)));
+  document.getElementById('qs-use-pts').value=Math.max(0,cap);
+  recalcQS();
 }
 function selectQSPay(k){
   _qsState.pay=k;
@@ -1972,8 +2100,8 @@ function submitQuickSettle(){
   const a=DB.appointments.find(x=>x.id===apptId);
   if(!a){toast('预约不存在');return;}
   const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
-  const orig=parseFloat(document.getElementById('qs-original').value)||0;
-  const final=parseFloat(document.getElementById('qs-final').textContent.replace(/[¥,]/g,''))||0;
+  const R=qsCompute();
+  const orig=R.orig, final=R.final;
   if(orig<=0){toast('请填写原价');return;}
   const pay=_qsState.pay;
   if(pay==='card'){
@@ -2004,13 +2132,32 @@ function submitQuickSettle(){
       balanceAfter:(+cust.membershipBalance).toFixed(2)
     });
   }
-  const earned=Math.floor(orig*_qsState.rate);
+  // 核销优惠券
+  if(R.coupon&&R.couponCut>0){
+    R.coupon.status='used';R.coupon.usedAt=Date.now();R.coupon.usedApptId=a.id;
+    const rd=DB.redeems.find(x=>x.id===R.coupon.fromRedeem);
+    if(rd&&rd.status==='unused'){rd.status='used';rd.usedAt=Date.now();}
+  }
+  // 扣减抵现积分
+  if(cust&&R.usePts>0&&R.ptsCut>0){
+    spendPoints(cust.id,R.usePts,'deduct',`积分抵现 ¥${R.ptsCut.toFixed(2)}（${itemName}）`);
+  }
+  // 发放消费积分（grantPoints 内自动应用双倍日 + 自动升级会员）
+  let earned=0;
   if(cust){
-    cust.points=(+cust.points||0)+earned;
-    DB.points_log.unshift({id:genId('pl'),date,customerId:cust.id,name:cust.name,change:earned,reason:'消费 '+itemName+' ¥'+final,balance:cust.points});
+    earned=grantPoints(cust.id,Math.floor(final*(_qsState.rate||1)),'consume',`消费 ${itemName} ¥${final.toFixed(2)}`,{date});
+    // 新客首次消费 → 结算待处理推荐奖励
+    const n=autoSettleReferralOnConsume(cust.id);
+    if(n)setTimeout(()=>toast(`🎉 推荐奖励已到账（${n} 笔）`),1200);
   }
   a.status='completed';
   a.finalPrice=final;
+  a.originalPrice=orig;
+  a.pointsUsed=R.usePts;
+  a.pointsDeduct=R.ptsCut;
+  a.couponId=R.coupon?R.coupon.id:'';
+  a.couponCut=R.couponCut;
+  a.pointsEarned=earned;
   a.payMethod=pay;
   a.completedAt=Date.now();
   if(!a.technicianId){
@@ -2020,7 +2167,12 @@ function submitQuickSettle(){
   if(CLOUD.ready)CLOUD.pushAppt(a);
   document.querySelector('.modal-mask').remove();
   renderRoute();
-  toast(`已结算 +${earned}积分${pay==='card'?' · 扣卡 ¥'+final.toFixed(2):''}`);
+  const bits=[`已结算 ¥${final.toFixed(2)}`];
+  if(earned)bits.push(`+${earned}积分${R.dbl?' 🎉双倍':''}`);
+  if(R.ptsCut>0)bits.push(`积分抵${R.ptsCut.toFixed(2)}元`);
+  if(R.couponCut>0)bits.push(`券减${R.couponCut.toFixed(2)}元`);
+  if(pay==='card')bits.push(`扣卡 ¥${final.toFixed(2)}`);
+  toast(bits.join(' · '));
 }
 
 /* =============================================================

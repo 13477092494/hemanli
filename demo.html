@@ -419,6 +419,8 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
    数据层 - localStorage包装
    ============================================================= */
 const DB_KEY='hemanli_db_v1';
+/* 云端默认环境 ID（工作台加载即自动连接、二维码自动携带）。如连接失败多为填成了 APPID，请改为控制台里带 -1g 后缀的「环境 ID」 */
+const CLOUD_ENV_DEFAULT='100051207528';
 const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',envId:'',enabled:false}}};
 
 const MEMBER_TIERS={
@@ -611,8 +613,9 @@ function applyDB(frag){
 }
 async function startWorkbenchCloud(){
   const cfg=DB.settings.cloud;
-  if(!cfg||!cfg.enabled||!cfg.envId)return;
-  const r=await CLOUD.init(cfg.envId,'workbench');
+  const envId=(cfg&&cfg.envId)||CLOUD_ENV_DEFAULT;
+  if(!envId)return;
+  const r=await CLOUD.init(envId,'workbench');
   if(!r.ok){toast('云端连接失败：'+r.msg);renderCloudStatus&&renderCloudStatus();return;}
   const frag=await CLOUD.pullDB();
   if(frag)applyDB(frag);
@@ -620,6 +623,8 @@ async function startWorkbenchCloud(){
   await CLOUD.pushDB();
   CLOUD.watchAppts(list=>applyAppts(list));
   CLOUD.watchDB(frag=>applyDB(frag));
+  DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
+  saveLocalOnly();
   toast('☁️ 云端同步已连接');
   renderCloudStatus&&renderCloudStatus();
 }
@@ -637,6 +642,8 @@ async function enableCloudSync(){
   DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
   saveLocalOnly();
   toast('☁️ 云端同步已开启');
+  drawQRCode();
+  const cl=document.getElementById('client-link');if(cl)cl.value=clientShareUrl();
   renderCloudStatus();
 }
 async function enableCloudClient(env){
@@ -1790,7 +1797,7 @@ function renderSettings(el){
       <div class="card-title">☁️ 云端同步（跨设备实时）</div>
       <p class="text-muted" style="font-size:12px;margin-bottom:10px">开启后，客户手机扫码提交的预约会<strong>实时</strong>推送到你的工作台（手机/iPad/电脑互通）。环境ID不是密钥，可公开。</p>
       <label class="form-label">腾讯云开发 环境ID</label>
-      <input id="cloud-env" placeholder="如 hemanli-1gabc1234" value="${DB.settings.cloud&&DB.settings.cloud.envId||''}">
+      <input id="cloud-env" placeholder="如 hemanli-1gabc1234" value="${DB.settings.cloud&&DB.settings.cloud.envId||CLOUD_ENV_DEFAULT||''}">
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
         <button class="btn primary" onclick="enableCloudSync()">连接并开启</button>
         <button class="btn" onclick="if(CLOUD.ready){CLOUD.pushDB();DB.appointments.forEach(a=>CLOUD.pushAppt(a));toast('已上传到云端')}else toast('请先开启云端')">⬆️ 上传本地</button>
@@ -1862,7 +1869,7 @@ function importData(e){
   r.readAsText(file);
 }
 function clientShareUrl(){
-  const env=(DB.settings.cloud&&DB.settings.cloud.enabled&&DB.settings.cloud.envId)||getUrlEnv()||'';
+  const env=(DB.settings.cloud&&DB.settings.cloud.envId)||CLOUD_ENV_DEFAULT||getUrlEnv()||'';
   return location.origin+location.pathname+(env?('?env='+encodeURIComponent(env)):'')+'#customer';
 }
 function drawQRCode(){

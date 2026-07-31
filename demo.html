@@ -227,6 +227,7 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
   color:#fff;display:flex;align-items:center;justify-content:center;position:relative;
 }
 .app-header h1{font-size:16px;font-weight:600;text-align:center;}
+.brand-mark{width:72px;height:72px;border-radius:50%;display:block;margin:0 auto 10px;box-shadow:0 4px 14px rgba(196,121,123,.25);border:2px solid #fff;}
 .app-content{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;background:#fff;}
 .app-tabbar{
   position:absolute;left:0;right:0;bottom:0;height:64px;
@@ -2042,7 +2043,7 @@ function customerHome(){
   if(!c){
     return `
       <div style="text-align:center;padding:40px 20px">
-        <div style="font-size:60px;margin-bottom:20px">💅</div>
+        <img src="icon-180.png" alt="禾蔓里" class="brand-mark">
         <h2 style="margin-bottom:14px">欢迎来到禾蔓里</h2>
         <p class="text-muted mb-3">请输入您的预约信息开始使用</p>
         <button class="btn primary" onclick="location.hash='#customer/appoint'" style="padding:12px 28px">立即预约</button>
@@ -2110,9 +2111,9 @@ function customerAppointForm(){
   // 默认显示明天起
   return `
     <div style="text-align:center;padding:14px 0 6px">
-      <div style="font-size:42px">🌧️</div>
-      <h2 style="color:var(--primary-dark)">${DB.settings.shopName.split('·')[0]||'禾蔓里'}</h2>
-      <p class="text-muted">在线预约</p>
+      <img src="icon-180.png" alt="禾蔓里" class="brand-mark">
+      <h2 style="color:var(--primary-dark);margin-bottom:4px">${DB.settings.shopName.split('·')[0]||'禾蔓里'}</h2>
+      <p class="text-muted" style="margin-top:0">在线预约</p>
     </div>
 
     <div class="tip-block">

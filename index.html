@@ -1857,7 +1857,7 @@ alter publication supabase_realtime add table public.sync;</pre>
       <div id="qrcode" style="margin-top:14px;text-align:center;background:#fff;padding:16px;border-radius:8px;display:inline-block"></div>
       <p class="text-muted mt-1" style="font-size:12px">客户扫码后将看到预约入口（不含工作台内容，仅客户个人账户）</p>
       <div style="margin-top:14px">
-        <p class="text-muted" style="font-size:12px">客户直接访问链接（已自动带环境ID，可分享）：</p>
+        <p class="text-muted" style="font-size:12px">客户直接访问链接（已自动带云端配置，可分享）：</p>
         <input id="client-link" value="${clientShareUrl()}" readonly onclick="this.select()">
         <button class="btn sm mt-1" onclick="const l=document.getElementById('client-link');if(l){l.select();document.execCommand('copy');toast('链接已复制')}">复制链接</button>
       </div>

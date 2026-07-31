@@ -4942,10 +4942,45 @@ window.addEventListener('hashchange',()=>{detectMode();if(currentMode==='custome
 init();
 
 /* ===== PWA：注册 Service Worker（离线可用 + 安装到桌面）===== */
+function showUpdateBar(){
+  if(document.getElementById('upd-bar'))return;
+  var bar=document.createElement('div');
+  bar.id='upd-bar';
+  bar.style.cssText='position:fixed;left:12px;right:12px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:99999;'+
+    'background:#2d2424;color:#fff;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;'+
+    'box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13.5px';
+  bar.innerHTML='<span style="flex:1">✨ 有新版本可用（新增功能已就绪）</span>'+
+    '<button id="upd-now" style="background:#d99a9a;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px">立即更新</button>'+
+    '<button id="upd-later" style="background:transparent;color:#bbb;border:none;font-size:13px">稍后</button>';
+  document.body.appendChild(bar);
+  document.getElementById('upd-later').onclick=function(){bar.remove();};
+  document.getElementById('upd-now').onclick=function(){
+    bar.innerHTML='<span style="flex:1">正在更新…</span>';
+    navigator.serviceWorker.getRegistration().then(function(reg){
+      if(reg&&reg.waiting)reg.waiting.postMessage('SKIP_WAITING');
+      else location.reload();
+    });
+  };
+}
 (function(){
   if('serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(e){/* 本地file://或隐私模式静默忽略 */});
+      navigator.serviceWorker.register('./sw.js').then(function(reg){
+        // 每次打开主动检查更新；发现新版本准备好后提示一键刷新
+        try{reg.update();}catch(e){}
+        reg.addEventListener('updatefound',function(){
+          var nw=reg.installing;if(!nw)return;
+          nw.addEventListener('statechange',function(){
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              showUpdateBar();
+            }
+          });
+        });
+      }).catch(function(e){/* 本地file://或隐私模式静默忽略 */});
+      var _reloaded=false;
+      navigator.serviceWorker.addEventListener('controllerchange',function(){
+        if(_reloaded)return;_reloaded=true;location.reload();
+      });
     });
   }
   // 提示安装到主屏幕（桌面/移动）

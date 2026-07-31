@@ -419,7 +419,7 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
    数据层 - localStorage包装
    ============================================================= */
 const DB_KEY='hemanli_db_v1';
-const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}]}};
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',envId:'',enabled:false}}};
 
 const MEMBER_TIERS={
   '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
@@ -430,7 +430,12 @@ const MEMBER_TIERS={
 function loadDB(){
   try{
     const raw=localStorage.getItem(DB_KEY);
-    if(raw){const data=JSON.parse(raw);return Object.assign({},SCHEMA,data);}
+    if(raw){const data=JSON.parse(raw);
+      const merged=Object.assign({},SCHEMA,data);
+      merged.settings=Object.assign({},SCHEMA.settings,data.settings||{});
+      merged.settings.cloud=Object.assign({},SCHEMA.settings.cloud,(data.settings&&data.settings.cloud)||{});
+      return merged;
+    }
   }catch(e){}
   const init=Object.assign({},SCHEMA);
   // 初始化示例数据
@@ -448,7 +453,8 @@ function loadDB(){
   ];
   return init;
 }
-function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
+function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));if(CLOUD.ready&&CLOUD.mode==='workbench'){CLOUD.pushDB();}}
+function saveLocalOnly(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
 let DB=loadDB();
 
 function genId(p='id'){return p+'_'+Date.now()+'_'+Math.floor(Math.random()*1000);}
@@ -465,6 +471,188 @@ channel.onmessage=e=>{
     toast('数据已同步');
   }
 };
+
+/* =============================================================
+   云端同步层 (腾讯云开发 CloudBase)
+   - 预约：每条预约一个文档存入集合 appointments；工作台 watch 全部，客户端按手机号过滤只看自己 → 隐私隔离
+   - 其它数据：存入集合 sync 文档 main（工作台间同步 + 备份），客户端不读取
+   - 环境 ID 通过 URL (?env=xxx) 给客户端，通过设置在工作台配置
+   ============================================================= */
+const CLOUD={
+  envId:'',app:null,db:null,ready:false,mode:null,
+  apptWatcher:null,dbWatcher:null,pollTimer:null,dbPollTimer:null,
+  status:'off',_scriptLoading:null,
+  loadScript(){
+    if(window.tcb)return Promise.resolve(true);
+    if(this._scriptLoading)return this._scriptLoading;
+    this._scriptLoading=new Promise(res=>{
+      const s=document.createElement('script');
+      s.src='https://imgcache.qq.com/qcloud/tcbjs/1.10.4/tcb.js';
+      s.onload=()=>res(true);
+      s.onerror=()=>res(false);
+      document.head.appendChild(s);
+    });
+    return this._scriptLoading;
+  },
+  async init(envId,mode){
+    this.envId=envId;this.mode=mode;this.status='connecting';
+    const ok=await this.loadScript();
+    if(!ok){this.status='error';return{ok:false,msg:'SDK加载失败（网络或被拦截）'}};
+    try{
+      this.app=tcb.init({env:envId});
+      await this.app.auth({persistence:'local'}).anonymousAuthProvider().signIn();
+      this.db=this.app.database();
+      this.ready=true;this.status='online';
+      return{ok:true};
+    }catch(e){this.status='error';return{ok:false,msg:(e&&e.message)||String(e)};}
+  },
+  /* 预约文档 */
+  async pushAppt(a){
+    if(!this.ready)return false;
+    try{await this.db.collection('appointments').doc(a.id).set(Object.assign({},a,{_phone:a.phone||''}));return true;}catch(e){console.warn('pushAppt',e);return false;}
+  },
+  async removeAppt(id){
+    if(!this.ready)return false;
+    try{await this.db.collection('appointments').doc(id).remove();return true;}catch(e){console.warn('removeAppt',e);return false;}
+  },
+  watchAppts(cb){
+    if(!this.ready)return;
+    try{
+      this.db.collection('appointments').watch({
+        onChange:snap=>{try{const list=(snap.docs||[]).map(d=>{const{_phone,...rest}=d;return rest;});cb(list);}catch(e){}},
+        onError:err=>{console.warn('appt watch err→poll',err);this.startApptPoll(cb);}
+      });
+    }catch(e){this.startApptPoll(cb);}
+  },
+  startApptPoll(cb){
+    this.stopPoll();
+    this.pollTimer=setInterval(async()=>{
+      try{const r=await this.db.collection('appointments').get();const list=(r.data||[]).map(d=>{const{_phone,...rest}=d;return rest;});cb(list);}catch(e){}
+    },5000);
+  },
+  stopPoll(){if(this.pollTimer){clearInterval(this.pollTimer);this.pollTimer=null;}},
+  /* 其它数据（工作台间同步） */
+  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,appointments:[]}},
+  async pushDB(){
+    if(!this.ready)return false;
+    try{await this.db.collection('sync').doc('main').set({data:this.dbFragment(),ts:Date.now()});return true;}catch(e){console.warn('pushDB',e);return false;}
+  },
+  async pullDB(){
+    if(!this.ready)return null;
+    try{const r=await this.db.collection('sync').doc('main').get();const d=(r.data||[])[0];return d&&d.data?d.data:null;}catch(e){return null;}
+  },
+  watchDB(cb){
+    if(!this.ready)return;
+    try{
+      this.db.collection('sync').doc('main').watch({
+        onChange:snap=>{try{const d=snap.docs&&snap.docs[0];if(d&&d.data)cb(d.data);}catch(e){}},
+        onError:err=>{console.warn('db watch err→poll',err);this.startDBPoll(cb);}
+      });
+    }catch(e){this.startDBPoll(cb);}
+  },
+  startDBPoll(cb){
+    if(this.dbPollTimer)return;
+    this.dbPollTimer=setInterval(async()=>{const f=await this.pullDB();if(f)cb(f);},6000);
+  },
+  stop(){
+    try{this.apptWatcher&&this.apptWatcher.close();}catch(e){}
+    try{this.dbWatcher&&this.dbWatcher.close();}catch(e){}
+    this.stopPoll();if(this.dbPollTimer){clearInterval(this.dbPollTimer);this.dbPollTimer=null;}
+  }
+};
+function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=0.08;o.start();setTimeout(()=>o.stop(),200);}catch(e){}}
+function getUrlEnv(){try{const m=location.href.match(/[?&]env=([^&#]+)/);return m?decodeURIComponent(m[1]):'';}catch(e){return'';}}
+function renderCurrentRouteSafe(){if(currentMode==='workspace')renderCurrentRoute();else renderCustomerPage();}
+function ensureCustomerFromAppt(a){
+  if(!a.name&&!a.phone)return;
+  let c=DB.customers.find(x=>x.phone===a.phone&&x.name===a.name);
+  if(!c){c={id:genId('c'),name:a.name,phone:a.phone,points:0,createdAt:Date.now(),fromCloud:true,membershipAmount:a.membershipAmount||'',membershipExpire:a.membershipExpire||''};
+    if(a.customerId)c.id=a.customerId;
+    DB.customers.push(c);}
+  const ap=DB.appointments.find(x=>x.id===a.id);if(ap)ap.customerId=c.id;
+}
+/* 工作台：合并云端预约（含来自客户的新预约） */
+function applyAppts(list){
+  const newFromClient=[];
+  list.forEach(a=>{
+    const ex=DB.appointments.find(x=>x.id===a.id);
+    if(ex)Object.assign(ex,a);
+    else{DB.appointments.unshift(a);ensureCustomerFromAppt(a);if(a.source==='customer')newFromClient.push(a);}
+  });
+  saveLocalOnly();
+  if(CLOUD.ready&&CLOUD.mode==='workbench')CLOUD.pushDB();
+  if(!document.querySelector('.modal-mask'))renderCurrentRouteSafe();
+  refreshBadges();
+  if(newFromClient.length){
+    const a=newFromClient[0];
+    toast('🔔 新预约：'+(a.name||'客户')+' '+a.date+' '+a.startTime+(a.item?' · '+a.item:''));
+    beep();
+  }
+}
+/* 客户端：只合并自己的预约（按手机号过滤，其它客户数据不进本地） */
+function applyApptsForClient(list){
+  const me=DB.customers.find(c=>c.id===customerCurrentId);
+  const phone=me&&me.phone;
+  if(!phone)return;
+  list.filter(a=>a.phone===phone).forEach(a=>{
+    const ex=DB.appointments.find(x=>x.id===a.id);
+    if(ex)Object.assign(ex,a);else DB.appointments.unshift(a);
+  });
+  saveLocalOnly();
+  if(!document.querySelector('.modal-mask'))renderCustomerPage();
+}
+/* 工作台间：合并其它数据 */
+function applyDB(frag){
+  if(!frag)return;
+  ['customers','transactions','items','memberships','points_log','notifications','settings'].forEach(k=>{if(frag[k]!==undefined)DB[k]=frag[k];});
+  saveLocalOnly();
+  if(!document.querySelector('.modal-mask'))renderCurrentRouteSafe();
+  refreshBadges();
+}
+async function startWorkbenchCloud(){
+  const cfg=DB.settings.cloud;
+  if(!cfg||!cfg.enabled||!cfg.envId)return;
+  const r=await CLOUD.init(cfg.envId,'workbench');
+  if(!r.ok){toast('云端连接失败：'+r.msg);renderCloudStatus&&renderCloudStatus();return;}
+  const frag=await CLOUD.pullDB();
+  if(frag)applyDB(frag);
+  for(const a of DB.appointments){await CLOUD.pushAppt(a);}
+  await CLOUD.pushDB();
+  CLOUD.watchAppts(list=>applyAppts(list));
+  CLOUD.watchDB(frag=>applyDB(frag));
+  toast('☁️ 云端同步已连接');
+  renderCloudStatus&&renderCloudStatus();
+}
+async function enableCloudSync(){
+  const inp=document.getElementById('cloud-env');
+  const envId=inp?inp.value.trim():'';
+  if(!envId){toast('请填写环境ID');return;}
+  const r=await CLOUD.init(envId,'workbench');
+  if(!r.ok){toast('连接失败：'+r.msg);renderCloudStatus();return;}
+  const frag=await CLOUD.pullDB();
+  if(frag)applyDB(frag);else await CLOUD.pushDB();
+  for(const a of DB.appointments){await CLOUD.pushAppt(a);}
+  CLOUD.watchAppts(list=>applyAppts(list));
+  CLOUD.watchDB(frag=>applyDB(frag));
+  DB.settings.cloud={provider:'cloudbase',envId,enabled:true};
+  saveLocalOnly();
+  toast('☁️ 云端同步已开启');
+  renderCloudStatus();
+}
+async function enableCloudClient(env){
+  const r=await CLOUD.init(env,'client');
+  if(!r.ok){console.warn('cloud client init failed',r.msg);return;}
+  const me=DB.customers.find(c=>c.id===customerCurrentId);
+  if(me&&me.phone)CLOUD.watchAppts(list=>applyApptsForClient(list));
+  toast('☁️ 已连接云端，预约实时同步');
+}
+function renderCloudStatus(){
+  const el=document.getElementById('cloud-status');
+  if(!el)return;
+  const map={off:'未开启',connecting:'连接中…',online:'✅ 已连接',error:'❌ 连接失败'};
+  el.textContent='状态：'+(map[CLOUD.status]||CLOUD.status);
+  el.className='text-muted mt-1';
+}
 
 /* =============================================================
    路由
@@ -496,6 +684,8 @@ function init(){
   setInterval(checkReminders,60000);
   setInterval(checkBroadcastReminders,30000);
   checkBroadcastReminders();
+  // 云端同步（工作台）
+  if(currentMode!=='customer')startWorkbenchCloud();
 }
 
 /* =============================================================
@@ -759,15 +949,16 @@ function deleteAppt(id){
   if(!confirm('确定彻底删除该预约吗？此操作不可恢复'))return;
   DB.appointments=DB.appointments.filter(a=>a.id!==id);
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+  if(CLOUD.ready)CLOUD.removeAppt(id);
 }
 function cancelAppt(id){
   if(!confirm('确定取消该预约？'))return;
   const a=DB.appointments.find(x=>x.id===id);
-  if(a){a.status='cancelled';saveDB();syncChannel();renderCurrentRoute();toast('已取消');}
+  if(a){a.status='cancelled';saveDB();syncChannel();renderCurrentRoute();toast('已取消');if(CLOUD.ready)CLOUD.pushAppt(a);}
 }
 function setApptStatus(id,s){
   const a=DB.appointments.find(x=>x.id===id);
-  if(a){a.status=s;saveDB();syncChannel();renderCurrentRoute();toast('已更新');}
+  if(a){a.status=s;saveDB();syncChannel();renderCurrentRoute();toast('已更新');if(CLOUD.ready)CLOUD.pushAppt(a);}
 }
 function editAppt(id){
   const a=DB.appointments.find(x=>x.id===id);
@@ -1596,6 +1787,29 @@ function renderSettings(el){
     </div>
 
     <div class="card">
+      <div class="card-title">☁️ 云端同步（跨设备实时）</div>
+      <p class="text-muted" style="font-size:12px;margin-bottom:10px">开启后，客户手机扫码提交的预约会<strong>实时</strong>推送到你的工作台（手机/iPad/电脑互通）。环境ID不是密钥，可公开。</p>
+      <label class="form-label">腾讯云开发 环境ID</label>
+      <input id="cloud-env" placeholder="如 hemanli-1gabc1234" value="${DB.settings.cloud&&DB.settings.cloud.envId||''}">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn primary" onclick="enableCloudSync()">连接并开启</button>
+        <button class="btn" onclick="if(CLOUD.ready){CLOUD.pushDB();DB.appointments.forEach(a=>CLOUD.pushAppt(a));toast('已上传到云端')}else toast('请先开启云端')">⬆️ 上传本地</button>
+        <button class="btn" onclick="(async()=>{if(!CLOUD.ready){toast('请先开启云端');return;}const f=await CLOUD.pullDB();if(f)applyDB(f);const r=await CLOUD.db.collection('appointments').get();(r.data||[]).forEach(d=>{const{_phone,...rest}=d;const ex=DB.appointments.find(x=>x.id===rest.id);if(ex)Object.assign(ex,rest);else{DB.appointments.unshift(rest);ensureCustomerFromAppt(rest);}});saveLocalOnly();renderCurrentRoute();toast('已从云端下载')})()">⬇️ 从云端下载</button>
+      </div>
+      <div id="cloud-status">状态：${DB.settings.cloud&&DB.settings.cloud.enabled?'✅ 已开启（重载页面后自动连接）':'未开启'}</div>
+      <details style="margin-top:10px">
+        <summary class="text-muted" style="font-size:12px;cursor:pointer">首次使用设置步骤</summary>
+        <ol style="font-size:12px;color:#888;padding-left:18px;line-height:1.7">
+          <li>注册并登录 <a href="https://cloud.tencent.com/product/tcb" target="_blank">腾讯云开发</a>（免费），新建一个环境，复制「环境ID」。</li>
+          <li>环境 → 登录授权 → 开启<b>匿名登录</b>。</li>
+          <li>数据库 → 新建集合 <code>appointments</code> 和 <code>sync</code> → 权限设为「所有用户可读写」。</li>
+          <li>环境 → 安全配置 → 添加授权域名 <code>13477092494.github.io</code>（否则浏览器跨域会被拦）。</li>
+          <li>把环境ID填到上方，点「连接并开启」。客户扫码的二维码会自动带上环境ID。</li>
+        </ol>
+      </details>
+    </div>
+
+    <div class="card">
       <div class="card-title">⚠️ 数据管理</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <button class="btn" onclick="exportData()">📤 导出 JSON</button>
@@ -1603,7 +1817,7 @@ function renderSettings(el){
         <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
         <button class="btn danger" onclick="if(confirm('清空所有数据？')){localStorage.removeItem(DB_KEY);DB=loadDB();renderCurrentRoute();toast('已清空')}">🗑️ 清空</button>
       </div>
-      <p class="text-muted mt-2" style="font-size:12px">所有数据存储在浏览器本地。换设备请用导出/导入功能。</p>
+      <p class="text-muted mt-2" style="font-size:12px">已开启云端时，数据实时同步到云端；换设备登录同一环境即可互通。未开启云端时数据仅在本机。</p>
     </div>
 
     <div class="card">
@@ -1612,8 +1826,9 @@ function renderSettings(el){
       <div id="qrcode" style="margin-top:14px;text-align:center;background:#fff;padding:16px;border-radius:8px;display:inline-block"></div>
       <p class="text-muted mt-1" style="font-size:12px">客户扫码后将看到预约入口（不含工作台内容，仅客户个人账户）</p>
       <div style="margin-top:14px">
-        <p class="text-muted" style="font-size:12px">客户直接访问链接：</p>
-        <input value="${location.origin+location.pathname}#customer" readonly onclick="this.select()">
+        <p class="text-muted" style="font-size:12px">客户直接访问链接（已自动带环境ID，可分享）：</p>
+        <input id="client-link" value="${clientShareUrl()}" readonly onclick="this.select()">
+        <button class="btn sm mt-1" onclick="const l=document.getElementById('client-link');if(l){l.select();document.execCommand('copy');toast('链接已复制')}">复制链接</button>
       </div>
     </div>
   `;
@@ -1646,8 +1861,12 @@ function importData(e){
   };
   r.readAsText(file);
 }
+function clientShareUrl(){
+  const env=(DB.settings.cloud&&DB.settings.cloud.enabled&&DB.settings.cloud.envId)||getUrlEnv()||'';
+  return location.origin+location.pathname+(env?('?env='+encodeURIComponent(env)):'')+'#customer';
+}
 function drawQRCode(){
-  const url=location.origin+location.pathname+'#customer';
+  const url=clientShareUrl();
   // 简易二维码（用api.qrserver.com如果在线）或本地模拟
   const qr=document.getElementById('qrcode');
   qr.innerHTML=`<div style="font-size:80px">📱</div><p style="margin-top:8px;font-size:12px">客户扫码访问</p>`;
@@ -1669,6 +1888,9 @@ function initCustomer(){
   const saved=localStorage.getItem('hemanli_customer_id');
   customerCurrentId=saved;
   renderCustomerPage();
+  // 客户端自动连接云端（环境ID来自扫码链接 ?env=）
+  const env=getUrlEnv();
+  if(env){enableCloudClient(env);}
 }
 
 function renderCustomerPage(){
@@ -1883,6 +2105,7 @@ function submitCustomerAppoint(){
   const appt={id:genId('a'),date,startTime:time,endTime,customerId:customer.id,name,phone,item,note,status:'pending',createdAt:Date.now(),source:'customer'};
   DB.appointments.unshift(appt);
   saveDB();syncChannel();
+  if(CLOUD.ready&&CLOUD.mode==='client'){CLOUD.pushAppt(appt);if(!CLOUD.apptWatcher)CLOUD.watchAppts(list=>applyApptsForClient(list));}
   toast('预约成功！店家稍后会确认');
   setTimeout(()=>{location.hash='#customer/mine';},800);
 }
@@ -2061,8 +2284,10 @@ function openNewAppointment(){
     const eH=parseInt(time.split(':')[0])+Math.floor(duration/60);
     const eM=parseInt(time.split(':')[1])+(duration%60);
     const endTime=String(Math.floor((eH*60+eM)/60)%24).padStart(2,'0')+':'+String((eH*60+eM)%60).padStart(2,'0');
-    DB.appointments.unshift({id:genId('a'),date,startTime:time,endTime,customerId:cid,name:customer?customer.name:'',phone:customer?customer.phone:'',item:item?item.name:'',note,status:'confirmed',createdAt:Date.now(),source:'shop'});
+    const na={id:genId('a'),date,startTime:time,endTime,customerId:cid,name:customer?customer.name:'',phone:customer?customer.phone:'',item:item?item.name:'',note,status:'confirmed',createdAt:Date.now(),source:'shop'};
+    DB.appointments.unshift(na);
     saveDB();syncChannel();
+    if(CLOUD.ready)CLOUD.pushAppt(na);
     document.querySelector('.modal-mask').remove();
     renderCurrentRoute();refreshBadges();toast('预约已创建');
   };
@@ -2108,6 +2333,7 @@ function openApptEditor(a){
       if(c){c.name=a.name;c.phone=a.phone;}
     }
     saveDB();syncChannel();
+    if(CLOUD.ready)CLOUD.pushAppt(a);
     document.querySelector('.modal-mask').remove();
     renderCurrentRoute();toast('已保存');
   };
@@ -2305,16 +2531,7 @@ window.drawFinanceList=drawFinanceList;
 window.addEventListener('hashchange',()=>{detectMode();if(currentMode==='customer')renderCustomerPage();});
 
 init();
-</script>
-<script>
-(function(){
-    const _DATA = {"customers":[{"id":"c1","name":"林小姐","phone":"13812345678","birthday":"1992-03-15","membershipAmount":500,"membershipBalance":250,"membershipExpire":"2026-08-28","points":680},{"id":"c2","name":"陈女士","phone":"13987654321","birthday":"1996-08-22","membershipAmount":1000,"membershipBalance":800,"membershipExpire":"2027-01-27","points":1280},{"id":"c3","name":"李太太","phone":"13711112222","birthday":"1988-12-01","points":120},{"id":"c4","name":"王小姐","phone":"13522223333","birthday":"1994-06-18","membershipAmount":300,"membershipBalance":150,"membershipExpire":"2026-08-05","points":380},{"id":"c5","name":"张太太","phone":"13433334444","birthday":"1985-11-25","membershipAmount":500,"membershipBalance":0,"membershipExpire":"2026-08-02","points":920}],"appointments":[{"id":"a1","date":"2026-07-31","startTime":"14:00","endTime":"15:30","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲猫眼","note":"复杂款","status":"confirmed"},{"id":"a2","date":"2026-07-31","startTime":"16:00","endTime":"18:30","customerId":"c2","name":"陈女士","phone":"13987654321","item":"复杂款手绘","status":"confirmed"},{"id":"a3","date":"2026-08-01","startTime":"10:00","endTime":"12:00","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲法式","note":"想试新色","status":"pending"},{"id":"a4","date":"2026-08-02","startTime":"14:00","endTime":"17:00","customerId":"c3","name":"李太太","phone":"13711112222","item":"甲片款式","status":"pending"},{"id":"a5","date":"2026-07-30","startTime":"11:00","endTime":"13:00","customerId":"c2","name":"陈女士","phone":"13987654321","item":"本甲猫眼","status":"completed"},{"id":"a6","date":"2026-07-28","startTime":"15:00","endTime":"16:30","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲单色","status":"completed"}],"memberships":[{"id":"m300","amount":300,"discount":0.95,"name":"储值卡","pointsRate":1,"expireMonths":12},{"id":"m500","amount":500,"discount":0.9,"name":"银卡","pointsRate":1.2,"expireMonths":12},{"id":"m1000","amount":1000,"discount":0.8,"name":"金卡","pointsRate":1.5,"expireMonths":12}],"items":[{"id":"i1","name":"本甲单色","price":80,"duration":60,"category":"本甲","hot":false},{"id":"i2","name":"本甲法式","price":120,"duration":90,"category":"本甲","hot":true},{"id":"i3","name":"本甲猫眼","price":150,"duration":120,"category":"本甲","hot":true},{"id":"i4","name":"甲片单色","price":180,"duration":120,"category":"甲片","hot":false},{"id":"i5","name":"甲片款式","price":280,"duration":150,"category":"甲片","hot":true},{"id":"i6","name":"复杂款手绘","price":580,"duration":240,"category":"千元款","hot":true},{"id":"i7","name":"手部护理","price":60,"duration":30,"category":"护理","hot":false},{"id":"i8","name":"卸甲","price":30,"duration":20,"category":"护理","hot":false},{"id":"i9","name":"贴钻每个","price":5,"duration":10,"category":"加项","hot":false,"pointsMultiple":2}],"transactions":[{"id":"t1","date":"2026-07-31","type":"收入","amount":135,"name":"本甲猫眼","customerId":"c1","customerName":"林小姐"},{"id":"t2","date":"2026-07-31","type":"支出","amount":280,"name":"甲油胶采购"},{"id":"t3","date":"2026-07-30","type":"收入","amount":150,"name":"本甲猫眼","customerId":"c2","customerName":"陈女士"},{"id":"t4","date":"2026-07-26","type":"收入","amount":540,"name":"复杂款手绘","customerId":"c2","customerName":"陈女士"},{"id":"t5","date":"2026-07-24","type":"支出","amount":2800,"name":"房租"},{"id":"t6","date":"2026-07-28","type":"收入","amount":520,"name":"甲片款式","customerId":"c3","customerName":"李太太"}],"points_log":[{"id":"p1","date":"2026-07-31","customerId":"c1","name":"林小姐","change":162,"reason":"消费 本甲猫眼 ¥135","balance":680}],"notifications":[],"settings":{"shopName":"禾蔓里·美甲美睫工作室","openTime":"09:00","closeTime":"20:00","appointmentInterval":30,"reminderHours":24,"businessHours":[{"day":1,"open":"09:00","close":"20:00","enabled":true},{"day":2,"open":"09:00","close":"20:00","enabled":true},{"day":3,"open":"09:00","close":"20:00","enabled":true},{"day":4,"open":"09:00","close":"20:00","enabled":true},{"day":5,"open":"09:00","close":"20:00","enabled":true},{"day":6,"open":"09:00","close":"20:00","enabled":true},{"day":0,"open":"09:00","close":"20:00","enabled":false}]}};
-    try {
-        localStorage.setItem('hemanli_db_v1', _DATA);
-    } catch(e) {}
-})();
-</script>
-<script>
+
 /* ===== PWA：注册 Service Worker（离线可用 + 安装到桌面）===== */
 (function(){
   if('serviceWorker' in navigator){
@@ -2322,6 +2539,7 @@ init();
       navigator.serviceWorker.register('./sw.js').catch(function(e){/* 本地file://或隐私模式静默忽略 */});
     });
   }
+  // 提示安装到主屏幕（桌面/移动）
   let deferredPrompt=null;
   window.addEventListener('beforeinstallprompt',function(e){
     e.preventDefault();
@@ -2344,5 +2562,36 @@ init();
   });
 })();
 </script>
+
+<script>
+(function(){
+  try{
+    if(!DB.appointments||DB.appointments.length===0){
+      var c1={id:genId("c"),name:"小美",phone:"13800001111",points:120,birthday:"1995-08-20",membershipAmount:500,membershipExpire:"2026-12-31",createdAt:Date.now()-86400000*30};
+      var c2={id:genId("c"),name:"阿琳",phone:"13900002222",points:60,birthday:"1998-02-14",membershipAmount:0,createdAt:Date.now()-86400000*20};
+      var c3={id:genId("c"),name:"婷婷",phone:"13700003333",points:300,membershipAmount:1000,membershipExpire:"2026-10-10",createdAt:Date.now()-86400000*10};
+      DB.customers=[c1,c2,c3];
+      function ymd(d){d=new Date(d);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+      var t0=Date.now();
+      DB.appointments=[
+        {id:genId("a"),date:ymd(t0),startTime:"10:00",endTime:"12:00",customerId:c1.id,name:c1.name,phone:c1.phone,item:"猫眼",note:"老客户",status:"confirmed",source:"shop",createdAt:t0},
+        {id:genId("a"),date:ymd(t0+86400000),startTime:"14:00",endTime:"16:00",customerId:c3.id,name:c3.name,phone:c3.phone,item:"甲片款式",status:"pending",source:"customer",createdAt:t0},
+        {id:genId("a"),date:ymd(t0+86400000*3),startTime:"11:00",endTime:"12:30",customerId:c2.id,name:c2.name,phone:c2.phone,item:"本甲法式",status:"confirmed",source:"shop",createdAt:t0}
+      ];
+      DB.transactions=[
+        {id:genId("t"),date:ymd(t0),type:"收入",amount:280,category:"服务",note:"猫眼-小美",createdAt:t0},
+        {id:genId("t"),date:ymd(t0),type:"支出",amount:60,category:"耗材",note:"光疗胶",createdAt:t0}
+      ];
+      DB.points_log=[
+        {id:genId("p"),customerId:c1.id,name:c1.name,type:"消费",points:120,reason:"猫眼服务",date:ymd(t0)},
+        {id:genId("p"),customerId:c3.id,name:c3.name,type:"充值",points:300,reason:"金卡充值",date:ymd(t0)}
+      ];
+      saveDB();
+      if(currentMode==="workspace"){renderCurrentRoute();}else{renderCustomerPage();}
+    }
+  }catch(e){console.warn("demo seed",e);}
+})();
+</script>
+
 </body>
 </html>

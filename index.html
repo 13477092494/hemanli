@@ -1241,11 +1241,18 @@ function renderOrder(el){
             <label class="form-label" style="margin-top:10px">技师自填金额(可选)</label>
             <input id="order-amount" type="number" placeholder="留空按款式价" oninput="recalcOrder()">
           </div>
-          <div style="margin-top:14px">
-            <label class="form-label">消费日期</label>
-            <input id="order-date" type="date" value="${today}">
-          </div>
+      <div style="margin-top:14px">
+        <label class="form-label">消费日期</label>
+        <input id="order-date" type="date" value="${today}">
+      </div>
+      <div style="margin-top:14px">
+        <label class="form-label">支付方式</label>
+        <div id="order-pay" style="display:flex;gap:8px;flex-wrap:wrap">
+          ${Object.entries(PAY_METHODS).map(([k,v])=>`<label class="pay-opt" data-k="${k}" onclick="selectPayMethod('${k}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:${k==='cash'?'var(--primary-light)':'#fff'}"><span style="font-size:16px">${v.icon}</span>${v.label}</label>`).join('')}
         </div>
+        <div id="order-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
+      </div>
+    </div>
       </div>
       <div class="card" style="margin-top:14px;background:#fffaf8">
         <div class="row">
@@ -1272,7 +1279,23 @@ function renderOrder(el){
   drawOrderList();
 }
 
-let orderState={customer:null,item:null};
+let orderState={customer:null,item:null,pay:'cash'};
+function selectPayMethod(k){
+  orderState.pay=k;
+  document.querySelectorAll('.pay-opt').forEach(o=>{
+    o.style.background=o.dataset.k===k?'var(--primary-light)':'#fff';
+    o.style.borderColor=o.dataset.k===k?'var(--primary-dark)':'var(--border)';
+  });
+  const tip=document.getElementById('order-card-tip');
+  if(k==='card'&&orderState.customer){
+    const bal=(+orderState.customer.membershipBalance||0);
+    tip.style.display='';
+    if(bal>0)tip.innerHTML=`💳 客户当前储值余额 <strong>¥${bal.toFixed(2)}</strong>`;
+    else tip.innerHTML='<span class="text-danger">⚠️ 客户未开卡或余额为 0，将按扣卡失败处理</span>';
+  }else if(tip){
+    tip.style.display='none';
+  }
+}
 function populateOrderCustomers(){
   const sel=document.getElementById('order-customer');
   if(!sel)return;
@@ -1319,6 +1342,10 @@ function recalcOrder(){
   document.getElementById('order-original').textContent='¥'+original.toFixed(0);
   document.getElementById('order-discount').textContent=discountText;
   document.getElementById('order-final').textContent='¥'+final.toFixed(0);
+  if(orderState.pay==='card')selectPayMethod('card');
+  else{
+    const tip=document.getElementById('order-card-tip');if(tip)tip.style.display='none';
+  }
 }
 function submitOrder(){
   const date=document.getElementById('order-date').value;
@@ -1345,6 +1372,12 @@ function submitOrder(){
   const customer=DB.customers.find(c=>c.id===customerId);
   let final=original;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){final=original*MEMBER_TIERS[customer.membershipAmount].discount;}
+  // 扣卡校验
+  const payMethod=orderState.pay||'cash';
+  if(payMethod==='card'){
+    if(!customer||!(+customer.membershipBalance>0)){toast('该客户未开卡或余额为 0，无法扣卡');return;}
+    if((+customer.membershipBalance)<final){toast(`余额不足（剩 ¥${(+customer.membershipBalance).toFixed(2)}，需 ¥${final.toFixed(2)}）`);return;}
+  }
   // 写入消费记录
   const tx={
     id:genId('tx'),
@@ -1355,10 +1388,27 @@ function submitOrder(){
     customerId,
     customerName:customer?customer.name:'',
     createdAt:Date.now(),
-    source:'manual'
+    source:'manual',
+    payMethod
   };
   DB.transactions.unshift(tx);
-  // 积分自动计算
+  // 扣卡
+  if(payMethod==='card'&&customer){
+    customer.membershipBalance=(+customer.membershipBalance)-final;
+    DB.transactions.unshift({
+      id:genId('tx'),date,type:'扣卡',amount:final,
+      name:item?item.name:'自填消费',customerId:customer.id,customerName:customer.name,
+      createdAt:Date.now(),source:'card_deduct',
+      payMethod:'card',refTxId:tx.id,
+      balanceAfter:(+customer.membershipBalance).toFixed(2)
+    });
+    DB.memberships.unshift({
+      id:genId('ms'),date,customerId:customer.id,customerName:customer.name,
+      type:'扣减',amount:-final,note:item?item.name:'自填消费',
+      balanceAfter:(+customer.membershipBalance).toFixed(2)
+    });
+  }
+  // 积分自动计算（基于原价）
   let ptsRate=1.0;
   if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){ptsRate=MEMBER_TIERS[customer.membershipAmount].pointsRate;}
   if(item&&item.pointsMultiple)ptsRate*=item.pointsMultiple;
@@ -1367,7 +1417,7 @@ function submitOrder(){
     customer.points=(+customer.points||0)+earned;
     DB.points_log.unshift({id:genId('pl'),date,customerId:customer.id,name:customer.name,change:earned,reason:'消费 '+tx.name+' ¥'+final,balance:customer.points});
   }
-  saveDB();syncChannel();toast(`开单成功 +${earned}积分`);
+  saveDB();syncChannel();toast(`开单成功 +${earned}积分${payMethod==='card'?' · 扣卡 ¥'+final.toFixed(2):''}`);
   drawOrderList();
   populateOrderCustomers();
   recalcOrder();
@@ -1405,6 +1455,143 @@ function deleteFinance(id){
   if(!confirm('删除？'))return;
   DB.transactions=DB.transactions.filter(t=>t.id!==id);
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+
+/* =============================================================
+   快速结算（从预约一键开单 + 扣卡 + 积分 + 完成预约）
+   ============================================================= */
+let _qsState={pay:'cash',apptId:null,rate:1};
+function openQuickSettle(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);
+  if(!a){toast('预约不存在');return;}
+  _qsState.apptId=apptId;
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const itm=(a.item||(a.styleNames&&a.styleNames[0]))?(DB.items.find(i=>i.name===(a.item||a.styleNames[0]))||null):null;
+  const quotedPrice=(+a.quotedPrice)||(itm?itm.price:0);
+  const tier=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount]:null;
+  const discountRate=tier?tier.discount:1;
+  const ptsRate=(tier?tier.pointsRate:1)*(itm&&itm.pointsMultiple?itm.pointsMultiple:1);
+  _qsState.rate=ptsRate;
+  const earnPts=Math.floor(quotedPrice*ptsRate);
+  showModal(`💰 快速结算 · ${a.name||''}`,`
+    <div style="background:var(--bg-2);padding:10px 12px;border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px">
+      <div>👤 客户：<strong>${a.name||'(散客)'}</strong>${cust&&cust.phone?' · '+cust.phone:''}</div>
+      <div>📅 预约：${a.date} ${a.startTime||''}-${a.endTime||''}</div>
+      <div>💅 项目：${a.item||(a.styleNames&&a.styleNames.join('+'))||'未填'}</div>
+    </div>
+    <div class="form-grid">
+      <div><label class="form-label">原价 ¥</label><input id="qs-original" type="number" value="${quotedPrice.toFixed(0)}" oninput="recalcQS()"></div>
+      <div><label class="form-label">会员折扣</label>
+        <div style="padding:10px 0;font-size:13px" id="qs-tier">${tier?tier.name+' ×'+tier.discount+'（自动）':'无'}</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:12px;background:#fffaf8;border-radius:var(--radius-sm);margin:12px 0">
+      <span>实付金额</span><strong style="font-size:18px;color:var(--primary-dark)" id="qs-final">¥${(quotedPrice*discountRate).toFixed(0)}</strong>
+    </div>
+    <label class="form-label">支付方式</label>
+    <div id="qs-pay" style="display:flex;gap:8px;flex-wrap:wrap">
+      ${Object.entries(PAY_METHODS).map(([k,v])=>`<label class="qs-pay-opt" data-k="${k}" onclick="selectQSPay('${k}')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;background:${k==='cash'?'var(--primary-light)':'#fff'}"><span style="font-size:16px">${v.icon}</span>${v.label}</label>`).join('')}
+    </div>
+    <div id="qs-card-tip" class="text-muted mt-1" style="font-size:12px;display:none"></div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px;color:var(--text-light)">
+      <span>本次将获得积分：<strong id="qs-pts">${earnPts}</strong> 分</span>
+      <span id="qs-after-bal" style="display:none">扣卡后余额：<strong>¥<span id="qs-bal-num">0</span></strong></span>
+    </div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="submitQuickSettle()">✅ 确认结算</button>
+  `);
+  selectQSPay('cash');
+}
+function recalcQS(){
+  const orig=parseFloat(document.getElementById('qs-original').value)||0;
+  const tierTxt=document.getElementById('qs-tier').textContent;
+  let rate=1;
+  const m=tierTxt.match(/×([\d.]+)/);
+  if(m)rate=parseFloat(m[1]);
+  const final=orig*rate;
+  document.getElementById('qs-final').textContent='¥'+final.toFixed(0);
+  document.getElementById('qs-pts').textContent=Math.floor(orig*_qsState.rate);
+  if(_qsState.pay==='card')selectQSPay('card');
+}
+function selectQSPay(k){
+  _qsState.pay=k;
+  document.querySelectorAll('.qs-pay-opt').forEach(o=>{
+    o.style.background=o.dataset.k===k?'var(--primary-light)':'#fff';
+    o.style.borderColor=o.dataset.k===k?'var(--primary-dark)':'var(--border)';
+  });
+  const tip=document.getElementById('qs-card-tip');
+  const ab=document.getElementById('qs-after-bal');
+  if(k==='card'){
+    const a=DB.appointments.find(x=>x.id===_qsState.apptId);
+    const cust=a&&a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+    const bal=cust?(+cust.membershipBalance||0):0;
+    const final=parseFloat(document.getElementById('qs-final').textContent.replace(/[¥,]/g,''))||0;
+    tip.style.display='';
+    if(!cust){tip.innerHTML='<span class="text-danger">⚠️ 该预约无客户档案，无法扣卡</span>';ab.style.display='none';return;}
+    if(bal<=0){tip.innerHTML='<span class="text-danger">⚠️ 客户未开卡或余额为 0</span>';ab.style.display='none';return;}
+    if(bal<final){
+      tip.innerHTML=`<span class="text-danger">⚠️ 余额不足（剩 ¥${bal.toFixed(2)}，需 ¥${final.toFixed(2)}）</span>`;
+      ab.style.display='none';return;
+    }
+    tip.innerHTML=`💳 当前储值余额 <strong>¥${bal.toFixed(2)}</strong>`;
+    ab.style.display='';document.getElementById('qs-bal-num').textContent=(bal-final).toFixed(2);
+  }else if(tip){tip.style.display='none';ab.style.display='none';}
+}
+function submitQuickSettle(){
+  const apptId=_qsState.apptId;
+  const a=DB.appointments.find(x=>x.id===apptId);
+  if(!a){toast('预约不存在');return;}
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const orig=parseFloat(document.getElementById('qs-original').value)||0;
+  const final=parseFloat(document.getElementById('qs-final').textContent.replace(/[¥,]/g,''))||0;
+  if(orig<=0){toast('请填写原价');return;}
+  const pay=_qsState.pay;
+  if(pay==='card'){
+    if(!cust){toast('该预约无客户档案，无法扣卡');return;}
+    if((+cust.membershipBalance)<final){toast('余额不足，无法扣卡');return;}
+  }
+  const itm=a.item?DB.items.find(i=>i.name===a.item):null;
+  const date=a.date||ymd(new Date());
+  const itemName=itm?itm.name:(a.styleNames&&a.styleNames.join('+'))||a.item||'预约消费';
+  DB.transactions.unshift({
+    id:genId('tx'),date,type:'收入',amount:final,
+    name:itemName,
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'appointment',apptId:a.id,payMethod:pay
+  });
+  if(pay==='card'&&cust){
+    cust.membershipBalance=(+cust.membershipBalance)-final;
+    DB.transactions.unshift({
+      id:genId('tx'),date,type:'扣卡',amount:final,
+      name:itemName,customerId:cust.id,customerName:cust.name,
+      createdAt:Date.now(),source:'card_deduct',
+      payMethod:'card',refApptId:a.id,
+      balanceAfter:(+cust.membershipBalance).toFixed(2)
+    });
+    DB.memberships.unshift({
+      id:genId('ms'),date,customerId:cust.id,customerName:cust.name,
+      type:'扣减',amount:-final,note:itemName,
+      balanceAfter:(+cust.membershipBalance).toFixed(2)
+    });
+  }
+  const earned=Math.floor(orig*_qsState.rate);
+  if(cust){
+    cust.points=(+cust.points||0)+earned;
+    DB.points_log.unshift({id:genId('pl'),date,customerId:cust.id,name:cust.name,change:earned,reason:'消费 '+itemName+' ¥'+final,balance:cust.points});
+  }
+  a.status='completed';
+  a.finalPrice=final;
+  a.payMethod=pay;
+  a.completedAt=Date.now();
+  if(!a.technicianId){
+    for(const t of activeTechs()){if(getShift(t.id,a.date)){a.technicianId=t.id;break;}}
+  }
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  renderRoute();
+  toast(`已结算 +${earned}积分${pay==='card'?' · 扣卡 ¥'+final.toFixed(2):''}`);
 }
 
 /* =============================================================
@@ -2910,6 +3097,7 @@ function openApptEditor(a){
   `,`
     <button class="btn danger" onclick="DB.appointments=DB.appointments.filter(x=>x.id!=='${a.id}');saveDB();syncChannel();this.closest('.modal-mask').remove();renderCurrentRoute();toast('已删除')">删除</button>
     <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    ${(a.status!=='completed'&&a.status!=='cancelled')?`<button class="btn primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="document.querySelector('.modal-mask').remove();openQuickSettle('${a.id}')">💰 快速结算</button>`:''}
     <button class="btn primary" id="ea-save">保存</button>
   `);
   document.getElementById('ea-save').onclick=()=>{

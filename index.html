@@ -1089,8 +1089,9 @@ function renderAppointment(el){
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="appt-filters">
         <button class="btn sm primary" data-filter="all">全部 (${DB.appointments.length})</button>
-        <button class="btn sm" data-filter="pending">待确认 (${DB.appointments.filter(a=>a.status==='pending').length})</button>
-        <button class="btn sm" data-filter="confirmed">已确认 (${DB.appointments.filter(a=>a.status==='confirmed').length})</button>
+        <button class="btn sm" data-filter="pending">待报价 (${DB.appointments.filter(a=>a.status==='pending'&&!a.quotedPrice).length})</button>
+        <button class="btn sm" data-filter="quoted">待付定金 (${DB.appointments.filter(a=>a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid).length})</button>
+        <button class="btn sm" data-filter="confirmed">已确认 (${DB.appointments.filter(a=>a.status==='confirmed'||(a.status==='pending'&&a.depositPaid)).length})</button>
         <button class="btn sm" data-filter="completed">已完成 (${DB.appointments.filter(a=>a.status==='completed').length})</button>
         <button class="btn sm" data-filter="cancelled">已取消 (${DB.appointments.filter(a=>a.status==='cancelled').length})</button>
       </div>
@@ -1099,7 +1100,12 @@ function renderAppointment(el){
   `;
   let curFilter='all';
   const list=()=>{
-    const data=curFilter==='all'?DB.appointments:DB.appointments.filter(a=>a.status===curFilter);
+    const data=curFilter==='all'?DB.appointments:DB.appointments.filter(a=>{
+      if(curFilter==='quoted')return a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid;
+      if(curFilter==='pending')return a.status==='pending'&&!a.quotedPrice;
+      if(curFilter==='confirmed')return a.status==='confirmed'||(a.status==='pending'&&a.depositPaid);
+      return a.status===curFilter;
+    });
     return data.sort((a,b)=>b.date.localeCompare(a.date)||a.startTime.localeCompare(b.startTime));
   };
   function draw(){
@@ -1108,19 +1114,28 @@ function renderAppointment(el){
     if(arr.length===0){target.innerHTML='<div class="empty"><div class="icon">📅</div>暂无预约</div>';return;}
     target.innerHTML='<div id="appt-rows">'+arr.map(a=>{
       const customer=DB.customers.find(c=>c.id===a.customerId)||{};
-      const statusTag={pending:'<span class="tag warning">待确认</span>',confirmed:'<span class="tag primary">已确认</span>',completed:'<span class="tag success">已完成</span>',cancelled:'<span class="tag danger">已取消</span>'}[a.status];
+      const imgs=(a.imagesByName&&a.imagesByName.length)?a.imagesByName:((a.images||[]).map(u=>({name:'',image:u})));
+      const statusMap={pending:'待确认',confirmed:'已确认',completed:'已完成',cancelled:'已取消'};
+      const statusCls={pending:'warning',confirmed:'primary',completed:'success',cancelled:'danger'};
+      const st=statusMap[a.status]||a.status;
+      const subSt=(a.status==='pending'&&a.quotedPrice>0)?(a.depositPaid?'已付定金':'待付定金'):'';
       return `<div class="swipe-wrap" data-id="${a.id}">
         <div class="swipe-action" onclick="deleteAppt('${a.id}')">删除</div>
         <div class="swipe-content">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <div><strong>${customer.name||a.name||'(已删除客户)'}</strong> <span style="color:#999;font-size:12px">${a.phone||customer.phone||''}</span></div>
-            ${statusTag}
+            <div><span class="tag ${statusCls[a.status]||''}">${st}</span>${subSt?` <span class="tag" style="background:${a.depositPaid?'#dcfce7':'#fef3c7'};color:${a.depositPaid?'#166534':'#92400e'}">${subSt}</span>`:''}</div>
           </div>
-          <div style="font-size:13px;color:#666">📅 ${a.date} ${a.startTime}-${a.endTime} ${a.item?'· '+a.item:''}</div>
+          <div style="font-size:13px;color:#666">📅 ${a.date} ${a.startTime}-${a.endTime} ${a.styleNames&&a.styleNames.length?'· '+a.styleNames.join(' + '):a.item?'· '+a.item:''}</div>
+          ${imgs.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${imgs.slice(0,5).map(o=>`<div style="position:relative"><img src="${o.image}" style="width:52px;height:52px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="showImgPreview('${o.image}')">${o.name?`<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;padding:1px 3px;border-radius:0 0 6px 6px;text-align:center;overflow:hidden">${o.name}</div>`:''}</div>`).join('')}${imgs.length>5?`<div style="width:52px;height:52px;background:var(--bg-2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:11px">+${imgs.length-5}</div>`:''}</div>`:''}
+          ${a.quotedPrice?`<div style="margin-top:8px;padding:8px 10px;background:#fffaf8;border-radius:6px;font-size:12.5px">💵 报价 ¥${a.quotedPrice}${a.quotedOriginal&&a.quotedOriginal>a.quotedPrice?`<span style="text-decoration:line-through;color:#999;font-size:11px"> ¥${a.quotedOriginal}</span>`:''}${a.deposit?` · 定金 ¥${a.deposit}${a.depositPaid?'（已付）':''}`:''}</div>`:''}
           ${a.note?'<div style="font-size:12px;color:#999;margin-top:4px">备注：'+a.note+'</div>':''}
           <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-            ${a.status==='pending'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','confirmed')">确认</button>`:''}
-            ${a.status==='confirmed'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','completed')">完成</button>`:''}
+            ${(a.status==='pending'&&!a.quotedPrice)?`<button class="btn sm primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="openQuoteAppt('${a.id}')">💰 报价</button>`:''}
+            ${(a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid)?`<button class="btn sm primary" style="background:var(--success);border-color:var(--success);color:#fff" onclick="markDepositPaid('${a.id}')">✅ 定金已付</button>`:''}
+            ${(a.status==='pending'&&a.quotedPrice>0&&a.depositPaid)?`<button class="btn sm success" onclick="setApptStatus('${a.id}','confirmed')">确认预约</button>`:''}
+            ${(a.status==='confirmed'||a.depositPaid)?`<button class="btn sm primary" style="background:var(--gold);border-color:var(--gold);color:#fff" onclick="openQuickSettle('${a.id}')">💰 快速结算</button>`:''}
+            ${(a.status==='confirmed'||a.depositPaid)?`<button class="btn sm success" onclick="setApptStatus('${a.id}','completed')">标记完成</button>`:''}
             ${a.status!=='cancelled'&&a.status!=='completed'?`<button class="btn sm danger" onclick="cancelAppt('${a.id}')">取消预约</button>`:''}
             <button class="btn sm" onclick="editAppt('${a.id}')">编辑</button>
             ${a.status==='cancelled'?`<button class="btn sm danger" onclick="deleteAppt('${a.id}')">删除</button>`:''}
@@ -1195,6 +1210,23 @@ function deleteAppt(id){
   DB.appointments=DB.appointments.filter(a=>a.id!==id);
   saveDB();syncChannel();renderCurrentRoute();toast('已删除');
   if(CLOUD.ready)CLOUD.removeAppt(id);
+}
+function markDepositPaid(id){
+  if(!confirm('确认已收到客户定金？将自动写入定金记录'))return;
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  if(!a.deposit){toast('该预约尚未设置定金');return;}
+  a.depositPaid=true;
+  a.depositPaidAt=Date.now();
+  a.status='confirmed';
+  DB.transactions.unshift({
+    id:genId('tx'),date:ymd(new Date()),type:'定金',
+    amount:a.deposit,name:'预约定金-'+(a.styleNames&&a.styleNames.join('+')||a.item),
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'workbench_deposit',apptId:a.id
+  });
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  renderRoute();toast('已标记定金到账');
 }
 function cancelAppt(id){
   if(!confirm('确定取消该预约？'))return;
@@ -2675,7 +2707,11 @@ function renderCustomerPage(){
 
   let body='';
   if(tab==='home')body=customerHome();
-  else if(tab==='appoint')body=customerAppointForm();
+  else if(tab==='appoint'){
+    if(!_cuStyles.length)_cuStyles=[{id:genId('st'),name:'',image:''}];
+    body=customerAppointForm();
+    setTimeout(renderCuStyleRows,0);
+  }
   else if(tab==='mine')body=customerMyAppoints();
   else if(tab==='member')body=customerMember();
 
@@ -2812,17 +2848,59 @@ function customerAppointForm(){
         <p class="text-muted" style="font-size:11px;margin-top:4px">营业时间 ${DB.settings.openTime}-${DB.settings.closeTime},结束时间由店家根据款式确定</p>
       </div>
       <div class="form-item">
-        <label class="form-label">想做的款式</label>
-        <input id="cu-item" placeholder="如：猫眼甲、法式..." list="cu-items-list">
-        <datalist id="cu-items-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+        <label class="form-label">想做的款式（可添加多个 · 每款可传图）</label>
+        <div id="cu-styles" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button type="button" class="btn sm" style="margin-top:8px" onclick="addCuStyleRow()">＋ 添加一个款式</button>
+        <p class="text-muted mt-1" style="font-size:11px">💡 每行填写款式名称（如 猫眼甲），再点 📷 上传参考图（最多 ${DB.settings.imageMaxCount||6} 张，可编辑删除）</p>
       </div>
       <div class="form-item">
         <label class="form-label">备注</label>
-        <textarea id="cu-note" placeholder="可补充图片链接(DY/XHS)或特别要求"></textarea>
+        <textarea id="cu-note" placeholder="可补充链接或特别要求"></textarea>
       </div>
       <button class="btn primary" style="width:100%;padding:14px" onclick="submitCustomerAppoint()">✅ 提交预约</button>
     </div>
   `;
+}
+
+let _cuStyles=[]; // [{name,image}]
+function addCuStyleRow(prefill){
+  const id=genId('st');
+  const row={id,name:prefill&&prefill.name||'',image:prefill&&prefill.image||''};
+  _cuStyles.push(row);
+  renderCuStyleRows();
+}
+function removeCuStyleRow(id){
+  _cuStyles=_cuStyles.filter(r=>r.id!==id);
+  renderCuStyleRows();
+}
+function renderCuStyleRows(){
+  const box=document.getElementById('cu-styles');if(!box)return;
+  const max=DB.settings.imageMaxCount||6;
+  const totalImgs=_cuStyles.filter(r=>r.image).length;
+  box.innerHTML=_cuStyles.map((r,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;padding:8px;background:var(--bg-2);border-radius:8px" data-id="${r.id}">
+      <input class="cu-st-name" data-id="${r.id}" value="${r.name}" placeholder="款式 ${i+1}（如 猫眼甲）" style="flex:1" list="cu-items-list">
+      <datalist id="cu-items-list">${DB.items.map(it=>`<option value="${it.name}">`).join('')}</datalist>
+      <input type="file" accept="image/*" style="display:none" data-id="${r.id}" onchange="onCuStyleImg(event,'${r.id}')">
+      <button type="button" class="btn sm" onclick="this.previousElementSibling.click()" title="上传图片" style="flex:none">${r.image?'🖼️':'📷'}</button>
+      ${r.image?`<button type="button" class="btn sm danger" onclick="removeCuStyleImg('${r.id}')">×</button>`:''}
+      <button type="button" class="btn sm danger" onclick="removeCuStyleRow('${r.id}')">删</button>
+    </div>
+    ${r.image?`<div style="margin-left:8px"><img src="${r.image}" style="width:60px;height:60px;object-fit:cover;border-radius:6px"></div>`:''}
+  `).join('');
+  // 控制上传按钮可用
+  const canAdd=totalImgs<max;
+  box.querySelectorAll('input[type=file]').forEach(f=>f.disabled=!canAdd&&!_cuStyles.find(r=>r.id===f.dataset.id).image);
+}
+async function onCuStyleImg(ev,rowId){
+  const file=ev.target.files[0];if(!file)return;
+  try{
+    const base64=await compressImage(file);
+    const row=_cuStyles.find(r=>r.id===rowId);if(row){row.image=base64;renderCuStyleRows();}
+  }catch(e){toast('图片处理失败');}
+}
+function removeCuStyleImg(rowId){
+  const row=_cuStyles.find(r=>r.id===rowId);if(row){row.image='';renderCuStyleRows();}
 }
 
 function renderCuDaySlots(){
@@ -2857,12 +2935,14 @@ function submitCustomerAppoint(){
   const phone=document.getElementById('cu-phone').value.trim();
   const date=document.getElementById('cu-date').value;
   const time=document.getElementById('cu-time').value;
-  const item=document.getElementById('cu-item').value.trim();
   const note=document.getElementById('cu-note').value.trim();
   if(!name||!phone||!date||!time){toast('请完整填写姓名/手机/日期/时间');return;}
-  const duration=item?((DB.items.find(i=>i.name===item)||{}).duration||60):60;
-  const eH=parseInt(time.split(':')[0])+Math.floor(duration/60);
-  const eM=parseInt(time.split(':')[1])+(duration%60);
+  // 收集款式
+  const styles=_cuStyles.map(r=>({name:(r.name||'').trim(),image:r.image||''})).filter(r=>r.name||r.image);
+  if(!styles.length){toast('请至少填写一个款式名称');return;}
+  const totalDur=styles.reduce((s,r)=>s+((DB.items.find(i=>i.name===r.name)||{}).duration||60),0);
+  const eH=parseInt(time.split(':')[0])+Math.floor(totalDur/60);
+  const eM=parseInt(time.split(':')[1])+(totalDur%60);
   const endTime=String(Math.floor((eH*60+eM)/60)%24).padStart(2,'0')+':'+String((eH*60+eM)%60).padStart(2,'0');
 
   // 找客户或创建
@@ -2873,35 +2953,135 @@ function submitCustomerAppoint(){
   }
   customerCurrentId=customer.id;
   localStorage.setItem('hemanli_customer_id',customer.id);
-  const appt={id:genId('a'),date,startTime:time,endTime,customerId:customer.id,name,phone,item,note,status:'pending',createdAt:Date.now(),source:'customer'};
+  const appt={
+    id:genId('a'),date,startTime:time,endTime,
+    customerId:customer.id,name,phone,
+    styleNames:styles.map(s=>s.name),
+    item:styles.map(s=>s.name).join('+'),
+    images:styles.map(s=>s.image).filter(Boolean),
+    imagesByName:styles.filter(s=>s.image).map(s=>({name:s.name,image:s.image})),
+    quotedPrice:0,deposit:0,depositPaid:false,payMethod:'cash',
+    technicianId:'',
+    note,status:'pending',createdAt:Date.now(),source:'customer'
+  };
   DB.appointments.unshift(appt);
   saveDB();syncChannel();
   if(CLOUD.ready&&CLOUD.mode==='client'){CLOUD.pushAppt(appt);if(!CLOUD.apptWatcher)CLOUD.watchAppts(list=>applyApptsForClient(list));}
-  toast('预约成功！店家稍后会确认');
+  toast('预约成功！店家稍后会确认并报价');
+  _cuStyles=[];
   setTimeout(()=>{location.hash='#customer/mine';},800);
 }
 
 function customerMyAppoints(){
   const my=DB.customers.find(x=>x.id===customerCurrentId);
   if(!my)return '<div class="empty"><div class="icon">📋</div>请先预约一次即可查看</div>';
-  const arr=DB.appointments.filter(a=>a.customerId===my.id||(a.phone===my.phone&&a.name===my.name)).sort((a,b)=>b.date.localeCompare(a.date)||b.startTime.localeCompare(a.startTime));
-  if(arr.length===0)return '<div class="empty"><div class="icon">📋</div>还没有预约记录</div>';
-  return arr.map(a=>{
+  const all=DB.appointments.filter(a=>a.customerId===my.id||(a.phone===my.phone&&a.name===my.name));
+  if(!all.length)return '<div class="empty"><div class="icon">📋</div>还没有预约记录</div>';
+  const groups={
+    quoted:all.filter(a=>a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid),
+    pending:all.filter(a=>a.status==='pending'&&(!a.quotedPrice||a.depositPaid===false&&a.quotedPrice===0)),
+    confirmed:all.filter(a=>a.status==='confirmed'||(a.status==='pending'&&a.depositPaid)),
+    done:all.filter(a=>a.status==='completed'||a.status==='cancelled')
+  };
+  const labels={quoted:'💰 待付定金',pending:'⏳ 待报价',confirmed:'✅ 已预约',done:'📦 历史'};
+  const keys=['quoted','pending','confirmed','done'];
+  const counts=Object.fromEntries(keys.map(k=>[k,groups[k].length]));
+  let active=window._myTab||(counts.quoted?'quoted':counts.pending?'pending':counts.confirmed?'confirmed':'done');
+  window._myTab=active;
+  const arr=groups[active].sort((a,b)=>b.date.localeCompare(a.date)||b.startTime.localeCompare(a.startTime));
+  const renderCard=a=>{
+    const imgs=(a.imagesByName&&a.imagesByName.length)?a.imagesByName:(a.images||[]).map(u=>({name:'',image:u}));
     const statusMap={pending:['待确认','warning'],confirmed:['已确认','primary'],completed:['已完成','success'],cancelled:['已取消','danger']};
     const [s,c]=statusMap[a.status]||['',''];
-    return `<div class="swipe-wrap" data-id="${a.id}">
-      <div class="swipe-action" onclick="cancelMyAppt('${a.id}')">取消</div>
-      <div class="swipe-content">
-        <div style="display:flex;justify-content:space-between">
-          <strong>${a.item||'(款式待定)'}</strong>
-          <span class="tag ${c}">${s}</span>
-        </div>
-        <div class="text-muted mt-1" style="font-size:12px">📅 ${a.date} ⏰ ${a.startTime}-${a.endTime}</div>
-        ${a.note?'<div class="text-muted mt-1" style="font-size:11px">备注：'+a.note+'</div>':''}
-        ${a.status==='pending'?'<p class="text-muted mt-1" style="font-size:11px">⏳ 等待店家确认</p>':a.status==='confirmed'?'<p class="text-success mt-1" style="font-size:11px">✓ 预约已确认，请准时到店</p>':''}
+    const canEdit=a.status==='pending'&&!a.depositPaid;
+    const canPayDeposit=a.status==='pending'&&a.quotedPrice>0&&!a.depositPaid;
+    const canCancel=a.status!=='cancelled'&&a.status!=='completed';
+    return `<div class="card" style="margin-bottom:12px;box-shadow:var(--shadow-2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <strong>${a.styleNames&&a.styleNames.length?a.styleNames.join(' + '):a.item||'(款式待定)'}</strong>
+        <span class="tag ${c}">${s}</span>
+      </div>
+      <div class="text-muted" style="font-size:12px">📅 ${a.date} ⏰ ${a.startTime}-${a.endTime}</div>
+      ${imgs.length?`<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">${imgs.slice(0,4).map(o=>`<img src="${o.image}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer" onclick="showImgPreview('${o.image}')">`).join('')}${imgs.length>4?`<div style="width:60px;height:60px;background:var(--bg-2);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-light);font-size:12px">+${imgs.length-4}</div>`:''}</div>`:''}
+      ${a.note?`<div class="text-muted mt-1" style="font-size:11px">备注：${a.note}</div>`:''}
+      ${a.quotedPrice?`<div style="margin-top:8px;padding:10px 12px;background:#fffaf8;border-radius:8px;font-size:13px">
+        <div>💵 报价：<strong style="color:var(--primary-dark);font-size:16px">¥${(+a.quotedPrice).toFixed(0)}</strong>${a.deposit?` · 定金 ¥${a.deposit}`:''}</div>
+        ${a.depositPaid?'<div class="text-success" style="font-size:11px;margin-top:3px">✓ 定金已付</div>':'<div class="text-muted" style="font-size:11px;margin-top:3px">⏳ 待付定金</div>'}
+      </div>`:''}
+      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
+        ${canPayDeposit?`<button class="btn sm primary" onclick="payDeposit('${a.id}')">💰 支付定金 ¥${a.deposit||Math.round((+a.quotedPrice)*0.3)}</button>`:''}
+        ${canEdit?`<button class="btn sm" onclick="customerAppointEdit('${a.id}')">✏️ 修改</button>`:''}
+        ${canCancel?`<button class="btn sm danger" onclick="cancelMyAppt('${a.id}')">取消</button>`:''}
       </div>
     </div>`;
-  }).join('');
+  };
+  return `
+    <div class="sch-tabs" style="margin-bottom:14px">
+      ${keys.map(k=>`<div class="sch-tab ${active===k?'active':''}" onclick="window._myTab='${k}';renderCustomerPage()">${labels[k]} (${counts[k]})</div>`).join('')}
+    </div>
+    ${arr.length?arr.map(renderCard).join(''):'<div class="empty"><div class="icon">📭</div>暂无</div>'}
+  `;
+}
+
+function showImgPreview(url){
+  showModal('图片预览',`<div style="text-align:center"><img src="${url}" style="max-width:100%;max-height:70vh;border-radius:8px"></div>`);
+}
+
+function payDeposit(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a)return;
+  const dep=a.deposit||Math.round((+a.quotedPrice)*0.3);
+  if(!confirm(`确认支付定金 ¥${dep}？（支付后将自动通知店家确认预约）`))return;
+  a.deposit=dep;
+  a.depositPaid=true;
+  a.depositPaidAt=Date.now();
+  a.status='confirmed';
+  DB.transactions.unshift({
+    id:genId('tx'),date:ymd(new Date()),type:'定金',
+    amount:dep,name:'预约定金-'+(a.styleNames&&a.styleNames.join('+')||a.item),
+    customerId:a.customerId,customerName:a.name||'',
+    createdAt:Date.now(),source:'customer_deposit',apptId:a.id,payMethod:'wechat'
+  });
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  toast('已支付定金，期待您的光临 ✨');
+  renderCustomerPage();
+}
+
+function customerAppointEdit(id){
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  _cuStyles=[];
+  const names=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:['']);
+  const byName=(a.imagesByName||[]).reduce((m,o)=>{m[o.name]=o.image;return m;},{});
+  const others=(a.images||[]).filter(u=>!Object.values(byName).includes(u));
+  names.forEach((n,i)=>{
+    _cuStyles.push({id:genId('st'),name:n,image:byName[n]||(i===0?others[0]||'':'')});
+  });
+  if(!_cuStyles.length)_cuStyles=[{id:genId('st'),name:'',image:''}];
+  showModal('✏️ 修改预约',customerAppointForm().replace(/<button[^>]*onclick="submitCustomerAppoint\(\)">[^<]+<\/button>/,`<button class="btn primary" style="width:100%;padding:14px" onclick="saveCustomerAppointEdit('${a.id}')">💾 保存修改</button>`),``);
+}
+function saveCustomerAppointEdit(id){
+  const a=DB.appointments.find(x=>x.id===id);if(!a)return;
+  const name=document.getElementById('cu-name').value.trim();
+  const phone=document.getElementById('cu-phone').value.trim();
+  const date=document.getElementById('cu-date').value;
+  const time=document.getElementById('cu-time').value;
+  const note=document.getElementById('cu-note').value.trim();
+  if(!name||!phone||!date||!time){toast('请完整填写姓名/手机/日期/时间');return;}
+  const styles=_cuStyles.map(r=>({name:(r.name||'').trim(),image:r.image||''})).filter(r=>r.name||r.image);
+  if(!styles.length){toast('请至少填写一个款式名称');return;}
+  a.name=name;a.phone=phone;a.date=date;a.startTime=time;
+  a.styleNames=styles.map(s=>s.name);
+  a.item=styles.map(s=>s.name).join('+');
+  a.images=styles.map(s=>s.image).filter(Boolean);
+  a.imagesByName=styles.filter(s=>s.image).map(s=>({name:s.name,image:s.image}));
+  a.note=note;
+  // 若已报价被修改 → 重新进入待报价
+  a.quotedPrice=0;a.deposit=0;a.depositPaid=false;
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  toast('已保存修改，店家将重新报价');
+  renderCustomerPage();
 }
 
 function cancelMyAppt(id){
@@ -2991,6 +3171,116 @@ function showModal(title,content,footer){
   mask.onclick=e=>{if(e.target===mask)mask.remove();};
   document.getElementById('modal-container').appendChild(mask);
   return mask;
+}
+
+/* =============================================================
+   报价（F3）：按款式分别定价，价格记忆快填，定金计算
+   ============================================================= */
+function openQuoteAppt(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a){toast('预约不存在');return;}
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const tier=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount]:null;
+  const discountRate=tier?tier.discount:1;
+  const items=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:['款式']);
+  const existedQuote=a.quotes||[];
+  const rows=items.map((n,i)=>{
+    const rec=existedQuote[i]||{};
+    const mem=recallPrices(n,5);
+    const fallback=DB.items.find(x=>x.name===n);
+    const suggestedPrice=rec.price||(fallback?fallback.price:0);
+    return {idx:i,name:n,suggestedPrice,discountRate,mem,rec};
+  });
+  const subtotal=rows.reduce((s,r)=>s+(+document.getElementById?0:(+r.rec.price||r.suggestedPrice||0)),0);
+  showModal(`💰 报价 · ${a.name||''}`,`
+    <div style="background:var(--bg-2);padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:12.5px">
+      <div>👤 ${a.name||''} ${a.phone||''} ${tier?`<span class="tag ${tier.tag}" style="margin-left:6px">${tier.name} ×${tier.discount}</span>`:''}</div>
+      <div>📅 ${a.date} ${a.startTime||''}-${a.endTime||''}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px" id="qrows">
+      ${rows.map(r=>`
+        <div style="padding:10px;border:1px solid var(--border);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <strong>${r.idx+1}. ${r.name}</strong>
+            ${r.mem.length?`<span style="font-size:11px;color:var(--text-light)">最近报价: ¥${r.mem.map(m=>m.price).join(' / ')}</span>`:''}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="number" class="qp" data-idx="${r.idx}" value="${r.rec.price||r.suggestedPrice||0}" placeholder="¥" style="width:90px" oninput="recalcQuote()">
+            ${r.mem.length?`<select onchange="document.querySelector('.qp[data-idx=&quot;${r.idx}&quot;]').value=this.value;this.value='';recalcQuote()" style="width:auto;font-size:12px">
+              <option value="">📌 快捷输入…</option>
+              ${r.mem.map(m=>`<option value="${m.price}">¥${m.price} (${ymd(new Date(m.ts))})</option>`).join('')}
+            </select>`:''}
+            <span style="font-size:11px;color:var(--text-light)">折后：<strong id="qpf-${r.idx}">¥${((r.rec.price||r.suggestedPrice||0)*r.discountRate).toFixed(0)}</strong></span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div style="margin-top:14px;padding:12px;background:#fffaf8;border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;color:var(--text-light)">原价合计</div>
+        <div style="font-size:11px;color:#999">${tier?tier.name+' ×'+tier.discount+' 折扣已自动应用':'(非会员无折扣)'}</div>
+      </div>
+      <strong style="font-size:22px;color:var(--primary-dark)" id="qtotal">¥0</strong>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">定金 (¥)</label><input id="q-deposit" type="number" value="${DB.settings.depositAmount||50}" oninput="recalcQuote()"></div>
+      <div><label class="form-label">到期时间</label><input id="q-expire" type="datetime-local"></div>
+    </div>
+    <div class="text-muted" style="font-size:11px;margin-top:6px" id="q-tip"></div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="submitQuote('${a.id}')">✅ 发送报价</button>
+  `);
+  recalcQuote();
+}
+function recalcQuote(){
+  const rows=[...document.querySelectorAll('.qp')];
+  const tierTxt=document.querySelector('#qrows').parentElement.querySelector('.text-light,.text-muted')||null;
+  let rate=1;
+  const a=DB.appointments.find(x=>x.id===window._quotingAppt);
+  const cust=a&&a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  if(cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount])rate=MEMBER_TIERS[cust.membershipAmount].discount;
+  let orig=0,final=0;
+  rows.forEach(inp=>{
+    const p=parseFloat(inp.value)||0;
+    orig+=p;
+    const out=document.getElementById('qpf-'+inp.dataset.idx);
+    if(out)out.textContent='¥'+(p*rate).toFixed(0);
+  });
+  final=orig*rate;
+  document.getElementById('qtotal').textContent='¥'+final.toFixed(0);
+  const dep=parseFloat(document.getElementById('q-deposit')?.value)||0;
+  const tip=document.getElementById('q-tip');
+  if(tip){
+    if(dep>final){tip.innerHTML='<span class="text-danger">⚠️ 定金超过总金额，请调整</span>';}
+    else if(dep>0){tip.innerHTML=`客户需支付定金 <strong>¥${dep.toFixed(0)}</strong>，尾款到店付 <strong>¥${(final-dep).toFixed(0)}</strong>`;}
+  }
+}
+function submitQuote(apptId){
+  const a=DB.appointments.find(x=>x.id===apptId);if(!a)return;
+  const rows=[...document.querySelectorAll('.qp')];
+  const names=a.styleNames&&a.styleNames.length?a.styleNames:(a.item?[a.item]:[]);
+  const quotes=rows.map((inp,i)=>({name:names[i]||('款式'+(i+1)),price:parseFloat(inp.value)||0}));
+  const cust=a.customerId?DB.customers.find(c=>c.id===a.customerId):null;
+  const rate=cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]?MEMBER_TIERS[cust.membershipAmount].discount:1;
+  const origTotal=quotes.reduce((s,q)=>s+q.price,0);
+  const final=+(origTotal*rate).toFixed(0);
+  const deposit=Math.min(parseFloat(document.getElementById('q-deposit').value)||0,final);
+  const expire=document.getElementById('q-expire').value;
+  a.quotes=quotes;
+  a.quotedPrice=final;
+  a.quotedOriginal=origTotal;
+  a.deposit=deposit;
+  a.depositPaid=false;
+  a.status='pending'; // 等客户付定金
+  a.quotedAt=Date.now();
+  if(expire)a.quoteExpire=expire;
+  // 价格记忆
+  quotes.forEach(q=>{if(q.price>0)rememberPrice(q.name,q.price);});
+  saveDB();syncChannel();
+  if(CLOUD.ready)CLOUD.pushAppt(a);
+  document.querySelector('.modal-mask').remove();
+  renderRoute();
+  toast('已报价 ¥'+final+'（定金 ¥'+deposit+'），客户将在手机上看到');
 }
 
 function openNewAppointment(){

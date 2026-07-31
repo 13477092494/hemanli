@@ -238,6 +238,25 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-light);font-size:11px;}
 .tab-item.active{color:var(--primary);}
 .tab-item .icon{font-size:22px;}
+.tab-item{position:relative;}
+.tab-dot{position:absolute;top:9px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 2px #fff;}
+
+/* 客户端打卡送礼 */
+.cu-gtabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch;}
+.cu-gtabs::-webkit-scrollbar{display:none;}
+.cu-gtab{flex:0 0 auto;padding:7px 13px;border-radius:16px;background:#fff;border:1px solid var(--border);font-size:12.5px;color:var(--text-light);white-space:nowrap;}
+.cu-gtab.active{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600;}
+.cu-dot{width:30px;height:30px;border-radius:50%;margin:0 auto;background:#f2ecec;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;}
+.cu-dot.on{background:var(--primary);border-color:var(--primary);}
+.cu-dot.today{box-shadow:0 0 0 3px rgba(214,150,150,.22);}
+.cu-way{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border);font-size:13px;}
+.cu-way:last-child{border-bottom:none;}
+.cu-shop{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cu-goods{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px;box-shadow:var(--shadow-2);}
+.cu-ticket{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px dashed var(--border);}
+.cu-ticket:last-child{border-bottom:none;}
+.cu-ticket.used{opacity:.5;}
 
 /* 客户卡片 */
 .user-card{
@@ -1145,6 +1164,7 @@ const CLOUD={
 };
 function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=0.08;o.start();setTimeout(()=>o.stop(),200);}catch(e){}}
 /* 从扫码链接读取 Supabase 配置：?sb_url=...&sb_key=... */
+function getUrlRef(){try{const m=location.href.match(/[?&]ref=([^&#]+)/);return m?decodeURIComponent(m[1]).trim():'';}catch(e){return '';}}
 function getUrlCloud(){try{const u=location.href.match(/[?&]sb_url=([^&#]+)/);const k=location.href.match(/[?&]sb_key=([^&#]+)/);return{url:u?decodeURIComponent(u[1]):'',key:k?decodeURIComponent(k[1]):''}}catch(e){return{url:'',key:''}}}
 function renderCurrentRouteSafe(){if(currentMode==='workspace')renderCurrentRoute();else renderCustomerPage();}
 function ensureCustomerFromAppt(a){
@@ -3434,6 +3454,7 @@ function renderCustomerPage(){
   if(hash==='#customer/appoint')tab='appoint';
   else if(hash==='#customer/mine')tab='mine';
   else if(hash==='#customer/member')tab='member';
+  else if(hash==='#customer/gift')tab='gift';
   else if(hash==='#customer/home')tab='home';
 
   let body='';
@@ -3444,6 +3465,7 @@ function renderCustomerPage(){
     setTimeout(renderCuStyleRows,0);
   }
   else if(tab==='mine')body=customerMyAppoints();
+  else if(tab==='gift')body=customerGift();
   else if(tab==='member')body=customerMember();
 
   app.innerHTML=`
@@ -3460,6 +3482,10 @@ function renderCustomerPage(){
       </div>
       <div class="tab-item ${tab==='home'?'active':''}" onclick="location.hash='#customer/home'">
         <div class="icon">🏠</div>我的主页
+      </div>
+      <div class="tab-item ${tab==='gift'?'active':''}" onclick="location.hash='#customer/gift'">
+        <div class="icon">🎁</div>打卡送礼
+        ${customerCurrentId&&RW().signin.enabled&&!todaySignedIn(customerCurrentId)?'<span class="tab-dot"></span>':''}
       </div>
       <div class="tab-item ${tab==='member'?'active':''}" onclick="location.hash='#customer/member'">
         <div class="icon">💳</div>会员中心
@@ -3506,17 +3532,30 @@ function customerHome(){
       <div class="c">每日 ${DB.settings.openTime}:00 - ${DB.settings.closeTime}:00</div>
     </div>
 
+    ${RW().signin.enabled?`<div class="card" style="box-shadow:var(--shadow-2);background:linear-gradient(135deg,#fff7f5,#fff)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:34px">${todaySignedIn(c.id)?'✅':'🎁'}</div>
+        <div style="flex:1">
+          <strong>${todaySignedIn(c.id)?'今日已签到':'今天还没签到哦'}</strong>
+          <div class="text-muted" style="font-size:12px">已连续签到 ${signinStreak(c.id)} 天${isDoubleDay()?' · 🎉 今天是'+(RW().doubleDay.label||'双倍积分日'):''}</div>
+        </div>
+        <button class="btn sm ${todaySignedIn(c.id)?'':'primary'}" onclick="${todaySignedIn(c.id)?"location.hash='#customer/gift'":'cuDoSignin()'}">
+          ${todaySignedIn(c.id)?'去看看':'签到 +'+RW().signin.dailyPoints}
+        </button>
+      </div>
+    </div>`:''}
+
     <div class="card" style="box-shadow:var(--shadow-2)">
-      <div class="card-title">🎁 积分兑换</div>
+      <div class="card-title">
+        <span>🎁 积分兑换</span>
+        <span style="font-size:12px;color:var(--primary)" onclick="location.hash='#customer/gift'">全部 ›</span>
+      </div>
       <p style="margin-bottom:8px">⭐ 您的积分：<strong style="color:var(--warning);font-size:18px">${c.points||0}</strong></p>
       <ul style="font-size:12.5px;line-height:1.9;color:#666">
-        <li>100分 兑换 卸甲服务 (¥30)</li>
-        <li>300分 兑换 单色补色 (¥80)</li>
-        <li>500分 兑换 免费手部护理</li>
-        <li>800分 兑换 限量款贴纸包</li>
-        <li>100分 = 1元 现金抵扣（上限20%）</li>
+        ${DB.rewardItems.filter(i=>i.enabled).slice(0,5).map(i=>`<li>${i.points}分 兑换 ${i.name}${i.value&&i.type!=='coupon'?' (¥'+i.value+')':''}</li>`).join('')||'<li>暂无奖品</li>'}
+        ${RW().deduct.enabled?`<li>${RW().deduct.pointsPerYuan}分 = 1元 现金抵扣（上限${RW().deduct.maxPercent}%）</li>`:''}
       </ul>
-      <p class="text-muted mt-2" style="font-size:12px">到店出示即可兑换</p>
+      <button class="btn sm primary" style="width:100%;margin-top:10px" onclick="location.hash='#customer/gift'">去兑换 →</button>
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">
@@ -3678,12 +3717,21 @@ function submitCustomerAppoint(){
 
   // 找客户或创建
   let customer=DB.customers.find(c=>c.name===name&&c.phone===phone);
+  const isNewCustomer=!customer;
   if(!customer){
     customer={id:genId('c'),name,phone,points:0,createdAt:Date.now()};
     DB.customers.push(customer);
   }
   customerCurrentId=customer.id;
   localStorage.setItem('hemanli_customer_id',customer.id);
+  // 邀请码绑定（来自 ?ref=xxx 邀请链接）
+  if(isNewCustomer){
+    const ref=getUrlRef();
+    if(ref){
+      const r=applyReferral(customer.id,ref);
+      if(r.ok)setTimeout(()=>toast('🎉 '+r.msg),1600);
+    }
+  }
   const appt={
     id:genId('a'),date,startTime:time,endTime,
     customerId:customer.id,name,phone,
@@ -3824,6 +3872,333 @@ function deleteMyAppt(id){
   // 客户端无法删除，只能取消
 }
 
+/* =============================================================
+   客户端「打卡送礼」页：签到 / 兑换 / 推荐 / 晒图 / 明细
+   ============================================================= */
+let GTAB='signin';
+function customerGift(){
+  const c=DB.customers.find(x=>x.id===customerCurrentId);
+  if(!c)return `
+    <div style="text-align:center;padding:44px 20px">
+      <div style="font-size:52px">🎁</div>
+      <h2 style="margin:10px 0 6px">打卡送礼</h2>
+      <p class="text-muted mb-3">签到攒积分、兑好礼、邀好友<br>先完成一次预约即可解锁</p>
+      <button class="btn primary" onclick="location.hash='#customer/appoint'" style="padding:12px 28px">去预约 →</button>
+    </div>`;
+
+  const rw=RW();
+  const pts=+c.points||0;
+  const soon=(expiringSoonList()||[]).find(x=>x.customerId===c.id);
+  const tabs=[['signin','📅 签到'],['shop','🎁 兑好礼'],['mine','🎫 我的券'],['invite','👭 邀好友'],['log','📋 明细']];
+
+  let body='';
+  if(GTAB==='signin')body=cuGiftSignin(c);
+  else if(GTAB==='shop')body=cuGiftShop(c);
+  else if(GTAB==='mine')body=cuGiftMine(c);
+  else if(GTAB==='invite')body=cuGiftInvite(c);
+  else body=cuGiftLog(c);
+
+  return `
+    <div class="user-card">
+      <div class="user-row"><div class="user-name">🎁 ${c.name} 的积分中心</div></div>
+      <div style="font-size:38px;font-weight:700;line-height:1.2;margin-top:4px">${pts}<span style="font-size:14px;font-weight:400;opacity:.85"> 分</span></div>
+      <div style="font-size:11.5px;opacity:.9;margin-top:2px">
+        ${isDoubleDay()?`🎉 今天是${rw.doubleDay.label||'双倍积分日'}，消费积分 ×${rw.doubleDay.multiplier}`:'积分可抵现金、换服务、换优惠券'}
+      </div>
+    </div>
+    ${soon?`<div class="tip-block" style="border-left-color:var(--danger);background:#fff5f5">
+      <div class="t">⏰ 积分即将过期</div>
+      <div class="c">您有 <strong style="color:var(--danger)">${soon.points}</strong> 分将在 <strong>${ymd(new Date(soon.soonest))}</strong> 过期，记得尽快使用～</div>
+    </div>`:''}
+    <div class="cu-gtabs">
+      ${tabs.map(([k,l])=>`<div class="cu-gtab ${GTAB===k?'active':''}" onclick="GTAB='${k}';renderCustomerPage()">${l}</div>`).join('')}
+    </div>
+    ${body}
+  `;
+}
+
+/* --- Tab 1：每日签到 --- */
+function cuGiftSignin(c){
+  const cfg=RW().signin;
+  if(!cfg.enabled)return '<div class="empty"><div class="icon">📅</div>签到活动暂未开启</div>';
+  const done=todaySignedIn(c.id);
+  const streak=signinStreak(c.id);
+  // 近 7 天签到点
+  const dots=[];
+  for(let i=6;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const ds=ymd(d);
+    dots.push({ds,label:['日','一','二','三','四','五','六'][d.getDay()],
+      on:DB.signins.some(s=>s.customerId===c.id&&s.date===ds),today:i===0});
+  }
+  const bonus=(cfg.streakBonus||[]).slice().sort((a,b)=>a.days-b.days);
+  const next=bonus.find(b=>b.days>streak);
+  const thisMonth=DB.signins.filter(s=>s.customerId===c.id&&s.date.startsWith(ymd(new Date()).slice(0,7))).length;
+
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2);text-align:center">
+      <div class="card-title" style="justify-content:center">📅 每日签到 · 每天 +${cfg.dailyPoints} 分</div>
+      <div style="display:flex;justify-content:space-between;gap:4px;margin:14px 0 16px">
+        ${dots.map(d=>`
+          <div style="flex:1;text-align:center">
+            <div class="cu-dot ${d.on?'on':''} ${d.today?'today':''}">${d.on?'✓':''}</div>
+            <div style="font-size:10.5px;color:${d.today?'var(--primary)':'#aaa'};margin-top:4px">${d.today?'今天':d.label}</div>
+          </div>`).join('')}
+      </div>
+      <button class="btn ${done?'':'primary'}" style="width:100%;padding:14px;font-size:15px" ${done?'disabled':''} onclick="cuDoSignin()">
+        ${done?'✅ 今日已签到':'🖐 立即签到 +'+cfg.dailyPoints+'分'}
+      </button>
+      <div style="display:flex;justify-content:space-around;margin-top:14px">
+        <div><div style="font-size:20px;font-weight:700;color:var(--primary)">${streak}</div><div class="text-muted" style="font-size:11px">连续签到(天)</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--primary)">${thisMonth}</div><div class="text-muted" style="font-size:11px">本月签到(天)</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--warning)">${DB.signins.filter(s=>s.customerId===c.id).length}</div><div class="text-muted" style="font-size:11px">累计签到(天)</div></div>
+      </div>
+      ${next?`<div class="text-muted" style="font-size:12px;margin-top:10px">再连签 <strong style="color:var(--primary)">${next.days-streak}</strong> 天，额外奖励 <strong style="color:var(--warning)">${next.points}</strong> 分 🎉</div>`:''}
+    </div>
+
+    ${bonus.length?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">🏆 连签奖励阶梯</div>
+      ${bonus.map(b=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border)">
+        <span>连续签到 <strong>${b.days}</strong> 天</span>
+        <span style="color:${streak>=b.days?'var(--success)':'var(--warning)'};font-weight:600">${streak>=b.days?'已达成 ✓':'+'+b.points+' 分'}</span>
+      </div>`).join('')}
+    </div>`:''}
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">⭐ 还能这样赚积分</div>
+      <div class="cu-way" onclick="GTAB='invite';renderCustomerPage()">
+        <span style="font-size:24px">👭</span>
+        <div style="flex:1"><strong>邀请好友到店</strong><div class="text-muted" style="font-size:11.5px">双方各得 ${RW().referral.referrerPoints} 分</div></div>
+        <span style="color:var(--primary)">去邀请 ›</span>
+      </div>
+      <div class="cu-way" onclick="GTAB='invite';renderCustomerPage()">
+        <span style="font-size:24px">📸</span>
+        <div style="flex:1"><strong>晒图到小红书/抖音</strong><div class="text-muted" style="font-size:11.5px">每次 +${RW().share.points} 分，每月最多 ${RW().share.maxPerMonth} 次</div></div>
+        <span style="color:var(--primary)">去晒图 ›</span>
+      </div>
+      <div class="cu-way" onclick="location.hash='#customer/appoint'">
+        <span style="font-size:24px">💅</span>
+        <div style="flex:1"><strong>到店消费</strong><div class="text-muted" style="font-size:11.5px">消费即累积积分${isDoubleDay()?'，今日双倍！':''}</div></div>
+        <span style="color:var(--primary)">去预约 ›</span>
+      </div>
+    </div>
+  `;
+}
+function cuDoSignin(){
+  const r=doSignin(customerCurrentId);
+  toast(r.msg);
+  if(r.ok)renderCustomerPage();
+}
+
+/* --- Tab 2：积分商城 --- */
+function cuGiftShop(c){
+  const list=DB.rewardItems.filter(i=>i.enabled);
+  if(!list.length)return '<div class="empty"><div class="icon">🎁</div>暂无可兑换奖品</div>';
+  const pts=+c.points||0;
+  const d=RW().deduct;
+  return `
+    ${d.enabled?`<div class="tip-block">
+      <div class="t">💰 积分抵现金</div>
+      <div class="c">${d.pointsPerYuan} 积分 = 1 元，单次最多抵 ${d.maxPercent}% 消费额<br>
+      您当前 ${pts} 分 ≈ 可抵 <strong style="color:var(--warning)">¥${(pts/d.pointsPerYuan).toFixed(2)}</strong>（结算时告知店家即可）</div>
+    </div>`:''}
+    <div class="cu-shop">
+      ${list.map(it=>{
+        const t=REWARD_TYPES[it.type]||REWARD_TYPES.service;
+        const can=pts>=it.points&&it.stock!==0;
+        return `<div class="cu-goods">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:30px">${it.icon||'🎁'}</div>
+            <span class="tag" style="background:${t.color};color:${t.text};font-size:10px">${t.label}</span>
+          </div>
+          <div style="font-weight:600;margin-top:6px;font-size:13.5px">${it.name}</div>
+          <div class="text-muted" style="font-size:11px;min-height:15px">${it.desc||''}${it.value?` · 价值¥${it.type==='coupon'&&it.value<1?(it.value*10).toFixed(1)+'折':it.value}`:''}</div>
+          <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="color:var(--warning);font-size:15px">${it.points}分</strong>
+            <span class="text-muted" style="font-size:10.5px">${it.stock<0?'不限量':'剩'+it.stock}</span>
+          </div>
+          <button class="btn sm ${can?'primary':''}" style="width:100%;margin-top:8px" ${can?'':'disabled'} onclick="cuRedeem('${it.id}')">
+            ${it.stock===0?'已兑完':can?'立即兑换':'还差'+(it.points-pts)+'分'}
+          </button>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+function cuRedeem(itemId){
+  const it=DB.rewardItems.find(x=>x.id===itemId);
+  if(!it)return;
+  if(!confirm(`确认用 ${it.points} 积分兑换「${it.name}」？`))return;
+  const r=redeemReward(customerCurrentId,itemId);
+  if(!r.ok){toast(r.msg);return;}
+  showModal('🎉 兑换成功',`
+    <div style="text-align:center;padding:12px 0">
+      <div style="font-size:46px">${it.icon||'🎁'}</div>
+      <div style="font-weight:600;font-size:16px;margin:8px 0 4px">${it.name}</div>
+      <p class="text-muted" style="font-size:12.5px">到店向店家出示以下核销码</p>
+      <div style="font-size:34px;letter-spacing:6px;font-weight:700;color:var(--primary-dark);background:#fff7f5;border:2px dashed var(--primary);border-radius:10px;padding:14px;margin:12px 0">${r.code}</div>
+      <p class="text-muted" style="font-size:12px">也可在「我的券」中随时查看</p>
+    </div>`,
+    `<button class="btn primary" onclick="this.closest('.modal-mask').remove();GTAB='mine';renderCustomerPage()">查看我的券</button>`);
+  renderCustomerPage();
+}
+
+/* --- Tab 3：我的兑换券 --- */
+function cuGiftMine(c){
+  const mine=DB.redeems.filter(r=>r.customerId===c.id);
+  const cps=DB.coupons.filter(x=>x.customerId===c.id);
+  if(!mine.length&&!cps.length)return '<div class="empty"><div class="icon">🎫</div>还没有兑换记录<br><span style="font-size:12px">去「兑好礼」看看吧</span></div>';
+  const today=ymd(new Date());
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">🎫 我的兑换券（${mine.filter(r=>r.status==='unused').length} 张待使用）</div>
+      ${mine.map(r=>{
+        const used=r.status==='used';
+        return `<div class="cu-ticket ${used?'used':''}">
+          <div style="flex:1">
+            <div style="font-weight:600">${r.itemName}</div>
+            <div class="text-muted" style="font-size:11.5px">${r.date} 兑换 · 消耗 ${r.points} 分</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:19px;letter-spacing:2px;font-weight:700;color:${used?'#bbb':'var(--primary-dark)'}">${r.code}</div>
+            <div style="font-size:11px;color:${used?'#bbb':'var(--success)'}">${used?'已核销':'待使用'}</div>
+          </div>
+        </div>`;
+      }).join('')||'<p class="text-muted">暂无</p>'}
+    </div>
+    ${cps.length?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">💳 优惠券包</div>
+      ${cps.map(p=>{
+        const dead=p.status==='used'||p.expireDate<today;
+        return `<div class="cu-ticket ${dead?'used':''}">
+          <div style="flex:1">
+            <div style="font-weight:600">${p.name}</div>
+            <div class="text-muted" style="font-size:11.5px">有效期至 ${p.expireDate}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:17px;font-weight:700;color:${dead?'#bbb':'var(--warning)'}">${p.kind==='discount'?(p.value*10).toFixed(1)+'折':'¥'+p.value}</div>
+            <div style="font-size:11px;color:${dead?'#bbb':'var(--success)'}">${p.status==='used'?'已使用':(p.expireDate<today?'已过期':'可使用')}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+  `;
+}
+
+/* --- Tab 4：邀好友 + 晒图 --- */
+function cuGiftInvite(c){
+  const rf=RW().referral, sh=RW().share;
+  const code=genReferralCode(c);
+  saveLocalOnly&&saveLocalOnly();
+  const link=location.origin+location.pathname+'?ref='+code+'#customer/appoint';
+  const mine=DB.referrals.filter(r=>r.referrerId===c.id);
+  const month=ymd(new Date()).slice(0,7);
+  const myShares=DB.shares.filter(s=>s.customerId===c.id);
+  const usedThisMonth=myShares.filter(s=>s.date.startsWith(month)&&s.status!=='rejected').length;
+
+  return `
+    ${rf.enabled?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">👭 邀请好友，双方各得 ${rf.referrerPoints} 分</div>
+      <p class="text-muted" style="font-size:12.5px;margin-bottom:10px">
+        把您的专属邀请码或链接发给闺蜜，她首次${rf.requireConsume?'到店消费':'预约'}后，你们双方各得 <strong style="color:var(--warning)">${rf.referrerPoints}</strong> / <strong style="color:var(--warning)">${rf.refereePoints}</strong> 积分。
+      </p>
+      <div style="background:#fff7f5;border:2px dashed var(--primary);border-radius:10px;padding:14px;text-align:center;margin-bottom:10px">
+        <div class="text-muted" style="font-size:11.5px">我的专属邀请码</div>
+        <div style="font-size:26px;letter-spacing:3px;font-weight:700;color:var(--primary-dark);margin-top:2px">${code}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" style="flex:1" onclick="cuCopy('${code}')">复制邀请码</button>
+        <button class="btn sm primary" style="flex:1" onclick="cuCopy('${link.replace(/'/g,"\\'")}')">复制邀请链接</button>
+      </div>
+      ${mine.length?`<div style="margin-top:14px">
+        <div class="text-muted" style="font-size:12px;margin-bottom:6px">已邀请 ${mine.length} 人，到账 ${mine.filter(r=>r.status==='done').length} 人</div>
+        ${mine.map(r=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px">
+          <span>${r.refereeName}<span class="text-muted" style="font-size:11px"> · ${r.date}</span></span>
+          <span style="color:${r.status==='done'?'var(--success)':'var(--warning)'}">${r.status==='done'?'+'+r.referrerPoints+'分 已到账':'待她首次消费'}</span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+
+    ${sh.enabled?`<div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">📸 晒图领积分 · 每次 +${sh.points} 分</div>
+      <p class="text-muted" style="font-size:12.5px;margin-bottom:10px">
+        在${(sh.platforms||[]).join(' / ')}发布带本店定位的美甲图或视频，把链接贴过来即可领积分。
+        本月已用 <strong>${usedThisMonth}</strong>/${sh.maxPerMonth} 次。
+      </p>
+      <div class="form-group"><label>发布平台</label>
+        <select id="cu-sh-plat">${(sh.platforms||[]).map(p=>`<option>${p}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>作品链接</label>
+        <input id="cu-sh-url" placeholder="粘贴小红书 / 抖音分享链接">
+      </div>
+      <div class="form-group"><label>备注（可选）</label>
+        <input id="cu-sh-note" placeholder="例如：发布于 3 月 8 日">
+      </div>
+      <button class="btn primary" style="width:100%" ${usedThisMonth>=sh.maxPerMonth?'disabled':''} onclick="cuSubmitShare()">
+        ${usedThisMonth>=sh.maxPerMonth?'本月已达上限':'提交领取 +'+sh.points+'分'}
+      </button>
+      ${myShares.length?`<div style="margin-top:14px">
+        ${myShares.slice(0,6).map(s=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--border);font-size:12.5px">
+          <span>${s.platform}<span class="text-muted" style="font-size:11px"> · ${s.date}</span></span>
+          <span style="color:${s.status==='approved'?'var(--success)':s.status==='rejected'?'var(--danger)':'var(--warning)'}">
+            ${s.status==='approved'?'+'+s.points+'分 已通过':s.status==='rejected'?'未通过':'审核中'}
+          </span>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+  `;
+}
+function cuCopy(txt){
+  const done=()=>toast('已复制，去粘贴给好友吧～');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>cuCopyFallback(txt,done));}
+  else cuCopyFallback(txt,done);
+}
+function cuCopyFallback(txt,done){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');done();}catch(e){prompt('请手动复制：',txt);}
+  ta.remove();
+}
+function cuSubmitShare(){
+  const plat=document.getElementById('cu-sh-plat').value;
+  const url=document.getElementById('cu-sh-url').value.trim();
+  const note=document.getElementById('cu-sh-note').value.trim();
+  if(!url){toast('请粘贴作品链接');return;}
+  const r=submitShare(customerCurrentId,plat,url,note);
+  toast(r.msg);
+  if(r.ok)renderCustomerPage();
+}
+
+/* --- Tab 5：积分明细 --- */
+function cuGiftLog(c){
+  const logs=DB.points_log.filter(l=>l.customerId===c.id).slice(0,60);
+  const cfg=RW().expire;
+  if(!logs.length)return '<div class="empty"><div class="icon">📋</div>还没有积分记录</div>';
+  const gained=logs.filter(l=>l.change>0).reduce((s,l)=>s+l.change,0);
+  const spent=logs.filter(l=>l.change<0).reduce((s,l)=>s-l.change,0);
+  return `
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div style="display:flex;justify-content:space-around;text-align:center;padding:4px 0 10px">
+        <div><div style="font-size:20px;font-weight:700;color:var(--success)">+${gained}</div><div class="text-muted" style="font-size:11px">累计获得</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--danger)">-${spent}</div><div class="text-muted" style="font-size:11px">累计使用</div></div>
+        <div><div style="font-size:20px;font-weight:700;color:var(--warning)">${c.points||0}</div><div class="text-muted" style="font-size:11px">当前可用</div></div>
+      </div>
+      ${cfg.enabled?`<div class="text-muted" style="font-size:11.5px;text-align:center;border-top:1px dashed var(--border);padding-top:8px">积分自获得起 ${cfg.months} 个月内有效，过期前 ${cfg.remindDays} 天会提醒您</div>`:''}
+    </div>
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">📋 积分明细</div>
+      ${logs.map(l=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border)">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13.5px">${l.reason||POINT_SOURCES[l.source]||'积分变动'}</div>
+            <div class="text-muted" style="font-size:11px">${l.date}${l.expireAt&&l.change>0?' · '+(l.expired?'已过期':'有效期至 '+ymd(new Date(l.expireAt))):''}</div>
+          </div>
+          <strong style="color:${l.change>0?'var(--success)':'var(--danger)'};font-size:15px">${l.change>0?'+':''}${l.change}</strong>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
 function customerMember(){
   const c=DB.customers.find(x=>x.id===customerCurrentId);
   if(!c)return '<div class="empty"><div class="icon">💳</div>请先预约一次</div>';
@@ -3848,16 +4223,19 @@ function customerMember(){
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">
-      <div class="card-title">⭐ 我的积分</div>
+      <div class="card-title">
+        <span>⭐ 我的积分</span>
+        <span style="font-size:12px;color:var(--primary)" onclick="location.hash='#customer/gift'">打卡送礼 ›</span>
+      </div>
       <p style="font-size:30px;color:var(--warning);font-weight:700;margin-bottom:8px">${c.points||0}</p>
       <p class="text-muted">积分可兑换：</p>
       <ul style="font-size:12.5px;line-height:1.9;margin-top:8px">
-        <li>100分 = 卸甲服务</li>
-        <li>300分 = 单色补色</li>
-        <li>500分 = 手部护理</li>
-        <li>800分 = 限量贴纸包</li>
-        <li>100分 = 1元现金抵扣</li>
+        ${DB.rewardItems.filter(i=>i.enabled).map(i=>`<li>${i.points}分 = ${i.name}</li>`).join('')||'<li>暂无奖品</li>'}
+        ${RW().deduct.enabled?`<li>${RW().deduct.pointsPerYuan}分 = 1元现金抵扣</li>`:''}
       </ul>
+      ${RW().levelUp.enabled?`<div class="text-muted" style="font-size:11.5px;border-top:1px dashed var(--border);margin-top:10px;padding-top:8px">
+        积分自动升级：${[...RW().levelUp.rules].sort((a,b)=>a.points-b.points).map(r=>`${r.points}分→${(MEMBER_TIERS[String(r.amount)]||{}).name||r.amount}`).join(' · ')}
+      </div>`:''}
     </div>
 
     <div class="card" style="box-shadow:var(--shadow-2)">

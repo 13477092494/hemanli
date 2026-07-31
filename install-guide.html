@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>禾蔓里·美甲美睫工作室 - 安装与部署指南</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#faf6f5,#fbe9e7);min-height:100vh;padding:24px 16px;color:#2d2424;line-height:1.7}
+.wrap{max-width:780px;margin:0 auto}
+.hero{text-align:center;padding:24px 0 32px}
+.hero .logo{font-size:56px}
+.hero h1{font-size:24px;color:#c4797b;margin-top:8px;font-weight:600}
+.hero p{color:#7a6f6f;margin-top:8px;font-size:14px}
+.card{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.card h2{font-size:18px;color:#c4797b;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.os{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #f5eeed}
+.os:last-child{border-bottom:none}
+.os .badge{flex-shrink:0;width:54px;text-align:center;background:#faf6f5;border-radius:8px;padding:8px 4px;font-size:11px;color:#c4797b}
+.os .steps{flex:1;font-size:13.5px;color:#4a4040}
+.os .steps b{color:#2d2424}
+.step{display:flex;gap:10px;margin:8px 0}
+.step .num{flex-shrink:0;width:22px;height:22px;background:#d99a9a;color:#fff;border-radius:50%;text-align:center;line-height:22px;font-size:12px}
+.tip{background:linear-gradient(135deg,#fff8e1,#fff3cc);border-left:4px solid #d4a85a;padding:12px 16px;border-radius:8px;font-size:13px;color:#6b5a3a;margin:12px 0}
+.kbd{background:#faf6f5;border:1px solid #d99a9a;color:#c4797b;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:12px}
+.url-box{background:#faf6f5;border:1px dashed #d99a9a;border-radius:8px;padding:12px;font-size:12.5px;word-break:break-all;color:#7a6f6f;margin:10px 0;user-select:all}
+.btn{display:inline-block;background:#d99a9a;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;text-decoration:none;margin:6px 6px 6px 0}
+.btn.ghost{background:#fff;color:#c4797b;border:1px solid #d99a9a}
+.note{font-size:12.5px;color:#998f8f;margin-top:8px}
+.code{background:#2d2424;color:#f5e9e8;padding:14px;border-radius:8px;font-size:12px;overflow-x:auto;font-family:monospace;margin:10px 0;white-space:pre}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">💅</div>
+    <h1>禾蔓里·美甲美睫工作室</h1>
+    <p>工作台已升级为可安装 App · 含离线缓存与桌面图标</p>
+  </div>
+
+  <div class="card">
+    <h2>📲 第一步：把工作台装到桌面（当 App 用）</h2>
+    <p class="note">应用已改造成 PWA（渐进式 Web 应用），打开后会自动提示安装。也可按下列方式手动添加：</p>
+
+    <div class="os">
+      <div class="badge">iPhone<br> Safari</div>
+      <div class="steps">
+        打开工作台网页 → 点底部 <b>⬆ 分享</b> 按钮（方框加箭头）→ 往上滑找到 <b>「添加到主屏幕」</b> → 命名「禾蔓里」→ 点右上角 <b>添加</b>。<br>
+        桌面即出现粉色花朵图标，点开就是全屏 App（无浏览器地址栏）。
+      </div>
+    </div>
+    <div class="os">
+      <div class="badge">安卓<br> Chrome</div>
+      <div class="steps">
+        打开工作台网页 → 点右上角 <b>⋮ 菜单</b> → 选 <b>「安装应用」/「添加到主屏幕」</b> → 确认。<br>
+        或直接点地址栏右侧的 <b>📲 安装图标</b>。
+      </div>
+    </div>
+    <div class="os">
+      <div class="badge">Windows<br> 电脑</div>
+      <div class="steps">
+        用 Chrome / Edge 打开工作台网页 → 点地址栏右侧 <b>📲 安装（电脑图标）</b> → 点「安装」。<br>
+        或在 <b>⋮ → 应用 → 将此站点另存为应用</b>。装好后开始菜单/桌面出现图标。
+      </div>
+    </div>
+    <div class="os">
+      <div class="badge">Mac<br> 电脑</div>
+      <div class="steps">
+        用 Chrome / Safari 打开 → Safari 选 <b>文件 → 添加到「访达」程序坞</b>；Chrome 点地址栏安装图标 → 安装。<br>
+        App 会出现在启动台/程序坞。
+      </div>
+    </div>
+    <div class="tip">💡 客户扫码进入的也是同一套界面（自动只显示预约/积分/会员），他们同样可以「添加到主屏幕」，得到自己的预约 App。店主 App 和客户 App 是同一个链接、同一个入口。</div>
+  </div>
+
+  <div class="card">
+    <h2>🔗 第二步：关于「永久固定链接」</h2>
+    <p>当前工作台部署在云端沙盒里，<b>沙盒休眠期间预览链接会失效</b>，所以它不是永久链接。要获得真正 7×24 永久、免费、不变的链接，推荐把应用上传到你自己的静态托管（应用是纯前端单文件，部署极简）。</p>
+
+    <div class="url-box" id="preview-url">当前可用预览链接（沙盒存活期间）：<br>正在加载…</div>
+
+    <h3 style="margin:16px 0 8px;color:#2d2424;font-size:15px">方案 A：GitHub Pages（免费永久，最推荐）</h3>
+    <div class="step"><div class="num">1</div><div>把下载的 <b>zip</b> 解压，得到 <span class="kbd">index.html</span>、<span class="kbd">demo.html</span>、<span class="kbd">manifest.webmanifest</span> 等 10 个文件</div></div>
+    <div class="step"><div class="num">2</div><div>登录 <b>github.com</b> → 新建仓库（如 <b>hemanli</b>）→ 把解压文件全部上传</div></div>
+    <div class="step"><div class="num">3</div><div>仓库 <b>Settings → Pages</b> → Source 选 <b>main 分支 / root</b> → Save</div></div>
+    <div class="step"><div class="num">4</div><div>几分钟后获得永久链接：<span class="kbd">https://你的用户名.github.io/hemanli/</span>（加上 <span class="kbd">#customer</span> 即客户端）</div></div>
+    <p class="note">✅ 完全免费、永久稳定、HTTPS 加密、支持「添加到主屏幕」安装为 App</p>
+
+    <h3 style="margin:16px 0 8px;color:#2d2424;font-size:15px">方案 B：任意静态托管（国内更快）</h3>
+    <div class="steps" style="font-size:13.5px">把解压文件夹整个上传到 <b>阿里云 OSS / 腾讯云 COS / 七牛云 / 又拍云 / 自己的虚拟主机</b> 的网站根目录，开启「静态网站托管」即得到一个永久域名。国内访问速度比 GitHub 更快。</div>
+
+    <h3 style="margin:16px 0 8px;color:#2d2424;font-size:15px">方案 C：纯本地（最稳妥、零依赖）</h3>
+    <div class="steps" style="font-size:13.5px">解压后直接双击 <span class="kbd">index.html</span> 用浏览器打开即可使用（数据存在本机浏览器里）。缺点：不能「添加到主屏幕」装成 App、换设备数据不共享。适合只用一台电脑的工作室。</div>
+  </div>
+
+  <div class="card">
+    <h2>💾 第三步：下载应用包</h2>
+    <p>应用已打包成 <b>hemanli-studio.zip</b>（160KB，含全部 10 个文件）。下载后按方案 A/B/C 部署，或直接解压使用。</p>
+    <p class="note">📦 包内文件：index.html（工作台空数据）、demo.html（带示例数据）、README.html（说明）、manifest.webmanifest、sw.js、icon.svg/192/512/180/maskable.png</p>
+    <a class="btn" href="hemanli-studio.zip">⬇ 下载安装包 (zip)</a>
+    <a class="btn ghost" href="demo.html">▶ 打开工作台演示版</a>
+    <a class="btn ghost" href="demo.html#customer">▶ 打开客户端预览</a>
+  </div>
+
+  <div class="card">
+    <h2>🔄 数据备份提醒</h2>
+    <p class="steps" style="font-size:13.5px">所有数据存在浏览器本地（localStorage）。定期在「设置 → 数据管理 → 导出 JSON」备份，换设备或重装后「导入 JSON」恢复。部署到自己的托管后，同一设备同一浏览器数据会保留；换设备需重新导入。多人（店长+店员）共用时，请在同一台设备/浏览器上操作以保证数据一致。</p>
+  </div>
+
+  <p style="text-align:center;color:#998f8f;font-size:12px;padding:16px 0">禾蔓里工作室 · App 安装与部署指南</p>
+</div>
+
+<script>
+// 填入当前 preview url（若有）
+try{
+  const base='https://webview.e2b.sh3.sandbox.cloudstudio.club/?x-cs-sandbox-id=72ff412aa29244e6bbebd2e619f38058&x-cs-sandbox-port=8080';
+  document.getElementById('preview-url').innerHTML='当前可用预览链接（沙盒存活期间有效）：<br><b>'+base+'</b><br><span style="font-size:11px">工作台：直接打开 · 客户端：在链接后加 #customer</span>';
+}catch(e){}
+</script>
+</body>
+</html>

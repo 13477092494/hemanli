@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#d99a9a">
+<title>禾蔓里·美甲美睫工作室</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="禾蔓里">
+<style>
+/* ========== CSS变量和基础重置 ========== */
+:root{
+  --primary:#d99a9a;
+  --primary-dark:#c4797b;
+  --primary-light:#f7e3e3;
+  --accent:#e8b4b8;
+  --bg:#faf6f5;
+  --bg-2:#fff5f3;
+  --card:#ffffff;
+  --text:#2d2424;
+  --text-light:#7a6f6f;
+  --border:#f0e3e3;
+  --success:#7ab87a;
+  --warning:#e8b04c;
+  --danger:#d96666;
+  --gold:#d4a85a;
+  --silver:#a8a8a8;
+  --shadow:0 4px 20px rgba(217,154,154,.12);
+  --shadow-2:0 2px 8px rgba(0,0,0,.06);
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-lg:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+  user-select:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+input,textarea,select{font-family:inherit;font-size:14px;color:var(--text);outline:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;background:#fff;width:100%;transition:border-color .2s;}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);}
+textarea{resize:none;min-height:80px;line-height:1.6;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:var(--primary-light);border-radius:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ========== 工作台布局(iPad) ========== */
+.workspace{
+  display:flex;
+  height:100vh;
+  background:var(--bg);
+}
+/* 左侧导航 */
+.workspace-sidebar{
+  width:240px;
+  background:linear-gradient(180deg,#fff 0%,#fffaf8 100%);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  flex-shrink:0;
+}
+.sidebar-brand{
+  padding:24px 20px 18px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-brand h1{font-size:18px;color:var(--primary-dark);font-weight:600;}
+.sidebar-brand .en{font-size:11px;color:var(--text-light);margin-top:4px;letter-spacing:1px;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;}
+.nav-group{margin-bottom:12px;}
+.nav-group-title{padding:8px 12px 4px;font-size:11px;color:var(--text-light);letter-spacing:1px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-size:13.5px;
+  cursor:pointer;
+  position:relative;
+  transition:all .15s;
+}
+.nav-item:hover{background:var(--primary-light);}
+.nav-item.active{background:var(--primary);color:#fff;font-weight:500;}
+.nav-item .badge{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  background:var(--danger);color:#fff;font-size:10px;
+  padding:2px 6px;border-radius:10px;min-width:18px;text-align:center;
+}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;}
+.sidebar-footer{padding:12px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text-light);text-align:center;}
+
+/* 主区 */
+.workspace-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.workspace-header{
+  height:60px;
+  padding:0 24px;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.header-title{font-size:18px;font-weight:600;color:var(--text);}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn{
+  padding:8px 14px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:500;
+  background:var(--primary-light);color:var(--primary-dark);
+  border:1px solid transparent;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .15s;
+}
+.btn:hover{background:var(--primary);color:#fff;}
+.btn.primary{background:var(--primary);color:#fff;}
+.btn.primary:hover{background:var(--primary-dark);}
+.btn.danger{background:#ffeaea;color:var(--danger);}
+.btn.danger:hover{background:var(--danger);color:#fff;}
+.btn.success{background:#e6f4e6;color:var(--success);}
+.btn.success:hover{background:var(--success);color:#fff;}
+.btn.gold{background:linear-gradient(135deg,#f7e1b3,#e8c479);color:#8a6420;}
+.btn.sm{padding:5px 10px;font-size:12px;}
+.workspace-content{flex:1;overflow-y:auto;padding:24px;}
+
+/* 卡片 */
+.card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-2);margin-bottom:16px;}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.row{display:flex;gap:12px;}
+.col{flex:1;}
+
+/* 数据卡片 */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;}
+.stat-card{
+  padding:18px;border-radius:var(--radius);
+  background:linear-gradient(135deg,#fff,#fffaf8);
+  border:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.stat-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--primary);}
+.stat-card.green::before{background:var(--success);}
+.stat-card.gold::before{background:var(--gold);}
+.stat-card.danger::before{background:var(--danger);}
+.stat-label{font-size:12px;color:var(--text-light);margin-bottom:6px;}
+.stat-value{font-size:24px;font-weight:700;color:var(--text);}
+
+/* 表格 */
+.tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden;}
+.tbl th{background:var(--bg-2);padding:12px 14px;font-size:12px;text-align:left;color:var(--text-light);font-weight:500;border-bottom:1px solid var(--border);}
+.tbl td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover{background:var(--bg-2);}
+
+/* 标签 */
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500;}
+.tag.gold{background:#fff4d4;color:#8a6420;}
+.tag.silver{background:#e8e8e8;color:#555;}
+.tag.normal{background:#f0f0f0;color:#777;}
+.tag.success{background:#e6f4e6;color:var(--success);}
+.tag.warning{background:#fff4d4;color:var(--warning);}
+.tag.danger{background:#ffeaea;color:var(--danger);}
+.tag.primary{background:var(--primary-light);color:var(--primary-dark);}
+
+/* 表单 */
+.form-item{margin-bottom:14px;}
+.form-label{display:block;font-size:13px;color:var(--text);margin-bottom:6px;font-weight:500;}
+.form-label .req{color:var(--danger);margin-left:2px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+
+/* 模态框 */
+.modal-mask{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  display:flex;align-items:center;justify-content:center;z-index:1000;
+  animation:fade .2s;
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{
+  background:#fff;border-radius:var(--radius-lg);width:600px;max-width:90vw;
+  max-height:85vh;display:flex;flex-direction:column;overflow:hidden;
+  animation:pop .25s;
+}
+@keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-header h3{font-size:16px;font-weight:600;}
+.modal-close{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-light);}
+.modal-close:hover{background:var(--bg-2);}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+
+/* Toast */
+.toast{position:fixed;left:50%;top:30%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:13px;z-index:9999;animation:popIn .2s;}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* 客户小程序布局 */
+.app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:#fff;position:relative;}
+.app-header{
+  height:60px;padding:0 16px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;display:flex;align-items:center;justify-content:center;position:relative;
+}
+.app-header h1{font-size:16px;font-weight:600;text-align:center;}
+.app-content{flex:1;overflow-y:auto;padding:16px;padding-bottom:80px;background:#fff;}
+.app-tabbar{
+  position:absolute;left:0;right:0;bottom:0;height:64px;
+  background:#fff;border-top:1px solid var(--border);
+  display:flex;z-index:50;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-light);font-size:11px;}
+.tab-item.active{color:var(--primary);}
+.tab-item .icon{font-size:22px;}
+
+/* 客户卡片 */
+.user-card{
+  background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color:#fff;border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;
+}
+.user-row{display:flex;justify-content:space-between;align-items:center;}
+.user-name{font-size:18px;font-weight:600;}
+.user-tag{font-size:11px;padding:3px 10px;background:rgba(255,255,255,.2);border-radius:12px;}
+.user-stats{display:flex;gap:16px;margin-top:14px;}
+.user-stat{flex:1;text-align:center;}
+.user-stat .v{font-size:20px;font-weight:700;}
+.user-stat .l{font-size:11px;opacity:.85;margin-top:2px;}
+
+/* 时间段网格 */
+.time-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+.time-slot{
+  padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  text-align:center;font-size:13px;background:#fff;cursor:pointer;
+  transition:all .15s;
+}
+.time-slot:hover{border-color:var(--primary);}
+.time-slot.selected{background:var(--primary);color:#fff;border-color:var(--primary);}
+.time-slot.disabled{background:#f5f5f5;color:#bbb;cursor:not-allowed;text-decoration:line-through;}
+
+/* 营业时间块 */
+.tip-block{
+  background:linear-gradient(135deg,#fff8e1,#fff3cc);
+  border-left:4px solid var(--gold);border-radius:var(--radius-sm);
+  padding:14px;margin-bottom:16px;
+}
+.tip-block .t{font-weight:600;color:#8a6420;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.tip-block .c{font-size:12.5px;line-height:1.8;color:#6b5a3a;}
+
+/* 左滑删除 */
+.swipe-wrap{position:relative;overflow:hidden;background:#fff;border-radius:var(--radius-sm);margin-bottom:8px;}
+.swipe-content{padding:12px;background:#fff;transition:transform .2s;position:relative;z-index:2;}
+.swipe-content.swiped{transform:translateX(-80px);}
+.swipe-action{
+  position:absolute;right:0;top:0;bottom:0;width:80px;
+  background:var(--danger);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  z-index:1;
+}
+
+/* 弹幕提醒 */
+.danmu{
+  position:fixed;left:20px;right:20px;bottom:24px;z-index:999;
+  background:linear-gradient(135deg,#fff8e1,#fff3cc);
+  border-left:4px solid var(--warning);
+  padding:12px 16px;border-radius:var(--radius);
+  box-shadow:0 8px 24px rgba(232,176,76,.3);
+  animation:slideUp .3s;font-size:13px;
+}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* 分析图表 */
+.chart-box{height:220px;position:relative;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-light);}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;}
+
+.empty{text-align:center;padding:48px 20px;color:var(--text-light);}
+.empty .icon{font-size:48px;margin-bottom:14px;opacity:.4;}
+
+/* 链接抓取 */
+.link-input-row{display:flex;gap:8px;margin-bottom:14px;}
+.link-input-row input{flex:1;}
+
+.preview-card{
+  border:1px dashed var(--primary);
+  border-radius:var(--radius);padding:14px;
+  background:#fffaf8;margin-bottom:14px;
+}
+.preview-cover{width:80px;height:80px;border-radius:var(--radius-sm);background:#f0e3e3;object-fit:cover;flex-shrink:0;}
+.preview-row{display:flex;gap:14px;}
+
+/* 提醒 */
+.notice-bar{
+  background:var(--primary-light);color:var(--primary-dark);
+  padding:10px 14px;border-radius:var(--radius-sm);
+  font-size:12.5px;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+
+.text-danger{color:var(--danger);}
+.text-success{color:var(--success);}
+.text-warning{color:var(--warning);}
+.text-muted{color:var(--text-light);}
+.text-center{text-align:center;}
+.text-right{text-align:right;}
+.font-bold{font-weight:600;}
+
+.mt-1{margin-top:8px;}.mt-2{margin-top:16px;}.mt-3{margin-top:24px;}
+.mb-1{margin-bottom:8px;}.mb-2{margin-bottom:16px;}.mb-3{margin-bottom:24px;}
+
+/* 时间块 */
+.hours-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+.day-card{
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  overflow:hidden;
+}
+.day-head{padding:8px 12px;background:var(--bg-2);font-size:13px;font-weight:500;text-align:center;}
+.day-body{padding:8px;display:flex;flex-wrap:wrap;gap:4px;}
+.hour-chip{
+  font-size:11px;padding:4px 8px;border-radius:6px;
+  background:#f5f5f5;color:var(--text-light);
+}
+.hour-chip.booked{background:var(--primary-light);color:var(--primary-dark);}
+.hour-chip.closed{background:#fff0f0;color:#ccc;}
+.hour-chip.free{background:#e6f4e6;color:#5a8a5a;}
+
+/* 选择会员 */
+.member-card{
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;margin-bottom:10px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:all .15s;
+}
+.member-card:hover,.member-card.selected{border-color:var(--primary);background:var(--bg-2);}
+
+/* 直播选题 */
+.topic-card{padding:12px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;}
+.topic-card .ttl{font-weight:500;display:flex;justify-content:space-between;}
+
+/* 响应式 */
+@media (max-width:900px){
+  .workspace{flex-direction:column;}
+  .workspace-sidebar{width:100%;height:auto;flex-direction:row;border-right:none;border-bottom:1px solid var(--border);overflow-x:auto;}
+  .sidebar-brand{display:none;}
+  .sidebar-nav{display:flex;padding:8px;gap:4px;}
+  .nav-group{flex-shrink:0;}
+  .nav-group-title{display:none;}
+  .nav-item{white-space:nowrap;padding:8px 12px;}
+  .nav-item .badge{right:4px;}
+  .workspace-header{padding:0 12px;}
+  .workspace-content{padding:14px;}
+  .form-grid,.form-grid-3{grid-template-columns:1fr;}
+  .modal{width:94vw;max-height:90vh;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========= 工作台 ========= -->
+<div id="workspace-view" class="workspace" style="display:none">
+  <aside class="workspace-sidebar">
+    <div class="sidebar-brand">
+      <h1>禾蔓里·美甲美睫</h1>
+      <div class="en">HEMANLI NAIL STUDIO</div>
+    </div>
+    <div class="sidebar-nav" id="nav">
+      <div class="nav-group">
+        <div class="nav-group-title">主菜单</div>
+        <div class="nav-item active" data-route="dashboard"><span class="icon">🏠</span>工作台 <span class="badge" id="badge-noti" style="display:none">0</span></div>
+        <div class="nav-item" data-route="appointment"><span class="icon">📅</span>预约管理 <span class="badge" id="badge-appoint" style="display:none">0</span></div>
+        <div class="nav-item" data-route="order"><span class="icon">💰</span>报价开单</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title">客户管理</div>
+        <div class="nav-item" data-route="customer"><span class="icon">👤</span>客户档案</div>
+        <div class="nav-item" data-route="member"><span class="icon">💳</span>会员管理</div>
+        <div class="nav-item" data-route="points"><span class="icon">⭐</span>积分中心</div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-title">运营工具</div>
+        <div class="nav-item" data-route="marketing"><span class="icon">📊</span>营销管理</div>
+        <div class="nav-item" data-route="finance"><span class="icon">📒</span>财务管理</div>
+        <div class="nav-item" data-route="crawler"><span class="icon">🔗</span>链接抓取</div>
+        <div class="nav-item" data-route="notice"><span class="icon">🔔</span>通知中心</div>
+        <div class="nav-item" data-route="settings"><span class="icon">⚙️</span>设置</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">禾蔓里工作室 © 2026</div>
+  </aside>
+  <main class="workspace-main">
+    <header class="workspace-header">
+      <div class="header-title" id="page-title">工作台</div>
+      <div class="header-actions">
+        <button class="btn" onclick="openNewAppointment()">📅 新建预约</button>
+        <button class="btn primary" onclick="openQuickQuote()">⚡ 快速报价</button>
+      </div>
+    </header>
+    <div class="workspace-content" id="page-content"></div>
+  </main>
+</div>
+
+<!-- ========= 客户端 ========= -->
+<div id="customer-view" class="app" style="display:none"></div>
+
+<!-- ========= 弹幕提醒 ========= -->
+<div id="danmu-container"></div>
+
+<!-- ========= 模态框容器 ========= -->
+<div id="modal-container"></div>
+<!-- ========= Toast ========= -->
+<div id="toast-container"></div>
+
+<script>
+/* =============================================================
+   数据层 - localStorage包装
+   ============================================================= */
+const DB_KEY='hemanli_db_v1';
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}]}};
+
+const MEMBER_TIERS={
+  '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
+  '500':{name:'银卡',amount:500,discount:0.9,tag:'silver',pointsRate:1.2,expireMonths:12,color:'#a8a8a8'},
+  '1000':{name:'金卡',amount:1000,discount:0.8,tag:'gold',pointsRate:1.5,expireMonths:12,color:'#d4a85a'}
+};
+
+function loadDB(){
+  try{
+    const raw=localStorage.getItem(DB_KEY);
+    if(raw){const data=JSON.parse(raw);return Object.assign({},SCHEMA,data);}
+  }catch(e){}
+  const init=Object.assign({},SCHEMA);
+  // 初始化示例数据
+  init.memberships=[{id:'m300',amount:300,discount:0.95,name:'储值卡',pointsRate:1.0,expireMonths:12},{id:'m500',amount:500,discount:0.9,name:'银卡',pointsRate:1.2,expireMonths:12},{id:'m1000',amount:1000,discount:0.8,name:'金卡',pointsRate:1.5,expireMonths:12}];
+  init.items=[
+    {id:'i1',name:'本甲单色',price:80,duration:60,category:'本甲',hot:false},
+    {id:'i2',name:'本甲法式',price:120,duration:90,category:'本甲',hot:true},
+    {id:'i3',name:'本甲猫眼',price:150,duration:120,category:'本甲',hot:true},
+    {id:'i4',name:'甲片单色',price:180,duration:120,category:'甲片',hot:false},
+    {id:'i5',name:'甲片款式',price:280,duration:150,category:'甲片',hot:true},
+    {id:'i6',name:'复杂款手绘',price:580,duration:240,category:'千元款',hot:true},
+    {id:'i7',name:'手部护理',price:60,duration:30,category:'护理',hot:false},
+    {id:'i8',name:'卸甲',price:30,duration:20,category:'护理',hot:false},
+    {id:'i9',name:'贴钻每个',price:5,duration:10,category:'加项',hot:false,pointsMultiple:2}
+  ];
+  return init;
+}
+function saveDB(){localStorage.setItem(DB_KEY,JSON.stringify(DB));}
+let DB=loadDB();
+
+function genId(p='id'){return p+'_'+Date.now()+'_'+Math.floor(Math.random()*1000);}
+function ymd(d){d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function hm(date){date=new Date(date);return String(date.getHours()).padStart(2,'0')+':'+String(date.getMinutes()).padStart(2,'0');}
+function parseHM(s){const [h,m]=s.split(':').map(Number);return {h,m};}
+
+/* 跨标签同步 */
+const channel=new BroadcastChannel('hemanli_sync');
+channel.onmessage=e=>{
+  if(e.data.type==='update'){
+    DB=loadDB();
+    renderCurrentRoute();
+    toast('数据已同步');
+  }
+};
+
+/* =============================================================
+   路由
+   ============================================================= */
+let currentRoute='dashboard';
+let currentMode='workspace';
+let customerCurrentId=null; // 客户登录态
+
+function detectMode(){
+  const hash=location.hash.replace('#','');
+  if(hash.startsWith('customer')){currentMode='customer';return;}
+  // 客户端扫码判断：URL带?customer或扫码hash
+  if(location.search.includes('mode=customer')||location.hash==='#customer'){currentMode='customer';return;}
+  currentMode='workspace';
+}
+
+function init(){
+  detectMode();
+  if(currentMode==='customer'){
+    document.getElementById('workspace-view').style.display='none';
+    document.getElementById('customer-view').style.display='flex';
+    initCustomer();
+  }else{
+    document.getElementById('workspace-view').style.display='flex';
+    document.getElementById('customer-view').style.display='none';
+    initWorkspace();
+  }
+  // 启动定时检查
+  setInterval(checkReminders,60000);
+  setInterval(checkBroadcastReminders,30000);
+  checkBroadcastReminders();
+}
+
+/* =============================================================
+   工作台
+   ============================================================= */
+function initWorkspace(){
+  document.querySelectorAll('#nav .nav-item').forEach(el=>{
+    el.onclick=()=>{
+      document.querySelectorAll('#nav .nav-item').forEach(n=>n.classList.remove('active'));
+      el.classList.add('active');
+      currentRoute=el.dataset.route;
+      renderRoute();
+    };
+  });
+  renderRoute();
+  refreshBadges();
+}
+
+function renderRoute(){
+  document.getElementById('page-title').textContent={
+    dashboard:'工作台',
+    appointment:'预约管理',
+    order:'报价开单',
+    customer:'客户档案',
+    member:'会员管理',
+    points:'积分中心',
+    marketing:'营销管理',
+    finance:'财务管理',
+    crawler:'链接抓取',
+    notice:'通知中心',
+    settings:'设置'
+  }[currentRoute];
+  const el=document.getElementById('page-content');
+  el.innerHTML='';
+  ({
+    dashboard:renderDashboard,
+    appointment:renderAppointment,
+    order:renderOrder,
+    customer:renderCustomer,
+    member:renderMember,
+    points:renderPoints,
+    marketing:renderMarketing,
+    finance:renderFinance,
+    crawler:renderCrawler,
+    notice:renderNotice,
+    settings:renderSettings
+  })[currentRoute](el);
+}
+
+function renderCurrentRoute(){if(currentMode==='workspace')renderRoute();else renderCustomerPage();}
+
+function refreshBadges(){
+  const today=ymd(new Date());
+  const upcoming=DB.appointments.filter(a=>a.date>=today&&a.status!=='cancelled'&&a.status!=='completed').length;
+  if(upcoming>0){document.getElementById('badge-appoint').style.display='';document.getElementById('badge-appoint').textContent=upcoming;}
+  const membersExpiring=DB.customers.filter(c=>{
+    if(!c.membershipExpire)return false;
+    const diff=(new Date(c.membershipExpire)-new Date())/(1000*60*60*24);
+    return diff<=7&&diff>=0;
+  }).length;
+  const total=membersExpiring;
+  if(total>0){document.getElementById('badge-noti').style.display='';document.getElementById('badge-noti').textContent=total;}
+}
+
+/* 工作台首页 */
+function renderDashboard(el){
+  const today=ymd(new Date());
+  const todayTransactions=DB.transactions.filter(t=>t.date===today&&t.type==='收入');
+  const todayRevenue=todayTransactions.reduce((s,t)=>s+(+t.amount||0),0);
+  const todayAppointments=DB.appointments.filter(a=>a.date===today&&a.status!=='cancelled');
+  const completedToday=todayAppointments.filter(a=>a.status==='completed').length;
+  const pendingToday=todayAppointments.filter(a=>a.status==='confirmed'||a.status==='pending').length;
+  const month=new Date().getMonth(),year=new Date().getFullYear();
+  const monthRevenue=DB.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===month&&d.getFullYear()===year&&t.type==='收入';}).reduce((s,t)=>s+(+t.amount||0),0);
+  const monthExpense=DB.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===month&&d.getFullYear()===year&&t.type==='支出';}).reduce((s,t)=>s+(+t.amount||0),0);
+
+  const expiringMembers=DB.customers.filter(c=>{
+    if(!c.membershipExpire)return false;
+    const diff=(new Date(c.membershipExpire)-new Date())/(1000*60*60*24);
+    return diff<=7&&diff>=0;
+  });
+
+  el.innerHTML=`
+    <div class="notice-bar">💡 温馨提示：数据实时同步，请在手机/iPad/电脑不同设备间打开使用，所有数据自动保存。</div>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">今日营业额</div>
+        <div class="stat-value">¥${todayRevenue.toFixed(0)}</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">本月营业额</div>
+        <div class="stat-value">¥${monthRevenue.toFixed(0)}</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-label">本月利润</div>
+        <div class="stat-value">¥${(monthRevenue-monthExpense).toFixed(0)}</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-label">本月支出</div>
+        <div class="stat-value">¥${monthExpense.toFixed(0)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 今日工作汇报（${today}）</div>
+      <div class="row">
+        <div class="col">
+          <p style="margin-bottom:8px"><span class="tag primary">已完成 ${completedToday} 单</span></p>
+          <p style="margin-bottom:8px"><span class="tag warning">待进行 ${pendingToday} 单</span></p>
+          <p style="margin-bottom:8px"><span class="tag success">今日营收 ¥${todayRevenue.toFixed(0)}</span></p>
+          <p><span class="tag gold">今日客流 ${todayAppointments.length} 人</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔔 待办提醒</div>
+      ${expiringMembers.length>0?`
+        <div style="background:#fff8e1;padding:12px;border-radius:8px;margin-bottom:10px;">
+          <div style="font-weight:600;margin-bottom:6px;color:#8a6420">⚠️ 会员即将到期 ${expiringMembers.length} 位</div>
+          ${expiringMembers.map(c=>`<div style="font-size:12.5px;padding:4px 0">· ${c.name} (${c.phone||'无手机号'}) - 到期 ${c.membershipExpire} - 余额¥${c.membershipBalance||0}</div>`).join('')}
+          <button class="btn sm primary mt-1" onclick="routeTo('notice')">立即发送通知</button>
+        </div>
+      `:''}
+      ${pendingToday>0?`
+        <div style="background:#f0e3ff;padding:12px;border-radius:8px;margin-bottom:10px;">
+          <div style="font-weight:600;margin-bottom:6px;color:#6b4d8a">📅 今日预约 ${pendingToday} 单</div>
+          ${todayAppointments.filter(a=>a.status!=='completed').map(a=>`<div style="font-size:12.5px;padding:4px 0">· ${a.startTime}-${a.endTime} ${a.name} ${a.item||''}</div>`).join('')}
+        </div>
+      `:''}
+      ${expiringMembers.length===0&&pendingToday===0?'<div class="empty"><div class="icon">✓</div>暂无待办提醒</div>':''}
+    </div>
+
+    <div class="card">
+      <div class="card-title">👥 客户概览</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">总客户数</div><div class="stat-value">${DB.customers.length}</div></div>
+        <div class="stat-card"><div class="stat-label">金卡客户</div><div class="stat-value">${DB.customers.filter(c=>c.membershipAmount===1000).length}</div></div>
+        <div class="stat-card"><div class="stat-label">银卡客户</div><div class="stat-value">${DB.customers.filter(c=>c.membershipAmount===500).length}</div></div>
+        <div class="stat-card"><div class="stat-label">总积分余额</div><div class="stat-value">${DB.customers.reduce((s,c)=>s+(+c.points||0),0)}</div></div>
+      </div>
+    </div>
+  `;
+}
+
+/* 预约管理 */
+function renderAppointment(el){
+  const today=ymd(new Date());
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>预约列表</span>
+        <div>
+          <button class="btn sm" onclick="openNewAppointment()">＋ 新建预约</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="appt-filters">
+        <button class="btn sm primary" data-filter="all">全部 (${DB.appointments.length})</button>
+        <button class="btn sm" data-filter="pending">待确认 (${DB.appointments.filter(a=>a.status==='pending').length})</button>
+        <button class="btn sm" data-filter="confirmed">已确认 (${DB.appointments.filter(a=>a.status==='confirmed').length})</button>
+        <button class="btn sm" data-filter="completed">已完成 (${DB.appointments.filter(a=>a.status==='completed').length})</button>
+        <button class="btn sm" data-filter="cancelled">已取消 (${DB.appointments.filter(a=>a.status==='cancelled').length})</button>
+      </div>
+      <div id="appt-list"></div>
+    </div>
+  `;
+  let curFilter='all';
+  const list=()=>{
+    const data=curFilter==='all'?DB.appointments:DB.appointments.filter(a=>a.status===curFilter);
+    return data.sort((a,b)=>b.date.localeCompare(a.date)||a.startTime.localeCompare(b.startTime));
+  };
+  function draw(){
+    const arr=list();
+    const target=document.getElementById('appt-list');
+    if(arr.length===0){target.innerHTML='<div class="empty"><div class="icon">📅</div>暂无预约</div>';return;}
+    target.innerHTML='<div id="appt-rows">'+arr.map(a=>{
+      const customer=DB.customers.find(c=>c.id===a.customerId)||{};
+      const statusTag={pending:'<span class="tag warning">待确认</span>',confirmed:'<span class="tag primary">已确认</span>',completed:'<span class="tag success">已完成</span>',cancelled:'<span class="tag danger">已取消</span>'}[a.status];
+      return `<div class="swipe-wrap" data-id="${a.id}">
+        <div class="swipe-action" onclick="deleteAppt('${a.id}')">删除</div>
+        <div class="swipe-content">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div><strong>${customer.name||a.name||'(已删除客户)'}</strong> <span style="color:#999;font-size:12px">${a.phone||customer.phone||''}</span></div>
+            ${statusTag}
+          </div>
+          <div style="font-size:13px;color:#666">📅 ${a.date} ${a.startTime}-${a.endTime} ${a.item?'· '+a.item:''}</div>
+          ${a.note?'<div style="font-size:12px;color:#999;margin-top:4px">备注：'+a.note+'</div>':''}
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            ${a.status==='pending'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','confirmed')">确认</button>`:''}
+            ${a.status==='confirmed'?`<button class="btn sm success" onclick="setApptStatus('${a.id}','completed')">完成</button>`:''}
+            ${a.status!=='cancelled'&&a.status!=='completed'?`<button class="btn sm danger" onclick="cancelAppt('${a.id}')">取消预约</button>`:''}
+            <button class="btn sm" onclick="editAppt('${a.id}')">编辑</button>
+            ${a.status==='cancelled'?`<button class="btn sm danger" onclick="deleteAppt('${a.id}')">删除</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+    bindSwipe(target);
+  }
+  document.querySelectorAll('#appt-filters button').forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll('#appt-filters button').forEach(x=>x.classList.remove('primary'));
+      b.classList.add('primary');
+      curFilter=b.dataset.filter;
+      draw();
+    };
+  });
+  draw();
+}
+
+function bindSwipe(container){
+  let startX=0,curX=0,active=null,swiped=false;
+  container.querySelectorAll('.swipe-content').forEach(el=>{
+    el.ontouchstart=e=>{
+      const t=e.touches[0];startX=t.clientX;curX=0;active=el;swiped=false;
+      if(!el.classList.contains('swiped')){container.querySelectorAll('.swipe-content.swiped').forEach(x=>x.classList.remove('swiped'));}
+    };
+    el.ontouchmove=e=>{
+      if(!active)return;
+      e.preventDefault();
+      const t=e.touches[0];curX=t.clientX-startX;
+      const prev=el.classList.contains('swiped')?-80:0;
+      let next=Math.min(0,Math.max(-100,prev+curX));
+      el.style.transform='translateX('+next+'px)';
+    };
+    el.ontouchend=()=>{
+      if(!active)return;
+      const tx=parseInt(el.style.transform.replace(/[^-\d]/g,''))||0;
+      if(tx<-40){el.classList.add('swiped');el.style.transform='';}
+      else{el.classList.remove('swiped');el.style.transform='';}
+      active=null;
+    };
+    // 桌面拖拽
+    el.onmousedown=e=>{
+      startX=e.clientX;curX=0;active=el;swiped=false;
+      if(!el.classList.contains('swiped')){container.querySelectorAll('.swipe-content.swiped').forEach(x=>x.classList.remove('swiped'));}
+      const move=ev=>{
+        if(!active)return;
+        ev.preventDefault();
+        curX=ev.clientX-startX;
+        const prev=el.classList.contains('swiped')?-80:0;
+        let next=Math.min(0,Math.max(-100,prev+curX));
+        el.style.transform='translateX('+next+'px)';
+      };
+      const up=()=>{
+        document.removeEventListener('mousemove',move);
+        document.removeEventListener('mouseup',up);
+        const tx=parseInt(el.style.transform.replace(/[^-\d]/g,''))||0;
+        if(tx<-40)el.classList.add('swiped');
+        else el.classList.remove('swiped');
+        el.style.transform='';
+        active=null;
+      };
+      document.addEventListener('mousemove',move);
+      document.addEventListener('mouseup',up);
+    };
+  });
+}
+
+function deleteAppt(id){
+  if(!confirm('确定彻底删除该预约吗？此操作不可恢复'))return;
+  DB.appointments=DB.appointments.filter(a=>a.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+function cancelAppt(id){
+  if(!confirm('确定取消该预约？'))return;
+  const a=DB.appointments.find(x=>x.id===id);
+  if(a){a.status='cancelled';saveDB();syncChannel();renderCurrentRoute();toast('已取消');}
+}
+function setApptStatus(id,s){
+  const a=DB.appointments.find(x=>x.id===id);
+  if(a){a.status=s;saveDB();syncChannel();renderCurrentRoute();toast('已更新');}
+}
+function editAppt(id){
+  const a=DB.appointments.find(x=>x.id===id);
+  if(!a)return;
+  openApptEditor(a);
+}
+
+/* 报价开单 */
+function renderOrder(el){
+  const today=ymd(new Date());
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">✨ 快速报价 / 开单</div>
+      <div class="form-grid">
+        <div>
+          <label class="form-label">选择客户（已备案）</label>
+          <input id="order-customer-search" placeholder="🔍 搜索姓名/手机号" oninput="filterOrderCustomers()">
+          <select id="order-customer" size="6" style="margin-top:8px;height:auto"></select>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="form-label" style="margin:0">客户（散客自填）</label>
+            <button class="btn sm" onclick="toggleOrderNew()">＋ 新客户</button>
+          </div>
+          <div id="order-new" style="display:none">
+            <div class="form-grid-3">
+              <input id="order-name" placeholder="客户姓名">
+              <input id="order-phone" placeholder="手机号">
+              <input id="order-birthday" type="date" placeholder="生日">
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <label class="form-label">款式报价</label>
+            <select id="order-item" onchange="recalcOrder()"></select>
+            <label class="form-label" style="margin-top:10px">技师自填金额(可选)</label>
+            <input id="order-amount" type="number" placeholder="留空按款式价" oninput="recalcOrder()">
+          </div>
+          <div style="margin-top:14px">
+            <label class="form-label">消费日期</label>
+            <input id="order-date" type="date" value="${today}">
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px;background:#fffaf8">
+        <div class="row">
+          <div class="col">原价：<span id="order-original">¥0</span></div>
+          <div class="col">会员折扣：<span id="order-discount">无</span></div>
+          <div class="col text-success"><strong>应付：<span id="order-final">¥0</span></strong></div>
+        </div>
+        <div class="text-muted mt-1" style="font-size:12px" id="order-points-tip">本次消费将获得积分：0 分</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn primary" onclick="submitOrder()">✅ 创建消费记录</button>
+        <button class="btn" onclick="openQuickQuote()">📸 发图问价 →</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">消费记录</div>
+      <div id="order-list"></div>
+    </div>
+  `;
+  populateOrderCustomers();
+  populateOrderItems();
+  recalcOrder();
+  drawOrderList();
+}
+
+let orderState={customer:null,item:null};
+function populateOrderCustomers(){
+  const sel=document.getElementById('order-customer');
+  if(!sel)return;
+  sel.innerHTML='<option value="">-- 不选 / 散客 --</option>'+DB.customers.map(c=>`<option value="${c.id}">${c.name} ${c.phone||''}${c.membershipAmount?' ['+getMembershipName(c.membershipAmount)+']':''}</option>`).join('');
+  sel.onchange=()=>{orderState.customer=DB.customers.find(c=>c.id===sel.value);recalcOrder();};
+}
+function filterOrderCustomers(){
+  const q=document.getElementById('order-customer-search').value.toLowerCase();
+  const sel=document.getElementById('order-customer');
+  sel.innerHTML='<option value="">-- 不选 / 散客 --</option>'+DB.customers.filter(c=>{
+    return !q||(c.name&&c.name.toLowerCase().includes(q))||(c.phone&&c.phone.includes(q));
+  }).map(c=>`<option value="${c.id}">${c.name} ${c.phone||''}${c.membershipAmount?' ['+getMembershipName(c.membershipAmount)+']':''}</option>`).join('');
+  sel.onchange=()=>{orderState.customer=DB.customers.find(c=>c.id===sel.value);recalcOrder();};
+}
+function populateOrderItems(){
+  const sel=document.getElementById('order-item');
+  sel.innerHTML='<option value="">-- 选择款式 --</option>'+DB.items.map(i=>`<option value="${i.id}">${i.name} ¥${i.price} (${i.duration}分钟)</option>`).join('');
+  sel.onchange=()=>{orderState.item=DB.items.find(i=>i.id===sel.value);recalcOrder();};
+}
+function toggleOrderNew(){
+  const o=document.getElementById('order-new');
+  o.style.display=o.style.display==='none'?'':'none';
+}
+function getMembershipName(amt){return MEMBER_TIERS[amt]?MEMBER_TIERS[amt].name:'会员卡';}
+function recalcOrder(){
+  const itemPrice=orderState.item?orderState.item.price:0;
+  const manualAmount=parseFloat(document.getElementById('order-amount')?.value)||0;
+  const original=manualAmount||itemPrice;
+  let final=original;
+  let discountText='无';
+  if(orderState.customer&&orderState.customer.membershipAmount&&MEMBER_TIERS[orderState.customer.membershipAmount]){
+    const tier=MEMBER_TIERS[orderState.customer.membershipAmount];
+    final=original*tier.discount;
+    discountText=getMembershipName(orderState.customer.membershipAmount)+' ×'+tier.discount;
+  }
+  const pointsEl=document.getElementById('order-points-tip');
+  if(pointsEl){
+    let rate=1.0;
+    if(orderState.customer&&orderState.customer.membershipAmount&&MEMBER_TIERS[orderState.customer.membershipAmount]){rate=MEMBER_TIERS[orderState.customer.membershipAmount].pointsRate;}
+    if(orderState.item&&orderState.item.pointsMultiple)rate*=orderState.item.pointsMultiple;
+    const pts=Math.floor(original*rate);
+    pointsEl.textContent=`本次消费将获得积分：${pts} 分 (倍率 ×${rate.toFixed(1)})`;
+  }
+  document.getElementById('order-original').textContent='¥'+original.toFixed(0);
+  document.getElementById('order-discount').textContent=discountText;
+  document.getElementById('order-final').textContent='¥'+final.toFixed(0);
+}
+function submitOrder(){
+  const date=document.getElementById('order-date').value;
+  const itemId=document.getElementById('order-item').value;
+  const item=DB.items.find(i=>i.id===itemId);
+  const manualAmount=parseFloat(document.getElementById('order-amount').value)||0;
+  const original=manualAmount||(item?item.price:0);
+  if(original<=0){toast('请选择款式或填入金额');return;}
+  let customerId=document.getElementById('order-customer').value;
+  // 散客模式 - 自填
+  const newVisible=document.getElementById('order-new').style.display!=='none';
+  if(!customerId&&newVisible){
+    const name=document.getElementById('order-name').value.trim();
+    const phone=document.getElementById('order-phone').value.trim();
+    const birthday=document.getElementById('order-birthday').value;
+    if(!name){toast('请填写客户姓名');return;}
+    const c={id:genId('c'),name,phone,birthday,createdAt:Date.now(),points:0};
+    DB.customers.push(c);
+    customerId=c.id;
+    orderState.customer=c;
+  }else if(!customerId&&!newVisible){
+    toast('请选择客户或切换到散客模式');return;
+  }
+  const customer=DB.customers.find(c=>c.id===customerId);
+  let final=original;
+  if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){final=original*MEMBER_TIERS[customer.membershipAmount].discount;}
+  // 写入消费记录
+  const tx={
+    id:genId('tx'),
+    date,
+    type:'收入',
+    amount:final,
+    name:item?item.name:'自填消费',
+    customerId,
+    customerName:customer?customer.name:'',
+    createdAt:Date.now(),
+    source:'manual'
+  };
+  DB.transactions.unshift(tx);
+  // 积分自动计算
+  let ptsRate=1.0;
+  if(customer&&customer.membershipAmount&&MEMBER_TIERS[customer.membershipAmount]){ptsRate=MEMBER_TIERS[customer.membershipAmount].pointsRate;}
+  if(item&&item.pointsMultiple)ptsRate*=item.pointsMultiple;
+  const earned=Math.floor(original*ptsRate);
+  if(customer){
+    customer.points=(+customer.points||0)+earned;
+    DB.points_log.unshift({id:genId('pl'),date,customerId:customer.id,name:customer.name,change:earned,reason:'消费 '+tx.name+' ¥'+final,balance:customer.points});
+  }
+  saveDB();syncChannel();toast(`开单成功 +${earned}积分`);
+  drawOrderList();
+  populateOrderCustomers();
+  recalcOrder();
+}
+function drawOrderList(){
+  const el=document.getElementById('order-list');
+  if(!el)return;
+  const arr=DB.transactions.filter(t=>t.type==='收入').slice(0,50);
+  if(arr.length===0){el.innerHTML='<div class="empty"><div class="icon">💰</div>暂无消费记录</div>';return;}
+  el.innerHTML='<div id="order-rows">'+arr.map(t=>`
+    <div class="swipe-wrap" data-id="${t.id}">
+      <div class="swipe-action" onclick="deleteTx('${t.id}')">删除</div>
+      <div class="swipe-content">
+        <div style="display:flex;justify-content:space-between">
+          <div><strong>${t.customerName||'(散客)'}</strong> · ${t.name}</div>
+          <div class="text-success font-bold">+¥${(+t.amount).toFixed(0)}</div>
+        </div>
+        <div class="text-muted" style="font-size:12px">${t.date} ${t.source==='crawler'?'· 🔗抓取链接':''}</div>
+      </div>
+    </div>`).join('')+'</div>';
+  bindSwipe(el);
+}
+function deleteTx(id){
+  if(!confirm('删除此记录？积分也将回收'))return;
+  const tx=DB.transactions.find(t=>t.id===id);
+  if(tx&&tx.customerId){
+    const c=DB.customers.find(x=>x.id===tx.customerId);
+    if(c&&tx.earnedPoints){c.points=Math.max(0,(+c.points||0)-tx.earnedPoints);}
+  }
+  DB.transactions=DB.transactions.filter(t=>t.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+
+function deleteFinance(id){
+  if(!confirm('删除？'))return;
+  DB.transactions=DB.transactions.filter(t=>t.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+
+/* 客户档案 */
+function renderCustomer(el){
+  const q=window._customerQuery||'';
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>客户档案 (${DB.customers.length})</span>
+        <div>
+          <button class="btn sm" onclick="openNewCustomer()">＋ 新增客户</button>
+        </div>
+      </div>
+      <input placeholder="🔍 搜索姓名/手机号" id="cust-search" value="${q}" oninput="window._customerQuery=this.value;const list=DB.customers.filter(c=>!this.value||c.name.includes(this.value)||(c.phone&&c.phone.includes(this.value)));renderCustomerRows(list);">
+      <div class="mt-2" id="customer-rows"></div>
+    </div>
+  `;
+  function renderCustomerRows(arr){
+    const target=document.getElementById('customer-rows');
+    if(arr.length===0){target.innerHTML='<div class="empty"><div class="icon">👤</div>暂无客户，点击右上角新增</div>';return;}
+    target.innerHTML='<div id="cust-rows">'+arr.map(c=>{
+      const tier=c.membershipAmount&&MEMBER_TIERS[c.membershipAmount]?`<span class="tag ${MEMBER_TIERS[c.membershipAmount].tag}">${MEMBER_TIERS[c.membershipAmount].name}</span>`:'';
+      return `<div class="swipe-wrap" data-id="${c.id}">
+        <div class="swipe-action" onclick="deleteCustomer('${c.id}')">删除</div>
+        <div class="swipe-content" onclick="editCustomer('${c.id}')" style="cursor:pointer">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong style="font-size:15px">${c.name}</strong>
+              <span style="color:#999;font-size:12px;margin-left:8px">${c.phone||'无手机号'}</span>
+              ${tier}
+            </div>
+            <div class="text-right">
+              <div class="text-warning font-bold">⭐ ${c.points||0}分</div>
+              ${c.membershipBalance?'<div class="text-success" style="font-size:12px">储值 ¥'+c.membershipBalance+'</div>':''}
+            </div>
+          </div>
+          <div class="text-muted mt-1" style="font-size:12px">
+            ${c.birthday?'🎂 '+c.birthday:'(未填生日)'}
+            ${c.membershipExpire?' · 年卡到期 '+c.membershipExpire:''}
+            ${c.membershipAmount?' · 享'+MEMBER_TIERS[c.membershipAmount].discount*10+'折':''}
+          </div>
+        </div>
+      </div>`;
+    }).join('')+'</div>';
+    bindSwipe(target);
+  }
+  renderCustomerRows(DB.customers.filter(c=>!q||c.name.includes(q)||(c.phone&&c.phone.includes(q))));
+}
+function deleteCustomer(id){
+  if(!confirm('彻底删除该客户档案？'))return;
+  DB.customers=DB.customers.filter(c=>c.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+function editCustomer(id){
+  const c=DB.customers.find(x=>x.id===id);
+  if(!c)return;
+  openCustomerEditor(c);
+}
+
+/* 会员管理 */
+function renderMember(el){
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">💳 年卡会员等级配置</div>
+      <div id="member-tiers"></div>
+      <button class="btn sm primary mt-2" onclick="addMemberTier()">＋ 新增等级</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👑 会员客户管理</div>
+      <div id="member-list"></div>
+    </div>
+  `;
+  drawMemberTiers();
+  drawMemberList();
+}
+function drawMemberTiers(){
+  document.getElementById('member-tiers').innerHTML=DB.memberships.map((m,i)=>`
+    <div class="card" style="background:#fffaf8;padding:12px">
+      <div class="form-grid-3">
+        <input value="${m.name}" onchange="DB.memberships[${i}].name=this.value;saveDB()" placeholder="等级名称">
+        <input type="number" value="${m.amount}" onchange="DB.memberships[${i}].amount=+this.value;rebuildMemberRate();saveDB();drawMemberList();renderCurrentRoute()" placeholder="储值金额">
+        <input type="number" step="0.01" value="${m.discount}" onchange="DB.memberships[${i}].discount=+this.value;saveDB()" placeholder="折扣率如0.9">
+      </div>
+      <div class="form-grid-3 mt-1">
+        <input type="number" step="0.1" value="${m.pointsRate}" onchange="DB.memberships[${i}].pointsRate=+this.value;saveDB()" placeholder="积分倍率">
+        <input type="number" value="${m.expireMonths}" onchange="DB.memberships[${i}].expireMonths=+this.value;saveDB()" placeholder="月数">
+        <button class="btn sm danger" onclick="DB.memberships.splice(${i},1);saveDB();drawMemberTiers();drawMemberList()">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+function rebuildMemberRate(){
+  // 同步MEMBER_TIERS
+  DB.memberships.forEach(m=>{MEMBER_TIERS[m.amount]=MEMBER_TIERS[m.amount]||{tag:'normal',color:'#999'};MEMBER_TIERS[m.amount].name=m.name;MEMBER_TIERS[m.amount].amount=m.amount;MEMBER_TIERS[m.amount].discount=m.discount;MEMBER_TIERS[m.amount].pointsRate=m.pointsRate;MEMBER_TIERS[m.amount].expireMonths=m.expireMonths;});
+}
+function addMemberTier(){
+  DB.memberships.push({id:genId('m'),name:'新等级',amount:200,discount:0.95,pointsRate:1,expireMonths:12});
+  saveDB();drawMemberTiers();
+}
+function drawMemberList(){
+  const members=DB.customers.filter(c=>c.membershipAmount);
+  document.getElementById('member-list').innerHTML=members.length?members.map(c=>{
+    const tier=MEMBER_TIERS[c.membershipAmount]||{name:'会员'};
+    const daysLeft=c.membershipExpire?Math.floor((new Date(c.membershipExpire)-new Date())/(1000*60*60*24)):null;
+    return `<div class="member-card" onclick="editCustomer('${c.id}')">
+      <div>
+        <strong>${c.name}</strong> <span class="tag ${tier.tag||'normal'}">${tier.name} (¥${c.membershipAmount})</span>
+        <div style="font-size:12px;color:#999;margin-top:4px">
+          ${c.phone||'无手机号'} · 余额 ¥${c.membershipBalance||0} · 到期 ${c.membershipExpire||'-'}
+          ${daysLeft!==null&&daysLeft<=7?'<span class="text-danger"> · '+daysLeft+'天后到期</span>':''}
+        </div>
+      </div>
+      <div class="text-warning">⭐ ${c.points||0}</div>
+    </div>`;
+  }).join(''):'<div class="empty"><div class="icon">💳</div>暂无会员</div>';
+}
+
+/* 积分中心 */
+function renderPoints(el){
+  el.innerHTML=`
+    <div class="notice-bar">💡 积分自动计算：消费每1元积1分，会员等级/双倍项目翻倍。会员到期前7天自动提醒。</div>
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <div class="card-title">赚取积分规则</div>
+          <table class="tbl">
+            <tr><th>途径</th><th>规则</th></tr>
+            <tr><td>消费基础</td><td>每消费1元积1分</td></tr>
+            <tr><td>双倍项目</td><td>贴钻/延长甲/特定套餐 ×2</td></tr>
+            <tr><td>银卡会员</td><td>×1.2 倍</td></tr>
+            <tr><td>金卡会员</td><td>×1.5 倍</td></tr>
+            <tr><td>推荐新客</td><td>双方各 +200 分</td></tr>
+            <tr><td>社交分享</td><td>+50~100 分</td></tr>
+            <tr><td>每日签到</td><td>+10 分</td></tr>
+            <tr><td>会员注册</td><td>+100 分</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">兑换规则</div>
+          <table class="tbl">
+            <tr><th>兑换项目</th><th>所需积分</th><th>价值</th></tr>
+            <tr><td>卸甲服务</td><td>100 分</td><td>¥30</td></tr>
+            <tr><td>单色补色</td><td>300 分</td><td>¥80</td></tr>
+            <tr><td>8折美甲券</td><td>300 分</td><td>折扣券</td></tr>
+            <tr><td>免费手部护理</td><td>500 分</td><td>¥60</td></tr>
+            <tr><td>限量贴纸包</td><td>800 分</td><td>礼品</td></tr>
+            <tr><td>现金抵扣</td><td colspan="2">100积分=1元 (上限20%)</td></tr>
+            <tr><td>积分抽奖</td><td colspan="2">50分/次 (每月活动)</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚡ 手动操作积分</div>
+      <div class="form-grid">
+        <div>
+          <label class="form-label">选择客户</label>
+          <select id="pt-customer">
+            <option value="">-- 请选择 --</option>
+            ${DB.customers.map(c=>`<option value="${c.id}">${c.name} (当前: ${c.points||0}分)</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">变动分值 (+/-)</label>
+          <input type="number" id="pt-change" placeholder="如 +100 / -50">
+        </div>
+      </div>
+      <div class="form-item mt-1">
+        <label class="form-label">原因</label>
+        <input id="pt-reason" placeholder="如：推荐新客 / 兑换卸甲服务">
+      </div>
+      <button class="btn primary mt-1" onclick="addPointsManual()">提交</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">积分流水</div>
+      <div id="pt-log"></div>
+    </div>
+  `;
+  const log=DB.points_log.slice(0,100);
+  document.getElementById('pt-log').innerHTML=log.length?'<div id="pt-rows">'+log.map(p=>{
+    const c=DB.customers.find(x=>x.id===p.customerId)||{name:p.name};
+    return `<div class="swipe-wrap" data-id="${p.id}">
+      <div class="swipe-action" onclick="deletePtLog('${p.id}')">删除</div>
+      <div class="swipe-content">
+        <div style="display:flex;justify-content:space-between">
+          <div>${c.name} · ${p.reason}</div>
+          <div class="${p.change>0?'text-success':'text-danger'} font-bold">${p.change>0?'+':''}${p.change}</div>
+        </div>
+        <div class="text-muted" style="font-size:12px">${p.date} · 余额 ${p.balance}</div>
+      </div>
+    </div>`;
+  }).join('')+'</div>':'<div class="empty"><div class="icon">⭐</div>暂无积分流水</div>';
+  if(log.length)bindSwipe(document.getElementById('pt-log'));
+}
+function deletePtLog(id){
+  if(!confirm('删除？相应积分也将调整'))return;
+  const p=DB.points_log.find(x=>x.id===id);
+  if(p){const c=DB.customers.find(x=>x.id===p.customerId);if(c)c.points=Math.max(0,(+c.points||0)-p.change);}
+  DB.points_log=DB.points_log.filter(x=>x.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+function addPointsManual(){
+  const cid=document.getElementById('pt-customer').value;
+  const change=parseInt(document.getElementById('pt-change').value);
+  const reason=document.getElementById('pt-reason').value.trim();
+  if(!cid){toast('请选择客户');return;}
+  if(!change){toast('请输入变动分值');return;}
+  if(!reason){toast('请输入原因');return;}
+  const c=DB.customers.find(x=>x.id===cid);
+  if(!c)return;
+  c.points=Math.max(0,(+c.points||0)+change);
+  DB.points_log.unshift({id:genId('pl'),date:ymd(new Date()),customerId:c.id,name:c.name,change,reason,balance:c.points});
+  saveDB();syncChannel();renderCurrentRoute();toast('已调整');
+}
+
+/* 营销管理 */
+function renderMarketing(el){
+  el.innerHTML=`
+    <div class="row">
+      <div class="col">
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-label">年累计利润</div><div class="stat-value">¥${calcYearProfit()}</div></div>
+          <div class="stat-card green"><div class="stat-label">月累计利润</div><div class="stat-value">¥${calcMonthProfit()}</div></div>
+          <div class="stat-card gold"><div class="stat-label">本周营业额</div><div class="stat-value">¥${calcWeekRevenue()}</div></div>
+          <div class="stat-card danger"><div class="stat-label">客单价</div><div class="stat-value">¥${calcAvgOrder()}</div></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <div class="card-title">📈 12个月营收</div>
+          <div class="chart-box" id="chart-rev"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💎 产品/款式统计（TOP 10）</div>
+      <div id="product-stats"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📚 利润统计表</div>
+      <table class="tbl">
+        <tr><th>月份</th><th>收入</th><th>支出</th><th>利润</th><th>利润率</th></tr>
+        ${monthlyStats().map(m=>`<tr><td>${m.month}</td><td>¥${m.revenue}</td><td>¥${m.expense}</td><td class="text-success">¥${m.profit}</td><td>${m.margin}</td></tr>`).join('')}
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📺 直播/短视频选题建议</div>
+      <div id="topics"></div>
+      <button class="btn sm mt-1" onclick="addTopic()">＋ 新增选题</button>
+    </div>
+  `;
+
+  // 简易柱状图
+  const months=monthlyStats();
+  const maxRev=Math.max(...months.map(m=>m.revenue_num),100);
+  document.getElementById('chart-rev').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:6px;height:170px;padding:0 6px">
+      ${months.map(m=>`<div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#999">¥${m.revenue}</div>
+        <div style="height:${Math.max(8,(m.revenue_num/maxRev)*140)}px;background:linear-gradient(180deg,var(--accent),var(--primary));border-radius:4px 4px 0 0;margin-top:4px"></div>
+        <div style="font-size:10px;color:#999;margin-top:4px">${m.month}</div>
+      </div>`).join('')}
+    </div>`;
+
+  // 产品统计
+  const prodStats={};
+  DB.transactions.filter(t=>t.type==='收入').forEach(t=>{prodStats[t.name]=(prodStats[t.name]||0)+(+t.amount);});
+  const top10=Object.entries(prodStats).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  document.getElementById('product-stats').innerHTML=top10.length?top10.map((p,i)=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px dashed var(--border)">
+      <div><span class="tag ${i<3?'gold':''}">TOP${i+1}</span> ${p[0]}</div>
+      <div class="text-success font-bold">¥${p[1].toFixed(0)}</div>
+    </div>`).join(''):'<div class="text-muted text-center" style="padding:24px">暂无数据</div>';
+
+  // 选题
+  const topics=JSON.parse(localStorage.getItem('hemanli_topics')||'["猫眼渐变美甲｜秋冬氛围感","新年战甲·红色系","招财猫主题·可爱款","高级感法式美甲","千禧风·贴钻款","光疗延长甲教程","情人节限定款","新娘甲·优雅白","显白单色合集","手绘小花美甲｜春日清新"]');
+  function saveTopics(){localStorage.setItem('hemanli_topics',JSON.stringify(topics));renderTopics();}
+  window._saveTopics=saveTopics;
+  window._topics=topics;
+  function renderTopics(){
+    document.getElementById('topics').innerHTML=topics.map((t,i)=>`
+      <div class="topic-card">
+        <div class="ttl">
+          <span>📌 ${t}</span>
+          <span>
+            <button class="btn sm" onclick="topics.splice(${i},1);saveTopics()">删除</button>
+          </span>
+        </div>
+      </div>`).join('');
+  }
+  renderTopics();
+}
+window.addTopic=()=>{const t=prompt('新选题:');if(t){window._topics.push(t);localStorage.setItem('hemanli_topics',JSON.stringify(window._topics));renderCurrentRoute();}};
+window.saveTopics=()=>{};
+
+function calcYearProfit(){const y=new Date().getFullYear();let r=0,e=0;DB.transactions.forEach(t=>{const d=new Date(t.date);if(d.getFullYear()===y){if(t.type==='收入')r+=(+t.amount);if(t.type==='支出')e+=(+t.amount);}});return (r-e).toFixed(0);}
+function calcMonthProfit(){const y=new Date().getFullYear(),m=new Date().getMonth();let r=0,e=0;DB.transactions.forEach(t=>{const d=new Date(t.date);if(d.getFullYear()===y&&d.getMonth()===m){if(t.type==='收入')r+=(+t.amount);if(t.type==='支出')e+=(+t.amount);}});return (r-e).toFixed(0);}
+function calcWeekRevenue(){let r=0;const now=new Date(),weekStart=new Date(now);weekStart.setDate(now.getDate()-now.getDay());DB.transactions.forEach(t=>{if(t.type!=='收入')return;const d=new Date(t.date);if(d>=weekStart)r+=(+t.amount);});return r.toFixed(0);}
+function calcAvgOrder(){const txs=DB.transactions.filter(t=>t.type==='收入');return txs.length?(txs.reduce((s,t)=>s+(+t.amount),0)/txs.length).toFixed(0):'0';}
+function monthlyStats(){
+  const y=new Date().getFullYear();
+  const arr=[];
+  for(let m=0;m<12;m++){let r=0,e=0;DB.transactions.forEach(t=>{const d=new Date(t.date);if(d.getFullYear()===y&&d.getMonth()===m){if(t.type==='收入')r+=(+t.amount);if(t.type==='支出')e+=(+t.amount);}});
+  arr.push({month:`${m+1}月`,revenue:r.toFixed(0),revenue_num:r,expense:e.toFixed(0),profit:(r-e).toFixed(0),margin:r?((r-e)/r*100).toFixed(1)+'%':'0%'});
+  }
+  return arr;
+}
+
+/* 财务管理 */
+function renderFinance(el){
+  el.innerHTML=`
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">本月收入</div><div class="stat-value">¥${monthSum('收入').toFixed(0)}</div></div>
+      <div class="stat-card green"><div class="stat-label">本月支出</div><div class="stat-value">¥${monthSum('支出').toFixed(0)}</div></div>
+      <div class="stat-card gold"><div class="stat-label">月利润</div><div class="stat-value">¥${(monthSum('收入')-monthSum('支出')).toFixed(0)}</div></div>
+      <div class="stat-card danger"><div class="stat-label">总记录</div><div class="stat-value">${DB.transactions.length}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💸 记一笔</div>
+      <div class="form-grid-3">
+        <div>
+          <label class="form-label">类型</label>
+          <select id="fin-type"><option value="收入">收入</option><option value="支出">支出</option></select>
+        </div>
+        <div>
+          <label class="form-label">金额</label>
+          <input type="number" id="fin-amount" placeholder="¥">
+        </div>
+        <div>
+          <label class="form-label">日期</label>
+          <input type="date" id="fin-date" value="${ymd(new Date())}">
+        </div>
+      </div>
+      <div class="form-grid mt-2">
+        <div>
+          <label class="form-label">项目 / 来源 / 谁消费</label>
+          <input id="fin-name" placeholder="如：美甲款式 / 客户XXX / 房租水电">
+        </div>
+        <div>
+          <label class="form-label">备注</label>
+          <input id="fin-note" placeholder="可选">
+        </div>
+      </div>
+      <button class="btn primary mt-2" onclick="submitFinance()">💾 保存</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 收支明细 (${DB.transactions.length})</div>
+      <div id="fin-list"></div>
+    </div>
+  `;
+  drawFinanceList();
+}
+function monthSum(type){const y=new Date().getFullYear(),m=new Date().getMonth();let s=0;DB.transactions.forEach(t=>{if(t.type!==type)return;const d=new Date(t.date);if(d.getFullYear()===y&&d.getMonth()===m)s+=(+t.amount);});return s;}
+function submitFinance(){
+  const type=document.getElementById('fin-type').value;
+  const amount=parseFloat(document.getElementById('fin-amount').value);
+  const date=document.getElementById('fin-date').value;
+  const name=document.getElementById('fin-name').value.trim();
+  const note=document.getElementById('fin-note').value.trim();
+  if(!amount||!name||!date){toast('请完整填写');return;}
+  DB.transactions.unshift({id:genId('tx'),type,amount,date,name,note,createdAt:Date.now()});
+  saveDB();syncChannel();renderCurrentRoute();toast('已记录');
+}
+function drawFinanceList(){
+  const el=document.getElementById('fin-list');
+  if(!el)return;
+  const arr=DB.transactions.slice(0,200);
+  if(arr.length===0){el.innerHTML='<div class="empty"><div class="icon">📒</div>暂无记录</div>';return;}
+  el.innerHTML='<div id="fin-rows">'+arr.map(t=>`
+    <div class="swipe-wrap" data-id="${t.id}">
+      <div class="swipe-action" onclick="deleteFinance('${t.id}')">删除</div>
+      <div class="swipe-content">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span class="tag ${t.type==='收入'?'success':'danger'}">${t.type}</span>
+            <strong style="margin-left:6px">${t.name}</strong>
+            ${t.customerName?'<span style="color:#999;font-size:12px;margin-left:6px">· '+t.customerName+'</span>':''}
+          </div>
+          <div class="font-bold ${t.type==='收入'?'text-success':'text-danger'}">${t.type==='收入'?'+':'-'}¥${(+t.amount).toFixed(0)}</div>
+        </div>
+        <div class="text-muted mt-1" style="font-size:12px">${t.date}${t.note?' · '+t.note:''}</div>
+      </div>
+    </div>`).join('')+'</div>';
+  bindSwipe(el);
+}
+
+/* 链接抓取 */
+function renderCrawler(el){
+  el.innerHTML=`
+    <div class="notice-bar">💡 支持抖音、小红书、淘宝、京东、拼多多、1688链接。粘贴链接后自动识别并预览。</div>
+    <div class="card">
+      <div class="card-title">🔗 粘贴商品/帖子链接</div>
+      <div class="link-input-row">
+        <input id="crawl-url" placeholder="https://...">
+        <button class="btn primary" onclick="crawlLink()">解析</button>
+      </div>
+      <div id="crawl-result"></div>
+    </div>
+  `;
+}
+window._lastCrawl=null;
+async function crawlLink(){
+  const url=document.getElementById('crawl-url').value.trim();
+  if(!url){toast('请粘贴链接');return;}
+  // 简化的链接抓取 (本地解析预览)
+  const platform=identifyPlatform(url);
+  const preview={
+    platform,
+    url,
+    title:'来自'+platform+'的款式',
+    cover:'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="#f7e3e3"/><text x="40" y="46" text-anchor="middle" fill="#c4797b" font-size="14">'+platform+'</text></svg>'),
+    extractedAt:new Date().toLocaleString()
+  };
+  document.getElementById('crawl-result').innerHTML=`
+    <div class="preview-card">
+      <div class="preview-row">
+        <img class="preview-cover" src="${preview.cover}">
+        <div style="flex:1">
+          <div style="font-weight:600;margin-bottom:4px">${preview.title}</div>
+          <div class="text-muted" style="font-size:12px">${platform} · ${url.slice(0,40)}...</div>
+          <div class="text-muted mt-1" style="font-size:11px">抓取于 ${preview.extractedAt}</div>
+        </div>
+      </div>
+      <div class="form-grid mt-2">
+        <input id="crawl-price" type="number" placeholder="🔢 设置价格 (如参考进价)">
+        <select id="crawl-customer">
+          <option value="">-- 关联客户(可选) --</option>
+          ${DB.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <button class="btn primary mt-2" onclick="saveCrawl()">💾 保存到消费记录</button>
+    </div>
+  `;
+  window._lastCrawl=preview;
+}
+function identifyPlatform(url){
+  if(/douyin|抖音/i.test(url))return '抖音';
+  if(/xiaohongshu|小红书|redbook/i.test(url))return '小红书';
+  if(/taobao|tmall|淘宝/i.test(url))return '淘宝';
+  if(/jd\.com|京东/i.test(url))return '京东';
+  if(/pinduoduo|拼多多|pdd/i.test(url))return '拼多多';
+  if(/1688|alibaba|阿里巴巴/i.test(url))return '1688';
+  if(/weixin|微信|wechat/i.test(url))return '微信';
+  if(/alipay|支付宝/i.test(url))return '支付宝';
+  return '外链';
+}
+function saveCrawl(){
+  const c=window._lastCrawl;
+  if(!c){toast('无预览');return;}
+  const price=parseFloat(document.getElementById('crawl-price').value)||0;
+  const custId=document.getElementById('crawl-customer').value;
+  const cust=DB.customers.find(x=>x.id===custId);
+  let final=price;
+  if(cust&&cust.membershipAmount&&MEMBER_TIERS[cust.membershipAmount]){final=price*MEMBER_TIERS[cust.membershipAmount].discount;}
+  DB.transactions.unshift({id:genId('tx'),date:ymd(new Date()),type:'收入',amount:final,name:c.title+'-'+c.platform,customerId:custId,customerName:cust?cust.name:'',sourceUrl:c.url,source:'crawler'});
+  if(cust&&final>0){
+    let ptsRate=1.0;
+    if(MEMBER_TIERS[cust.membershipAmount])ptsRate=MEMBER_TIERS[cust.membershipAmount].pointsRate;
+    const earn=Math.floor(price*ptsRate);
+    cust.points=(+cust.points||0)+earn;
+    DB.points_log.unshift({id:genId('pl'),date:ymd(new Date()),customerId:cust.id,name:cust.name,change:earn,reason:'消费 '+c.title,balance:cust.points});
+  }
+  saveDB();syncChannel();toast('已保存');document.getElementById('crawl-result').innerHTML='';document.getElementById('crawl-url').value='';
+}
+
+/* 通知中心 */
+function renderNotice(el){
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">📝 自定义通知</div>
+      <div class="form-grid">
+        <div>
+          <label class="form-label">客户</label>
+          <input id="noti-cust" placeholder="姓名 / 手机号 / 已有客户">
+        </div>
+        <div>
+          <label class="form-label">选择（已有客户）</label>
+          <select id="noti-cust-select" onchange="document.getElementById('noti-cust').value=DB.customers.find(c=>c.id===this.value)?DB.customers.find(c=>c.id===this.value).name+' '+DB.customers.find(c=>c.id===this.value).phone:''">
+            <option value="">-- 选择已有客户 --</option>
+            ${DB.customers.map(c=>`<option value="${c.id}">${c.name} ${c.phone||''}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="form-item mt-1">
+        <label class="form-label">通知内容</label>
+        <textarea id="noti-content" placeholder="如：您的年卡即将到期..."></textarea>
+      </div>
+      <div class="form-grid mt-1">
+        <button class="btn primary" onclick="sendNotification('sms')">📱 发短信</button>
+        <button class="btn success" onclick="sendNotification('wx')">💬 发微信</button>
+        <button class="btn" onclick="copyNotification()">📋 仅复制</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📌 一键发送系统提醒</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="bulkNoti('expire')">⚠️ 给所有快到期客户发提醒</button>
+        <button class="btn gold" onclick="bulkNoti('points')">⭐ 积分余额通知</button>
+        <button class="btn" onclick="bulkNoti('birthday')">🎂 今日生日客户</button>
+        <button class="btn" onclick="bulkNoti('tomorrow')">📅 明日预约提醒</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📬 历史通知 (${DB.notifications.length})</div>
+      <div id="noti-list"></div>
+    </div>
+  `;
+  drawNotiList();
+}
+function drawNotiList(){
+  const el=document.getElementById('noti-list');
+  if(!el)return;
+  const arr=DB.notifications.slice(0,100);
+  el.innerHTML=arr.length?'<div id="noti-rows">'+arr.map(n=>`
+    <div class="swipe-wrap" data-id="${n.id}">
+      <div class="swipe-action" onclick="deleteNoti('${n.id}')">删除</div>
+      <div class="swipe-content">
+        <div style="display:flex;justify-content:space-between">
+          <strong>${n.customerName||'(系统)'}</strong>
+          <span class="text-muted" style="font-size:12px">${n.date} · ${n.type||'系统'}</span>
+        </div>
+        <div class="mt-1" style="font-size:13px">${n.content}</div>
+      </div>
+    </div>`).join('')+'</div>':'<div class="empty"><div class="icon">🔔</div>暂无通知</div>';
+  bindSwipe(el);
+}
+function deleteNoti(id){
+  if(!confirm('删除？'))return;
+  DB.notifications=DB.notifications.filter(n=>n.id!==id);
+  saveDB();syncChannel();renderCurrentRoute();toast('已删除');
+}
+function sendNotification(channel){
+  const cust=document.getElementById('noti-cust').value.trim();
+  const content=document.getElementById('noti-content').value.trim();
+  if(!cust||!content){toast('请填写客户和内容');return;}
+  DB.notifications.unshift({id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),customerName:cust,content,type:channel==='sms'?'短信':channel==='wx'?'微信':'复制',createdAt:Date.now()});
+  saveDB();syncChannel();drawNotiList();toast('已记录通知（'+cust+' '+(channel==='sms'?'短信':channel==='wx'?'微信':'仅复制')+'）');
+}
+function copyNotification(){
+  const c=document.getElementById('noti-content').value;
+  navigator.clipboard.writeText(c).then(()=>toast('已复制内容到剪贴板'));
+}
+function bulkNoti(type){
+  let list=[];
+  let content='';
+  if(type==='expire'){
+    list=DB.customers.filter(c=>{if(!c.membershipExpire)return false;const diff=(new Date(c.membershipExpire)-new Date())/(1000*60*60*24);return diff<=7&&diff>=0;});
+    content=c=>`【禾蔓里】亲爱的${c.name}，您的${getMembershipName(c.membershipAmount)}将于${c.membershipExpire}到期，余额¥${c.membershipBalance||0}，欢迎续费。`;
+  }else if(type==='points'){
+    list=DB.customers.filter(c=>(+c.points||0)>0);
+    content=c=>`【禾蔓里】亲爱的${c.name}，您当前积分${c.points||0}分，100分=1元，可兑换卸甲/补色等好礼，欢迎到店。`;
+  }else if(type==='birthday'){
+    const today=new Date(),td=today.getMonth()+'-'+today.getDate();
+    list=DB.customers.filter(c=>{if(!c.birthday)return false;const bd=c.birthday.substr(5);return bd===td;});
+    content=c=>`【禾蔓里】亲爱的${c.name}，今天是您的生日，凭此消息可到店领取生日礼遇一份哦~`;
+  }else if(type==='tomorrow'){
+    const tom=new Date();tom.setDate(tom.getDate()+1);
+    const td=ymd(tom);
+    list=DB.appointments.filter(a=>a.date===td&&a.status==='confirmed').map(a=>{const c=DB.customers.find(x=>x.id===a.customerId);return c||{name:a.name,phone:a.phone};});
+    content=c=>`【禾蔓里】亲爱的${c.name}，提醒您明天有预约美甲服务，期待您的光临~`;
+  }
+  if(list.length===0){toast('无匹配客户');return;}
+  if(!confirm(`将给 ${list.length} 位客户发送提醒，是否继续？`))return;
+  list.forEach(c=>{
+    DB.notifications.unshift({id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),customerName:c.name,content:content(c),type:'系统批量',createdAt:Date.now()});
+  });
+  saveDB();syncChannel();renderCurrentRoute();toast(`已批量记录 ${list.length} 条`);
+}
+
+/* 设置 */
+function renderSettings(el){
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">🏪 店铺信息</div>
+      <label class="form-label">店铺名称</label>
+      <input value="${DB.settings.shopName}" onchange="DB.settings.shopName=this.value;saveDB()">
+      <div class="form-grid mt-1">
+        <div>
+          <label class="form-label">开门时间</label>
+          <input type="time" value="${DB.settings.openTime}" onchange="DB.settings.openTime=this.value;saveDB()">
+        </div>
+        <div>
+          <label class="form-label">关门时间</label>
+          <input type="time" value="${DB.settings.closeTime}" onchange="DB.settings.closeTime=this.value;saveDB()">
+        </div>
+      </div>
+      <div class="form-grid mt-1">
+        <div>
+          <label class="form-label">预约间隔(分钟)</label>
+          <input type="number" value="${DB.settings.appointmentInterval}" onchange="DB.settings.appointmentInterval=+this.value;saveDB()">
+        </div>
+        <div>
+          <label class="form-label">提前提醒(小时)</label>
+          <input type="number" value="${DB.settings.reminderHours}" onchange="DB.settings.reminderHours=+this.value;saveDB()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💅 款式/服务管理</div>
+      <table class="tbl">
+        <tr><th>名称</th><th>分类</th><th>价格</th><th>耗时(分)</th><th>积分倍率</th><th>操作</th></tr>
+        ${DB.items.map((it,i)=>`<tr>
+          <td><input value="${it.name}" onchange="DB.items[${i}].name=this.value;saveDB()" style="padding:4px"></td>
+          <td><input value="${it.category}" onchange="DB.items[${i}].category=this.value;saveDB()" style="padding:4px;width:80px"></td>
+          <td><input type="number" value="${it.price}" onchange="DB.items[${i}].price=+this.value;saveDB()" style="padding:4px;width:80px"></td>
+          <td><input type="number" value="${it.duration}" onchange="DB.items[${i}].duration=+this.value;saveDB()" style="padding:4px;width:70px"></td>
+          <td><input type="number" step="0.5" value="${it.pointsMultiple||1}" onchange="DB.items[${i}].pointsMultiple=+this.value;saveDB()" style="padding:4px;width:60px"></td>
+          <td><button class="btn sm danger" onclick="DB.items.splice(${i},1);saveDB();renderCurrentRoute()">删除</button></td>
+        </tr>`).join('')}
+      </table>
+      <button class="btn sm primary mt-2" onclick="addItem()">＋ 新增款式</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚠️ 数据管理</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="exportData()">📤 导出 JSON</button>
+        <button class="btn" onclick="document.getElementById('import-file').click()">📥 导入 JSON</button>
+        <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+        <button class="btn danger" onclick="if(confirm('清空所有数据？')){localStorage.removeItem(DB_KEY);DB=loadDB();renderCurrentRoute();toast('已清空')}">🗑️ 清空</button>
+      </div>
+      <p class="text-muted mt-2" style="font-size:12px">所有数据存储在浏览器本地。换设备请用导出/导入功能。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 客户端二维码</div>
+      <p class="text-muted">客户扫码进入预约入口：</p>
+      <div id="qrcode" style="margin-top:14px;text-align:center;background:#fff;padding:16px;border-radius:8px;display:inline-block"></div>
+      <p class="text-muted mt-1" style="font-size:12px">客户扫码后将看到预约入口（不含工作台内容，仅客户个人账户）</p>
+      <div style="margin-top:14px">
+        <p class="text-muted" style="font-size:12px">客户直接访问链接：</p>
+        <input value="${location.origin+location.pathname}#customer" readonly onclick="this.select()">
+      </div>
+    </div>
+  `;
+  drawQRCode();
+}
+function addItem(){
+  const name=prompt('款式名称','新款式');
+  if(!name)return;
+  const price=parseFloat(prompt('价格','100'))||100;
+  const duration=parseInt(prompt('预估耗时(分钟)','60'))||60;
+  DB.items.push({id:genId('i'),name,price,duration,category:'其他',hot:false,pointsMultiple:1});
+  saveDB();renderCurrentRoute();
+}
+function exportData(){
+  const data=JSON.stringify(DB,null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`hemanli_${ymd(new Date())}.json`;a.click();
+  toast('已导出');
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!confirm('导入将覆盖现有数据，确定？'))return;
+      Object.assign(DB,data);saveDB();syncChannel();renderCurrentRoute();toast('已导入');
+    }catch(e){toast('导入失败');}
+  };
+  r.readAsText(file);
+}
+function drawQRCode(){
+  const url=location.origin+location.pathname+'#customer';
+  // 简易二维码（用api.qrserver.com如果在线）或本地模拟
+  const qr=document.getElementById('qrcode');
+  qr.innerHTML=`<div style="font-size:80px">📱</div><p style="margin-top:8px;font-size:12px">客户扫码访问</p>`;
+  // 使用Google Chart API生成（如果在线）
+  const img=new Image();
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url);
+  img.onload=()=>{qr.innerHTML='';qr.appendChild(img);};
+  img.onerror=()=>{
+    // 离线 fallback - 显示可复制的链接
+    qr.innerHTML='<div style="padding:14px;background:#fffaf8;border-radius:6px">'+url+'</div>';
+  };
+}
+
+/* =============================================================
+   客户端 (扫码端)
+   ============================================================= */
+function initCustomer(){
+  // 检查是否有登录态
+  const saved=localStorage.getItem('hemanli_customer_id');
+  customerCurrentId=saved;
+  renderCustomerPage();
+}
+
+function renderCustomerPage(){
+  const app=document.getElementById('customer-view');
+  const hash=location.hash;
+  let tab='home';
+  if(hash==='#customer/appoint')tab='appoint';
+  else if(hash==='#customer/mine')tab='mine';
+  else if(hash==='#customer/member')tab='member';
+  else if(hash==='#customer/home')tab='home';
+
+  let body='';
+  if(tab==='home')body=customerHome();
+  else if(tab==='appoint')body=customerAppointForm();
+  else if(tab==='mine')body=customerMyAppoints();
+  else if(tab==='member')body=customerMember();
+
+  app.innerHTML=`
+    <div class="app-header">
+      <h1>${DB.settings.shopName||'禾蔓里·美甲美睫工作室'}</h1>
+    </div>
+    <div class="app-content">${body}</div>
+    <div class="app-tabbar">
+      <div class="tab-item ${tab==='appoint'?'active':''}" onclick="location.hash='#customer/appoint'">
+        <div class="icon">📅</div>预约
+      </div>
+      <div class="tab-item ${tab==='mine'?'active':''}" onclick="location.hash='#customer/mine'">
+        <div class="icon">📋</div>我的预约
+      </div>
+      <div class="tab-item ${tab==='home'?'active':''}" onclick="location.hash='#customer/home'">
+        <div class="icon">🏠</div>我的主页
+      </div>
+      <div class="tab-item ${tab==='member'?'active':''}" onclick="location.hash='#customer/member'">
+        <div class="icon">💳</div>会员中心
+      </div>
+    </div>
+  `;
+}
+
+function customerHome(){
+  const c=DB.customers.find(x=>x.id===customerCurrentId);
+  if(!c){
+    return `
+      <div style="text-align:center;padding:40px 20px">
+        <div style="font-size:60px;margin-bottom:20px">💅</div>
+        <h2 style="margin-bottom:14px">欢迎来到禾蔓里</h2>
+        <p class="text-muted mb-3">请输入您的预约信息开始使用</p>
+        <button class="btn primary" onclick="location.hash='#customer/appoint'" style="padding:12px 28px">立即预约</button>
+      </div>`;
+  }
+  const tier=c.membershipAmount&&MEMBER_TIERS[c.membershipAmount]?MEMBER_TIERS[c.membershipAmount]:null;
+  return `
+    <div class="user-card">
+      <div class="user-row">
+        <div class="user-name">${c.name} ${tier?'<span class="user-tag">'+tier.name+'</span>':''}</div>
+      </div>
+      <div class="user-stats">
+        <div class="user-stat"><div class="v">⭐ ${c.points||0}</div><div class="l">可用积分</div></div>
+        <div class="user-stat"><div class="v">¥${c.membershipBalance||0}</div><div class="l">会员余额</div></div>
+        <div class="user-stat"><div class="v">${c.membershipExpire?c.membershipExpire.slice(5):'--'}</div><div class="l">年卡到期</div></div>
+      </div>
+    </div>
+
+    <div class="tip-block">
+      <div class="t">💡 温馨提示 · 美甲时长参考</div>
+      <div class="c">
+        💅 本甲：简约款 1-2h | 复杂款 2-4h<br>
+        💎 甲片：简约款 1-3.5h | 复杂款 2-5h<br>
+        👑 千元款：4-8h（建议提前与店家沟通）
+      </div>
+    </div>
+
+    <div class="tip-block">
+      <div class="t">🕐 营业时间</div>
+      <div class="c">每日 ${DB.settings.openTime}:00 - ${DB.settings.closeTime}:00</div>
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">🎁 积分兑换</div>
+      <p style="margin-bottom:8px">⭐ 您的积分：<strong style="color:var(--warning);font-size:18px">${c.points||0}</strong></p>
+      <ul style="font-size:12.5px;line-height:1.9;color:#666">
+        <li>100分 兑换 卸甲服务 (¥30)</li>
+        <li>300分 兑换 单色补色 (¥80)</li>
+        <li>500分 兑换 免费手部护理</li>
+        <li>800分 兑换 限量款贴纸包</li>
+        <li>100分 = 1元 现金抵扣（上限20%）</li>
+      </ul>
+      <p class="text-muted mt-2" style="font-size:12px">到店出示即可兑换</p>
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">💳 充值会员（享折扣+积分倍率）</div>
+      ${DB.memberships.map(m=>{const t=MEMBER_TIERS[m.amount]||{};return `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <strong>${m.name}</strong>
+            <div style="font-size:12px;color:#999;margin-top:2px">储值${m.amount}享${(m.discount*10).toFixed(1)}折 · 积分×${m.pointsRate}</div>
+          </div>
+          <span class="tag ${t.tag||'normal'}">¥${m.amount}</span>
+        </div>`;}).join('')}
+      <p class="text-muted mt-1" style="font-size:12px">联系店家或到店开通</p>
+    </div>
+
+    <button class="btn primary" style="width:100%;padding:14px;margin-top:10px" onclick="location.hash='#customer/appoint'">📅 立即预约 →</button>
+  `;
+}
+
+function customerAppointForm(){
+  const today=ymd(new Date());
+  // 默认显示明天起
+  return `
+    <div style="text-align:center;padding:14px 0 6px">
+      <div style="font-size:42px">🌧️</div>
+      <h2 style="color:var(--primary-dark)">${DB.settings.shopName.split('·')[0]||'禾蔓里'}</h2>
+      <p class="text-muted">在线预约</p>
+    </div>
+
+    <div class="tip-block">
+      <div class="t">💡 温馨提示 · 美甲时长参考</div>
+      <div class="c">
+        💅 本甲：简约款 1-2h | 复杂款 2-4h<br>
+        💎 甲片：简约款 1-3.5h | 复杂款 2-5h<br>
+        👑 千元款：4-8h（建议提前与店家沟通）
+      </div>
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="form-item">
+        <label class="form-label">姓名 <span class="req">*</span></label>
+        <input id="cu-name" placeholder="您的姓名" value="${customerCurrentId?(DB.customers.find(x=>x.id===customerCurrentId)||{}).name||'':''}">
+      </div>
+      <div class="form-item">
+        <label class="form-label">手机号 <span class="req">*</span></label>
+        <input id="cu-phone" type="tel" placeholder="您的手机号" value="${customerCurrentId?(DB.customers.find(x=>x.id===customerCurrentId)||{}).phone||'':''}">
+      </div>
+      <div class="form-item">
+        <label class="form-label">预约日期 <span class="req">*</span></label>
+        <input id="cu-date" type="date" value="${today}" onchange="renderCuDaySlots()">
+      </div>
+      <div class="form-item">
+        <label class="form-label">当日已约时段（仅显示时间，不显示信息）</label>
+        <div id="cu-day-slots" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"></div>
+        <p class="text-muted" style="font-size:11px;margin-top:6px">灰色 = 已被预约，请选择其他时间</p>
+      </div>
+      <div class="form-item">
+        <label class="form-label">期望开始时间 <span class="req">*</span></label>
+        <input id="cu-time" type="time">
+        <p class="text-muted" style="font-size:11px;margin-top:4px">营业时间 ${DB.settings.openTime}-${DB.settings.closeTime},结束时间由店家根据款式确定</p>
+      </div>
+      <div class="form-item">
+        <label class="form-label">想做的款式</label>
+        <input id="cu-item" placeholder="如：猫眼甲、法式..." list="cu-items-list">
+        <datalist id="cu-items-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+      </div>
+      <div class="form-item">
+        <label class="form-label">备注</label>
+        <textarea id="cu-note" placeholder="可补充图片链接(DY/XHS)或特别要求"></textarea>
+      </div>
+      <button class="btn primary" style="width:100%;padding:14px" onclick="submitCustomerAppoint()">✅ 提交预约</button>
+    </div>
+  `;
+}
+
+function renderCuDaySlots(){
+  const date=document.getElementById('cu-date').value;
+  if(!date)return;
+  const interval=DB.settings.appointmentInterval||30;
+  const bookings=DB.appointments.filter(a=>a.date===date&&a.status!=='cancelled');
+  // 收集已占用时间段
+  const booked=new Set();
+  bookings.forEach(b=>{
+    const s=parseHM(b.startTime),e=parseHM(b.endTime);
+    for(let h=s.h*60+s.m,end=e.h*60+e.m;h<end;h+=interval){booked.add(h);}
+  });
+  // 生成营业时间段
+  const oh=parseHM(DB.settings.openTime),ch=parseHM(DB.settings.closeTime);
+  const startMin=oh.h*60+oh.m,endMin=ch.h*60+ch.m;
+  let html='';
+  for(let m=startMin;m<endMin;m+=interval){
+    const from=m,to=Math.min(endMin,m+interval);
+    const fH=Math.floor(from/60),fM=from%60;
+    const tH=Math.floor(to/60),tM=to%60;
+    const fromT=String(fH).padStart(2,'0')+':'+String(fM).padStart(2,'0');
+    const toT=String(tH).padStart(2,'0')+':'+String(tM).padStart(2,'0');
+    const isBooked=booked.has(m);
+    html+=`<div class="time-slot ${isBooked?'disabled':''}" data-time="${fromT}" onclick="if(this.classList.contains('disabled'))return;document.getElementById('cu-time').value='${fromT}';document.querySelectorAll('#cu-day-slots .time-slot').forEach(s=>s.classList.remove('selected'));this.classList.add('selected')">${fromT}-${toT}${isBooked?' (已约)':''}</div>`;
+  }
+  document.getElementById('cu-day-slots').innerHTML=html||'<p class="text-muted">所选日期不可预约</p>';
+}
+
+function submitCustomerAppoint(){
+  const name=document.getElementById('cu-name').value.trim();
+  const phone=document.getElementById('cu-phone').value.trim();
+  const date=document.getElementById('cu-date').value;
+  const time=document.getElementById('cu-time').value;
+  const item=document.getElementById('cu-item').value.trim();
+  const note=document.getElementById('cu-note').value.trim();
+  if(!name||!phone||!date||!time){toast('请完整填写姓名/手机/日期/时间');return;}
+  const duration=item?((DB.items.find(i=>i.name===item)||{}).duration||60):60;
+  const eH=parseInt(time.split(':')[0])+Math.floor(duration/60);
+  const eM=parseInt(time.split(':')[1])+(duration%60);
+  const endTime=String(Math.floor((eH*60+eM)/60)%24).padStart(2,'0')+':'+String((eH*60+eM)%60).padStart(2,'0');
+
+  // 找客户或创建
+  let customer=DB.customers.find(c=>c.name===name&&c.phone===phone);
+  if(!customer){
+    customer={id:genId('c'),name,phone,points:0,createdAt:Date.now()};
+    DB.customers.push(customer);
+  }
+  customerCurrentId=customer.id;
+  localStorage.setItem('hemanli_customer_id',customer.id);
+  const appt={id:genId('a'),date,startTime:time,endTime,customerId:customer.id,name,phone,item,note,status:'pending',createdAt:Date.now(),source:'customer'};
+  DB.appointments.unshift(appt);
+  saveDB();syncChannel();
+  toast('预约成功！店家稍后会确认');
+  setTimeout(()=>{location.hash='#customer/mine';},800);
+}
+
+function customerMyAppoints(){
+  const my=DB.customers.find(x=>x.id===customerCurrentId);
+  if(!my)return '<div class="empty"><div class="icon">📋</div>请先预约一次即可查看</div>';
+  const arr=DB.appointments.filter(a=>a.customerId===my.id||(a.phone===my.phone&&a.name===my.name)).sort((a,b)=>b.date.localeCompare(a.date)||b.startTime.localeCompare(a.startTime));
+  if(arr.length===0)return '<div class="empty"><div class="icon">📋</div>还没有预约记录</div>';
+  return arr.map(a=>{
+    const statusMap={pending:['待确认','warning'],confirmed:['已确认','primary'],completed:['已完成','success'],cancelled:['已取消','danger']};
+    const [s,c]=statusMap[a.status]||['',''];
+    return `<div class="swipe-wrap" data-id="${a.id}">
+      <div class="swipe-action" onclick="cancelMyAppt('${a.id}')">取消</div>
+      <div class="swipe-content">
+        <div style="display:flex;justify-content:space-between">
+          <strong>${a.item||'(款式待定)'}</strong>
+          <span class="tag ${c}">${s}</span>
+        </div>
+        <div class="text-muted mt-1" style="font-size:12px">📅 ${a.date} ⏰ ${a.startTime}-${a.endTime}</div>
+        ${a.note?'<div class="text-muted mt-1" style="font-size:11px">备注：'+a.note+'</div>':''}
+        ${a.status==='pending'?'<p class="text-muted mt-1" style="font-size:11px">⏳ 等待店家确认</p>':a.status==='confirmed'?'<p class="text-success mt-1" style="font-size:11px">✓ 预约已确认，请准时到店</p>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function cancelMyAppt(id){
+  if(!confirm('取消该预约？'))return;
+  const a=DB.appointments.find(x=>x.id===id);
+  if(a){a.status='cancelled';saveDB();syncChannel();renderCustomerPage();toast('已取消');}
+}
+function deleteMyAppt(id){
+  // 客户端无法删除，只能取消
+}
+
+function customerMember(){
+  const c=DB.customers.find(x=>x.id===customerCurrentId);
+  if(!c)return '<div class="empty"><div class="icon">💳</div>请先预约一次</div>';
+  const tier=c.membershipAmount&&MEMBER_TIERS[c.membershipAmount]?MEMBER_TIERS[c.membershipAmount]:null;
+  return `
+    <div class="user-card">
+      <div class="user-row">
+        <div class="user-name">${c.name}</div>
+      </div>
+      ${tier?`<div class="user-tag mt-2">${tier.name}</div>`:''}
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">💳 我的会员</div>
+      ${tier?`
+        <p><strong>${tier.name}</strong> · 储值 ¥${c.membershipAmount}</p>
+        <p>享 ${(tier.discount*10).toFixed(1)} 折优惠</p>
+        <p>积分倍率 ×${tier.pointsRate}</p>
+        <p>会员余额：<strong class="text-success">¥${c.membershipBalance||0}</strong></p>
+        <p>到期：<strong>${c.membershipExpire||'--'}</strong></p>
+      `:'<p class="text-muted">您还不是会员，联系店家开通享折扣</p>'}
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">⭐ 我的积分</div>
+      <p style="font-size:30px;color:var(--warning);font-weight:700;margin-bottom:8px">${c.points||0}</p>
+      <p class="text-muted">积分可兑换：</p>
+      <ul style="font-size:12.5px;line-height:1.9;margin-top:8px">
+        <li>100分 = 卸甲服务</li>
+        <li>300分 = 单色补色</li>
+        <li>500分 = 手部护理</li>
+        <li>800分 = 限量贴纸包</li>
+        <li>100分 = 1元现金抵扣</li>
+      </ul>
+    </div>
+
+    <div class="card" style="box-shadow:var(--shadow-2)">
+      <div class="card-title">💰 开通/充值会员</div>
+      ${DB.memberships.map(m=>{const t=MEMBER_TIERS[m.amount]||{tag:'normal'};return `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>${m.name}</strong>
+            <span class="tag ${t.tag||'normal'}">¥${m.amount}</span>
+          </div>
+          <div style="font-size:12px;color:#999;margin-top:6px">
+            享 ${(m.discount*10).toFixed(1)} 折 · 积分 ×${m.pointsRate} · 有效期 ${m.expireMonths}个月
+          </div>
+        </div>`;}).join('')}
+      <p class="text-muted mt-2" style="font-size:12px;text-align:center">联系店家或到店开通</p>
+    </div>
+  `;
+}
+
+window.onhashchange=()=>{if(currentMode==='customer')renderCustomerPage();};
+window.renderCuDaySlots=renderCuDaySlots;
+
+/* =============================================================
+   通用：模态框/Toast/同步/提醒
+   ============================================================= */
+function syncChannel(){channel.postMessage({type:'update'});}
+
+function toast(msg){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},1800);
+}
+
+function showModal(title,content,footer){
+  const mask=document.createElement('div');mask.className='modal-mask';
+  mask.innerHTML=`<div class="modal">
+    <div class="modal-header"><h3>${title}</h3><button class="modal-close" onclick="this.closest('.modal-mask').remove()">×</button></div>
+    <div class="modal-body">${content}</div>
+    ${footer?`<div class="modal-footer">${footer}</div>`:''}
+  </div>`;
+  mask.onclick=e=>{if(e.target===mask)mask.remove();};
+  document.getElementById('modal-container').appendChild(mask);
+  return mask;
+}
+
+function openNewAppointment(){
+  showModal('新建预约',`
+    <div class="form-grid">
+      <div>
+        <label class="form-label">客户</label>
+        <select id="na-customer">
+          <option value="">-- 选择已有 --</option>
+          ${DB.customers.map(c=>`<option value="${c.id}">${c.name} ${c.phone||''}</option>`).join('')}
+        </select>
+        <button class="btn sm mt-1" onclick="toggleNaNew()">＋ 新客户</button>
+        <div id="na-new" style="display:none;margin-top:8px">
+          <input id="na-name" placeholder="姓名">
+          <input id="na-phone" placeholder="手机号" style="margin-top:6px">
+        </div>
+      </div>
+      <div>
+        <label class="form-label">款式</label>
+        <select id="na-item">
+          <option value="">-- 不限 --</option>
+          ${DB.items.map(i=>`<option value="${i.id}">${i.name} ¥${i.price} (${i.duration}分钟)</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-grid mt-2">
+      <div>
+        <label class="form-label">日期 <span class="req">*</span></label>
+        <input id="na-date" type="date" value="${ymd(new Date())}">
+      </div>
+      <div>
+        <label class="form-label">开始时间 <span class="req">*</span></label>
+        <input id="na-time" type="time">
+      </div>
+    </div>
+    <label class="form-label mt-1">备注</label>
+    <textarea id="na-note" placeholder="可选"></textarea>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" id="na-save">保存</button>
+  `);
+  document.getElementById('na-save').onclick=()=>{
+    let cid=document.getElementById('na-customer').value;
+    const date=document.getElementById('na-date').value;
+    const time=document.getElementById('na-time').value;
+    if(!date||!time){toast('请填写日期和时间');return;}
+    const itemId=document.getElementById('na-item').value;
+    const item=DB.items.find(i=>i.id===itemId);
+    let customer=cid?DB.customers.find(c=>c.id===cid):null;
+    const note=document.getElementById('na-note').value.trim();
+    if(!customer){
+      const newVisible=document.getElementById('na-new').style.display!=='none';
+      if(newVisible){
+        const name=document.getElementById('na-name').value.trim();
+        const phone=document.getElementById('na-phone').value.trim();
+        if(!name){toast('请填写客户姓名');return;}
+        customer={id:genId('c'),name,phone,points:0,createdAt:Date.now()};
+        DB.customers.push(customer);
+      }else{cid=null;}
+    }else{cid=customer.id;}
+    const duration=item?item.duration:60;
+    const eH=parseInt(time.split(':')[0])+Math.floor(duration/60);
+    const eM=parseInt(time.split(':')[1])+(duration%60);
+    const endTime=String(Math.floor((eH*60+eM)/60)%24).padStart(2,'0')+':'+String((eH*60+eM)%60).padStart(2,'0');
+    DB.appointments.unshift({id:genId('a'),date,startTime:time,endTime,customerId:cid,name:customer?customer.name:'',phone:customer?customer.phone:'',item:item?item.name:'',note,status:'confirmed',createdAt:Date.now(),source:'shop'});
+    saveDB();syncChannel();
+    document.querySelector('.modal-mask').remove();
+    renderCurrentRoute();refreshBadges();toast('预约已创建');
+  };
+}
+
+function toggleNaNew(){
+  const o=document.getElementById('na-new');
+  o.style.display=o.style.display==='none'?'':'none';
+}
+
+function openApptEditor(a){
+  showModal('编辑预约',`
+    <div class="form-grid">
+      <div><label class="form-label">姓名</label><input id="ea-name" value="${a.name||''}"></div>
+      <div><label class="form-label">手机</label><input id="ea-phone" value="${a.phone||''}"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">日期</label><input id="ea-date" type="date" value="${a.date}"></div>
+      <div><label class="form-label">开始</label><input id="ea-time" type="time" value="${a.startTime}"></div>
+      <div><label class="form-label">结束</label><input id="ea-end" type="time" value="${a.endTime}"></div>
+    </div>
+    <label class="form-label mt-1">款式</label>
+    <input id="ea-item" value="${a.item||''}" list="ea-list">
+    <datalist id="ea-list">${DB.items.map(i=>`<option value="${i.name}">`).join('')}</datalist>
+    <label class="form-label mt-1">备注</label>
+    <textarea id="ea-note">${a.note||''}</textarea>
+  `,`
+    <button class="btn danger" onclick="DB.appointments=DB.appointments.filter(x=>x.id!=='${a.id}');saveDB();syncChannel();this.closest('.modal-mask').remove();renderCurrentRoute();toast('已删除')">删除</button>
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" id="ea-save">保存</button>
+  `);
+  document.getElementById('ea-save').onclick=()=>{
+    a.name=document.getElementById('ea-name').value.trim();
+    a.phone=document.getElementById('ea-phone').value.trim();
+    a.date=document.getElementById('ea-date').value;
+    a.startTime=document.getElementById('ea-time').value;
+    a.endTime=document.getElementById('ea-end').value;
+    a.item=document.getElementById('ea-item').value.trim();
+    a.note=document.getElementById('ea-note').value.trim();
+    // 同步客户
+    if(a.customerId){
+      const c=DB.customers.find(x=>x.id===a.customerId);
+      if(c){c.name=a.name;c.phone=a.phone;}
+    }
+    saveDB();syncChannel();
+    document.querySelector('.modal-mask').remove();
+    renderCurrentRoute();toast('已保存');
+  };
+}
+
+function openCustomerEditor(c){
+  showModal('编辑客户档案',`
+    <div class="form-grid">
+      <div><label class="form-label">姓名 <span class="req">*</span></label><input id="ec-name" value="${c.name||''}"></div>
+      <div><label class="form-label">手机</label><input id="ec-phone" value="${c.phone||''}"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">生日</label><input id="ec-bd" type="date" value="${c.birthday||''}"></div>
+      <div><label class="form-label">会员卡</label>
+        <select id="ec-mb">
+          <option value="">-- 无 --</option>
+          ${DB.memberships.map(m=>`<option value="${m.amount}" ${c.membershipAmount==m.amount?'selected':''}>${m.name} (¥${m.amount} 享${m.discount*10}折)</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">储值余额</label><input id="ec-bal" type="number" value="${c.membershipBalance||0}"></div>
+      <div><label class="form-label">年卡到期</label><input id="ec-exp" type="date" value="${c.membershipExpire||''}"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">积分余额</label><input id="ec-pt" type="number" value="${c.points||0}"></div>
+      <div><label class="form-label">原始积分(历史)</label><input id="ec-pt-h" placeholder="可留空"></div>
+    </div>
+  `,`
+    <button class="btn danger" onclick="DB.customers=DB.customers.filter(x=>x.id!=='${c.id}');saveDB();syncChannel();this.closest('.modal-mask').remove();renderCurrentRoute();toast('已删除')">删除客户</button>
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" id="ec-save">保存</button>
+  `);
+  document.getElementById('ec-save').onclick=()=>{
+    c.name=document.getElementById('ec-name').value.trim();
+    c.phone=document.getElementById('ec-phone').value.trim();
+    c.birthday=document.getElementById('ec-bd').value;
+    c.membershipAmount=parseInt(document.getElementById('ec-mb').value)||0;
+    c.membershipBalance=parseFloat(document.getElementById('ec-bal').value)||0;
+    c.membershipExpire=document.getElementById('ec-exp').value;
+    c.points=parseInt(document.getElementById('ec-pt').value)||0;
+    saveDB();syncChannel();
+    document.querySelector('.modal-mask').remove();
+    renderCurrentRoute();toast('已保存');
+  };
+}
+
+function openNewCustomer(){
+  showModal('新增客户',`
+    <div class="form-grid">
+      <div><label class="form-label">姓名 <span class="req">*</span></label><input id="nc-name" placeholder="姓名"></div>
+      <div><label class="form-label">手机</label><input id="nc-phone" placeholder="手机号"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">生日</label><input id="nc-bd" type="date"></div>
+      <div><label class="form-label">会员卡</label>
+        <select id="nc-mb">
+          <option value="">-- 无 --</option>
+          ${DB.memberships.map(m=>`<option value="${m.amount}">${m.name} (¥${m.amount} 享${m.discount*10}折)</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">储值余额</label><input id="nc-bal" type="number" value="0"></div>
+      <div><label class="form-label">年卡到期</label><input id="nc-exp" type="date"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">积分余额</label><input id="nc-pt" type="number" value="0"></div>
+    </div>
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" id="nc-save">保存</button>
+  `);
+  document.getElementById('nc-save').onclick=()=>{
+    const name=document.getElementById('nc-name').value.trim();
+    if(!name){toast('请填写姓名');return;}
+    const c={
+      id:genId('c'),
+      name,
+      phone:document.getElementById('nc-phone').value.trim(),
+      birthday:document.getElementById('nc-bd').value,
+      membershipAmount:parseInt(document.getElementById('nc-mb').value)||0,
+      membershipBalance:parseFloat(document.getElementById('nc-bal').value)||0,
+      membershipExpire:document.getElementById('nc-exp').value,
+      points:parseInt(document.getElementById('nc-pt').value)||0,
+      createdAt:Date.now()
+    };
+    DB.customers.push(c);
+    saveDB();syncChannel();
+    document.querySelector('.modal-mask').remove();
+    renderCurrentRoute();toast('客户已创建');
+  };
+}
+
+function openQuickQuote(){
+  showModal('⚡ 客户发图问价',`
+    <div class="tip-block">
+      <div class="t">📸 客户发来款式图/链接</div>
+      <div class="c">输入款式描述或粘贴链接，生成快速报价</div>
+    </div>
+    <label class="form-label">客户手机 / 备注</label>
+    <input id="qq-cust" placeholder="如：客户微信XXX">
+    <label class="form-label mt-2">款式 / 描述</label>
+    <textarea id="qq-desc" placeholder="如：小红书看到的爆款猫眼"></textarea>
+    <label class="form-label mt-2">参考图片链接(可选)</label>
+    <input id="qq-url" placeholder="https://...">
+    <label class="form-label mt-2">建议价格</label>
+    <input id="qq-price" type="number" placeholder="¥">
+  `,`
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" id="qq-save">保存为报价草稿</button>
+  `);
+  document.getElementById('qq-save').onclick=()=>{
+    const cust=document.getElementById('qq-cust').value.trim();
+    const desc=document.getElementById('qq-desc').value.trim();
+    const url=document.getElementById('qq-url').value.trim();
+    const price=parseFloat(document.getElementById('qq-price').value)||0;
+    if(!desc){toast('请填写款式描述');return;}
+    DB.notifications.unshift({id:genId('qq'),date:ymd(new Date())+' '+hm(new Date()),customerName:cust||'(询价客户)',content:`[报价草稿] ${desc}\n价格:¥${price}\n${url?'链接:'+url:''}`,type:'询价',createdAt:Date.now()});
+    if(url){
+      DB.transactions.unshift({id:genId('tx'),date:ymd(new Date()),type:'收入',amount:price,name:'询价-'+desc.slice(0,10),sourceUrl:url,source:'crawler'});
+    }
+    saveDB();syncChannel();
+    document.querySelector('.modal-mask').remove();
+    toast('报价已保存为草稿（待回复客户）');
+  };
+}
+
+function checkReminders(){
+  // 弹幕提醒：即将到预约
+  const interval=DB.settings.appointmentInterval||30;
+  const now=new Date();
+  DB.appointments.forEach(a=>{
+    if(a.status!=='confirmed')return;
+    const apptTime=new Date(a.date+'T'+a.startTime);
+    const diffMin=(apptTime-now)/60000;
+    if(diffMin>0&&diffMin<=15){
+      const key='reminded_'+a.id+'_'+Math.floor(diffMin/15);
+      if(sessionStorage.getItem(key))return;
+      sessionStorage.setItem(key,'1');
+      showDanmu(`${a.name||'客户'}的预约 ${a.startTime} 还有${Math.ceil(diffMin)}分钟，请准备！`);
+    }
+  });
+}
+function checkBroadcastReminders(){
+  // 跨标签页同步 + 通知
+}
+function showDanmu(msg){
+  const c=document.getElementById('danmu-container');
+  const d=document.createElement('div');d.className='danmu';d.textContent='🔔 '+msg;
+  c.appendChild(d);
+  setTimeout(()=>d.remove(),8000);
+}
+
+// 工作台快捷入口
+window.openNewAppointment=openNewAppointment;
+window.openQuickQuote=openQuickQuote;
+window.openApptEditor=openApptEditor;
+window.openCustomerEditor=openCustomerEditor;
+window.openNewCustomer=openNewCustomer;
+window.deleteAppt=deleteAppt;
+window.deleteCustomer=deleteCustomer;
+window.deleteTx=deleteTx;
+window.deleteFinance=deleteFinance;
+window.deletePtLog=deletePtLog;
+window.deleteNoti=deleteNoti;
+window.cancelAppt=cancelAppt;
+window.setApptStatus=setApptStatus;
+window.editAppt=editAppt;
+window.editCustomer=editCustomer;
+window.submitOrder=submitOrder;
+window.populateOrderCustomers=populateOrderCustomers;
+window.populateOrderItems=populateOrderItems;
+window.toggleOrderNew=toggleOrderNew;
+window.recalcOrder=recalcOrder;
+window.drawOrderList=drawOrderList;
+window.crawlLink=crawlLink;
+window.saveCrawl=saveCrawl;
+window.submitFinance=submitFinance;
+window.drawFinanceList=drawFinanceList;
+window.sendNotification=sendNotification;
+window.copyNotification=copyNotification;
+window.bulkNoti=bulkNoti;
+window.addItem=addItem;
+window.exportData=exportData;
+window.importData=importData;
+window.addPointsManual=addPointsManual;
+window.submitCustomerAppoint=submitCustomerAppoint;
+window.cancelMyAppt=cancelMyAppt;
+window.crawlLink=crawlLink;
+window.routeTo=(r)=>{currentRoute=r;renderRoute();};
+window.toggleNaNew=toggleNaNew;
+window.drawFinanceList=drawFinanceList;
+
+window.addEventListener('hashchange',()=>{detectMode();if(currentMode==='customer')renderCustomerPage();});
+
+init();
+</script>
+<script>
+(function(){
+    const _DATA = {"customers":[{"id":"c1","name":"林小姐","phone":"13812345678","birthday":"1992-03-15","membershipAmount":500,"membershipBalance":250,"membershipExpire":"2026-08-28","points":680},{"id":"c2","name":"陈女士","phone":"13987654321","birthday":"1996-08-22","membershipAmount":1000,"membershipBalance":800,"membershipExpire":"2027-01-27","points":1280},{"id":"c3","name":"李太太","phone":"13711112222","birthday":"1988-12-01","points":120},{"id":"c4","name":"王小姐","phone":"13522223333","birthday":"1994-06-18","membershipAmount":300,"membershipBalance":150,"membershipExpire":"2026-08-05","points":380},{"id":"c5","name":"张太太","phone":"13433334444","birthday":"1985-11-25","membershipAmount":500,"membershipBalance":0,"membershipExpire":"2026-08-02","points":920}],"appointments":[{"id":"a1","date":"2026-07-31","startTime":"14:00","endTime":"15:30","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲猫眼","note":"复杂款","status":"confirmed"},{"id":"a2","date":"2026-07-31","startTime":"16:00","endTime":"18:30","customerId":"c2","name":"陈女士","phone":"13987654321","item":"复杂款手绘","status":"confirmed"},{"id":"a3","date":"2026-08-01","startTime":"10:00","endTime":"12:00","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲法式","note":"想试新色","status":"pending"},{"id":"a4","date":"2026-08-02","startTime":"14:00","endTime":"17:00","customerId":"c3","name":"李太太","phone":"13711112222","item":"甲片款式","status":"pending"},{"id":"a5","date":"2026-07-30","startTime":"11:00","endTime":"13:00","customerId":"c2","name":"陈女士","phone":"13987654321","item":"本甲猫眼","status":"completed"},{"id":"a6","date":"2026-07-28","startTime":"15:00","endTime":"16:30","customerId":"c1","name":"林小姐","phone":"13812345678","item":"本甲单色","status":"completed"}],"memberships":[{"id":"m300","amount":300,"discount":0.95,"name":"储值卡","pointsRate":1,"expireMonths":12},{"id":"m500","amount":500,"discount":0.9,"name":"银卡","pointsRate":1.2,"expireMonths":12},{"id":"m1000","amount":1000,"discount":0.8,"name":"金卡","pointsRate":1.5,"expireMonths":12}],"items":[{"id":"i1","name":"本甲单色","price":80,"duration":60,"category":"本甲","hot":false},{"id":"i2","name":"本甲法式","price":120,"duration":90,"category":"本甲","hot":true},{"id":"i3","name":"本甲猫眼","price":150,"duration":120,"category":"本甲","hot":true},{"id":"i4","name":"甲片单色","price":180,"duration":120,"category":"甲片","hot":false},{"id":"i5","name":"甲片款式","price":280,"duration":150,"category":"甲片","hot":true},{"id":"i6","name":"复杂款手绘","price":580,"duration":240,"category":"千元款","hot":true},{"id":"i7","name":"手部护理","price":60,"duration":30,"category":"护理","hot":false},{"id":"i8","name":"卸甲","price":30,"duration":20,"category":"护理","hot":false},{"id":"i9","name":"贴钻每个","price":5,"duration":10,"category":"加项","hot":false,"pointsMultiple":2}],"transactions":[{"id":"t1","date":"2026-07-31","type":"收入","amount":135,"name":"本甲猫眼","customerId":"c1","customerName":"林小姐"},{"id":"t2","date":"2026-07-31","type":"支出","amount":280,"name":"甲油胶采购"},{"id":"t3","date":"2026-07-30","type":"收入","amount":150,"name":"本甲猫眼","customerId":"c2","customerName":"陈女士"},{"id":"t4","date":"2026-07-26","type":"收入","amount":540,"name":"复杂款手绘","customerId":"c2","customerName":"陈女士"},{"id":"t5","date":"2026-07-24","type":"支出","amount":2800,"name":"房租"},{"id":"t6","date":"2026-07-28","type":"收入","amount":520,"name":"甲片款式","customerId":"c3","customerName":"李太太"}],"points_log":[{"id":"p1","date":"2026-07-31","customerId":"c1","name":"林小姐","change":162,"reason":"消费 本甲猫眼 ¥135","balance":680}],"notifications":[],"settings":{"shopName":"禾蔓里·美甲美睫工作室","openTime":"09:00","closeTime":"20:00","appointmentInterval":30,"reminderHours":24,"businessHours":[{"day":1,"open":"09:00","close":"20:00","enabled":true},{"day":2,"open":"09:00","close":"20:00","enabled":true},{"day":3,"open":"09:00","close":"20:00","enabled":true},{"day":4,"open":"09:00","close":"20:00","enabled":true},{"day":5,"open":"09:00","close":"20:00","enabled":true},{"day":6,"open":"09:00","close":"20:00","enabled":true},{"day":0,"open":"09:00","close":"20:00","enabled":false}]}};
+    try {
+        localStorage.setItem('hemanli_db_v1', _DATA);
+    } catch(e) {}
+})();
+</script>
+<script>
+/* ===== PWA：注册 Service Worker（离线可用 + 安装到桌面）===== */
+(function(){
+  if('serviceWorker' in navigator){
+    window.addEventListener('load',function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(e){/* 本地file://或隐私模式静默忽略 */});
+    });
+  }
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+    if(!localStorage.getItem('hemanli_pwa_dismissed')){
+      setTimeout(function(){
+        var box=document.createElement('div');
+        box.id='pwa-tip';
+        box.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#d99a9a,#c4797b);color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 6px 24px rgba(196,121,123,.4);font-size:13px;max-width:90vw;text-align:center';
+        box.innerHTML='📲 把工作台装到桌面？点右上角「⋯」选择「<b>添加到主屏幕</b>」即可当App用';
+        var close=document.createElement('span');
+        close.textContent='✕';
+        close.style.cssText='margin-left:10px;cursor:pointer;opacity:.8';
+        close.onclick=function(){localStorage.setItem('hemanli_pwa_dismissed','1');box.remove();};
+        box.appendChild(close);
+        document.body.appendChild(box);
+        setTimeout(function(){if(box.parentNode)box.parentNode.removeChild(box);},8000);
+      },1500);
+    }
+  });
+})();
+</script>
+</body>
+</html>

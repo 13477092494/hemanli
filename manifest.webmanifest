@@ -1,0 +1,52 @@
+{
+  "name": "禾蔓里·美甲美睫工作室",
+  "short_name": "禾蔓里",
+  "description": "禾蔓里美甲美睫工作室 - 预约管理、会员积分、财务管理一站式工作台",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "background_color": "#faf6f5",
+  "theme_color": "#d99a9a",
+  "orientation": "any",
+  "lang": "zh-CN",
+  "categories": ["business", "productivity", "lifestyle"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "工作台首页",
+      "short_name": "工作台",
+      "url": "./index.html"
+    },
+    {
+      "name": "客户预约端",
+      "short_name": "客户预约",
+      "url": "./index.html#customer"
+    }
+  ]
+}

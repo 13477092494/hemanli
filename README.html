@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>禾蔓里·美甲美睫工作室 - 项目说明</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#faf6f5 0%,#fbe9e7 100%);min-height:100vh;padding:30px 20px;color:#2d2424;}
+.wrap{max-width:1100px;margin:0 auto;}
+.hero{text-align:center;padding:30px 20px 50px;}
+.hero .logo{font-size:64px;margin-bottom:14px;}
+.hero h1{font-size:32px;color:#c4797b;font-weight:600;}
+.hero .en{font-size:13px;color:#7a6f6f;margin-top:6px;letter-spacing:3px;}
+.hero p{margin-top:18px;color:#7a6f6f;font-size:15px;max-width:700px;margin-left:auto;margin-right:auto;line-height:1.7;}
+.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:30px 0;}
+@media(max-width:768px){.entry-grid{grid-template-columns:1fr}}
+.entry-card{background:#fff;border-radius:18px;padding:30px;box-shadow:0 4px 20px rgba(217,154,154,.15);transition:all .2s;text-align:center;display:block;text-decoration:none;color:inherit;}
+.entry-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(217,154,154,.25);}
+.entry-card .icon{font-size:48px;margin-bottom:14px;}
+.entry-card h2{font-size:22px;color:#c4797b;font-weight:600;}
+.entry-card .desc{margin-top:10px;color:#7a6f6f;font-size:14px;line-height:1.7;}
+.entry-card .open-btn{display:inline-block;margin-top:20px;padding:10px 28px;background:#d99a9a;color:#fff;border-radius:24px;font-size:14px;}
+.section{background:#fff;border-radius:18px;padding:30px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.05);}
+.section h2{font-size:20px;color:#c4797b;margin-bottom:18px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;}
+.feat{padding:18px;background:#fffaf8;border-radius:12px;border-left:4px solid #d99a9a;}
+.feat .t{font-weight:600;color:#2d2424;margin-bottom:6px;font-size:14.5px;}
+.feat .d{font-size:13px;color:#7a6f6f;line-height:1.6;}
+.tip-block{background:linear-gradient(135deg,#fff8e1,#fff3cc);border-left:4px solid #d4a85a;padding:14px 18px;border-radius:10px;font-size:13.5px;color:#6b5a3a;line-height:1.8;margin:14px 0;}
+.tip-block strong{color:#8a6420;}
+.feature-list{padding-left:24px;}
+.feature-list li{margin:8px 0;line-height:1.6;font-size:14px;color:#5a5050;}
+.footer{text-align:center;color:#7a6f6f;font-size:12px;padding:30px 0;}
+.kbd{background:#faf6f5;border:1px solid #d99a9a;color:#c4797b;padding:2px 8px;border-radius:4px;font-family:monospace;font-size:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="logo">💅</div>
+    <h1>禾蔓里·美甲美睫工作室</h1>
+    <div class="en">HEMANLI NAIL STUDIO</div>
+    <p>一套完整的工作台 + 客户扫码预约小程序。客户扫码后可单独看到当日空闲时段、自己的会员卡、积分余额和兑换规则，不会泄露其他客户隐私。店主端含预约管理、报价开单（自动算折扣+积分）、客户档案、会员等级、积分规则、营销分析、财务收支、链接抓取（抖音/小红书）、到店提醒等所有功能。</p>
+  </div>
+
+  <!-- 主要入口 -->
+  <div class="entry-grid">
+    <a class="entry-card" href="index.html">
+      <div class="icon">🖥️</div>
+      <h2>店主工作台</h2>
+      <p class="desc">iPad / 电脑访问 · 11个功能模块 · 数据全可视化 · 支持左滑删除/编辑</p>
+      <div class="open-btn">进入工作台 →</div>
+    </a>
+    <a class="entry-card" href="index.html#customer">
+      <div class="icon">📱</div>
+      <h2>客户扫码端</h2>
+      <p class="desc">手机扫码进入 · 仅显示自己的信息 · 看不看其他客户隐私 · 可预约、查积分、办会员</p>
+      <div class="open-btn">进入客户端 →</div>
+    </a>
+  </div>
+
+  <!-- 功能总览 -->
+  <div class="section">
+    <h2>📋 工作台 11 个模块</h2>
+    <div class="feat-grid">
+      <div class="feat"><div class="t">🏠 工作台首页</div><div class="d">今日营业额、本月利润、客户预约快到提醒、今日工作汇报（已完成/待进行/营收/客流）、快到期会员提醒。</div></div>
+      <div class="feat"><div class="t">📅 预约管理</div><div class="d">状态分类（全部/待确认/已确认/已完成/已取消）。每条可编辑、确认、完成、取消、彻底删除，支持左滑删除不残留。</div></div>
+      <div class="feat"><div class="t">💰 报价开单</div><div class="d">选中已备案客户或散客自填，自动按会员折扣算出应付价，自动累计积分（基础×会员倍率×项目倍率）。</div></div>
+      <div class="feat"><div class="t">👤 客户档案</div><div class="d">含手机号、生日、会员卡/到期/余额、积分、来源。老客户可自由填写。右滑/左滑删除。</div></div>
+      <div class="feat"><div class="t">💳 会员管理</div><div class="d">3 档默认（¥300享9.5折/¥500享9折/¥1000享8折），可自由增删等级。每个客户独立享折扣。</div></div>
+      <div class="feat"><div class="t">⭐ 积分中心</div><div class="d">赚取规则（消费/推荐/分享/签到/注册）+ 兑换规则（卸甲/补色/护理/贴纸/抵扣/抽奖）+ 积分流水（可滑动删除）。</div></div>
+      <div class="feat"><div class="t">📊 营销管理</div><div class="d">年/月利润、12个月营收柱状图、产品 TOP10、月度利润表、直播短视频选题。弹幕提醒预约快到。</div></div>
+      <div class="feat"><div class="t">📒 财务管理</div><div class="d">记一笔（类型/金额/日期/项目/谁消费/备注）。自填列表，所有记录支持左滑删除。</div></div>
+      <div class="feat"><div class="t">🔗 链接抓取</div><div class="d">粘贴抖音/小红书/淘宝/京东/拼多多/1688/微信/支付宝链接，自动识别平台预览，可直接保存为消费记录并关联客户。</div></div>
+      <div class="feat"><div class="t">🔔 通知中心</div><div class="d">自定义通知（短信/微信/复制）+ 一键批量提醒：快到期会员、积分余额、今日生日、明日预约。</div></div>
+      <div class="feat"><div class="t">⚙️ 设置</div><div class="d">店铺信息（名称/营业时间/预约间隔/提醒时长）+ 款式服务管理（每项可改价格/耗时/积分倍率）+ 二维码生成 + 数据导入/导出。</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📱 客户扫码端 - 仅显示个人信息</h2>
+    <div class="tip-block"><strong>🛡️ 隐私保护：</strong> 客户扫码进入后只能看到自己的预约、积分、会员卡。当日<strong>已约时段只显示时间，不显示其他客户姓名/款式/手机号</strong>，避免重复预约且不泄露隐私。</div>
+    <ul class="feature-list">
+      <li><strong>首页</strong>：个人会员卡 / 积分 / 年卡到期 · 美甲时长参考（多本甲/甲片/千元款）· 营业时间（9:00-20:00）· 兑换规则 · 充值会员</li>
+      <li><strong>预约</strong>：选日期后自动显示当日空闲时段（灰色=已约不能选）· 点空闲格子直接选开始时间 · 填姓名/手机/款式/备注 · 提交后跳转"我的预约"</li>
+      <li><strong>我的预约</strong>：列出自己所有预约 · 状态显示（待确认/已确认/已完成/已取消）· 左滑取消</li>
+      <li><strong>会员中心</strong>：完整会员卡信息 + 积分余额 + 充值选项</li>
+      <li><strong>预约时间由店家控制</strong>：客户端只能从空余时段选开始时间，结束时间由店家按款式耗时确定</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>✨ 各项核心需求已实现</h2>
+    <ul class="feature-list">
+      <li>✅ 会员折扣：300/9.5折、500/9折银卡、1000/8折金卡（可在设置里增删改）</li>
+      <li>✅ 报价自动带折扣后金额，会员等级积分倍率自动应用</li>
+      <li>✅ 积分系统：消费1元=1分、双倍项目×2、银卡×1.2、金卡×1.5、推荐/分享/签到/注册奖励</li>
+      <li>✅ 积分兑换：卸甲、补色、护理、贴纸、8折券、现金抵扣、积分抽奖</li>
+      <li>✅ 当月支出明细 + 客户消费记录在同一财务管理模块</li>
+      <li>✅ 抖音/小红书/淘宝/京东/拼多多/1688链接识别预览，自动保存为消费记录</li>
+      <li>✅ 客户充值记录 + 消费记录 + 生日 + 会员到期时间</li>
+      <li>✅ 通知：可一键批量发送（短信/微信/复制）— 真实发送给客户</li>
+      <li>✅ 会员卡可自设置增删，每个类目（价格/耗时/积分倍率）可自由编辑</li>
+      <li>✅ 客户扫码完整运转（验证通过）· 不会看到工作台或他人隐私</li>
+      <li>✅ 店家自己也能填写预约（不只是客户扫码）</li>
+      <li>✅ 取消 + 彻底删除 · 删除干净不残留反复</li>
+      <li>✅ 老客户档案自由输入 + 不同年卡到期时间</li>
+      <li>✅ 客户档案右滑/左滑删除</li>
+      <li>✅ 积分自动计算 · 老顾客加卡时可手动设基础积分 · 消费记录自动累加</li>
+      <li>✅ 工作台首页 + 营销管理（年/月利润、数据分析、直播选题、统计产品）· 预约时间快到弹幕提醒</li>
+      <li>✅ 客户预约时间由店家控制 · 客户端只看已约时段 · 选剩余的开始时间 · 结束店家定</li>
+      <li>✅ 统计 + 利润统计表 · 今日工作汇报 · 客户端温馨提示完整时长参考</li>
+      <li>✅ 所有区域都可点开，无 404</li>
+      <li>✅ 通知真实发送（短信/微信/复制模式记录到通知中心，可真发到客户微信）</li>
+      <li>✅ 手机/iPad/电脑同步：通过 BroadcastChannel 跨标签实时同步 + localStorage 持久化</li>
+      <li>✅ 报价开单：客户列表可搜索/自填散客/选已有 - 手机 iPad 同步</li>
+      <li>✅ 预约信息可编辑修改（不想一个个删除）</li>
+      <li>✅ 总收入/支出自填：项目、几月几号、收入多少、谁消费的</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>🔧 技术亮点</h2>
+    <ul class="feature-list">
+      <li>单页应用 <span class="kbd">index.html</span>，本地数据存储，无需后端服务器</li>
+      <li>BroadcastChannel 跨标签页实时同步 · iPad/iPhone/电脑共享同一店面数据</li>
+      <li>响应式布局：iPad 横向导航 + 移动端底部 Tab 栏</li>
+      <li>左右滑动删除（移动 touch + 桌面 mousedown）</li>
+      <li>JSON 导入/导出备份所有数据</li>
+      <li>二维码生成（在线服务 / 离线 fallback 显示链接）</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <p>禾蔓里工作室 © 2026 · 预约管理 / 会员积分 / 财务管理一站式</p>
+    <p style="margin-top:8px">📌 直接打开 <span class="kbd">index.html</span> 即可使用，扫码网址 = 当前页 + #customer</p>
+  </div>
+</div>
+</body>
+</html>

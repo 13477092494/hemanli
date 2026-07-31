@@ -199,6 +199,25 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 .toast{position:fixed;left:50%;top:30%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:13px;z-index:9999;animation:popIn .2s;}
 @keyframes popIn{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
 
+/* 云端连接状态药丸（常驻悬浮） */
+.cloud-pill{position:fixed;bottom:16px;right:14px;z-index:9000;display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;cursor:default;
+  background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12);border:1px solid var(--border);color:var(--text-light);
+  user-select:none;transition:all .2s;max-width:60vw;}
+.cloud-pill.pill-top{top:10px;bottom:auto;right:12px;}
+.cloud-pill .dot{width:8px;height:8px;border-radius:50%;background:#bbb;flex:none;}
+.cloud-pill.online{color:#1a7f37;border-color:#b7e4c7;background:#f0fdf4;}
+.cloud-pill.online .dot{background:#1a7f37;}
+.cloud-pill.connecting{color:#9a6700;border-color:#ffe8a3;background:#fffbeb;}
+.cloud-pill.connecting .dot{background:#f0a020;animation:blink 1s infinite;}
+.cloud-pill.error{color:#b42318;border-color:#f6c9c3;background:#fff5f4;}
+.cloud-pill.error .dot{background:#e5484d;}
+.cloud-pill.off{color:#868e96;}
+.cloud-pill.off .dot{background:#bbb;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.cloud-pill.clickable{cursor:pointer;}
+.cloud-pill.clickable:hover{filter:brightness(.98);}
+
 /* 客户小程序布局 */
 .app{display:flex;flex-direction:column;height:100vh;max-width:480px;margin:0 auto;background:#fff;position:relative;}
 .app-header{
@@ -413,6 +432,9 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 <div id="modal-container"></div>
 <!-- ========= Toast ========= -->
 <div id="toast-container"></div>
+
+<!-- ========= 云端连接状态药丸（常驻） ========= -->
+<div id="cloud-pill" class="cloud-pill off" style="display:none"></div>
 
 <script>
 /* =============================================================
@@ -680,6 +702,7 @@ async function enableCloudClient(){
   const me=DB.customers.find(c=>c.id===customerCurrentId);
   if(me&&me.phone)CLOUD.watchAppts(list=>applyApptsForClient(list));
   toast('☁️ 已连接云端，预约实时同步');
+  renderCloudStatusPill();
 }
 function renderCloudStatus(){
   const el=document.getElementById('cloud-status');
@@ -687,6 +710,26 @@ function renderCloudStatus(){
   const map={off:'未开启',connecting:'连接中…',online:'✅ 已连接',error:'❌ 连接失败'};
   el.textContent='状态：'+(map[CLOUD.status]||CLOUD.status);
   el.className='text-muted mt-1';
+  renderCloudStatusPill();
+}
+/* 常驻悬浮的连接状态药丸：工作台始终显示；客户端仅在已自动连接时显示 */
+function renderCloudStatusPill(){
+  const el=document.getElementById('cloud-pill');
+  if(!el)return;
+  if(currentMode==='customer'&&CLOUD.mode!=='client'){el.style.display='none';return;}
+  el.style.display='';
+  const map={
+    off:{cls:'off',text:'未开启云端',click:true},
+    connecting:{cls:'connecting',text:'连接中…',click:false},
+    online:{cls:'online',text:'☁️ 云端已连接',click:false},
+    error:{cls:'error',text:'☁️ 连接失败',click:true}
+  };
+  const s=map[CLOUD.status]||map.off;
+  const label=(currentMode==='customer'&&s.text.startsWith('☁️ '))?('云端'+s.text.slice(2)):s.text;
+  const pos=(currentMode==='customer')?' pill-top':'';
+  el.className='cloud-pill '+s.cls+pos+(s.click&&currentMode!=='customer'?' clickable':'');
+  el.innerHTML='<span class="dot"></span><span>'+label+'</span>';
+  el.onclick=(s.click&&currentMode!=='customer')?()=>routeTo('settings'):null;
 }
 
 /* =============================================================
@@ -719,6 +762,9 @@ function init(){
   setInterval(checkReminders,60000);
   setInterval(checkBroadcastReminders,30000);
   checkBroadcastReminders();
+  // 常驻连接状态药丸（实时刷新）
+  setInterval(renderCloudStatusPill,1500);
+  renderCloudStatusPill();
   // 云端同步（工作台）
   if(currentMode!=='customer')startWorkbenchCloud();
 }

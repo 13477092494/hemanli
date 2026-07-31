@@ -422,6 +422,21 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
 .tl-row:last-child{border-bottom:none;}
 .tl-block{position:absolute;top:6px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;}
 .tl-appt{position:absolute;top:28px;height:18px;border-radius:4px;font-size:10px;line-height:18px;padding:0 5px;overflow:hidden;white-space:nowrap;background:var(--primary);color:#fff;cursor:pointer;}
+
+/* ============ 打卡送礼 ============ */
+.rw-switch{position:relative;display:inline-block;width:44px;height:24px;flex:none;cursor:pointer;}
+.rw-switch input{opacity:0;width:0;height:0;position:absolute;}
+.rw-switch span{position:absolute;inset:0;background:#d9d0d0;border-radius:24px;transition:.2s;}
+.rw-switch span:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.rw-switch input:checked+span{background:var(--primary-dark);}
+.rw-switch input:checked+span:before{transform:translateX(20px);}
+.stat-mini{background:var(--bg-2);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+.stat-mini .v{font-size:22px;font-weight:700;color:var(--primary-dark);}
+.stat-mini .l{font-size:11.5px;color:var(--text-light);margin-top:2px;}
+.rw-item{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;background:#fff;}
+.rw-item.locked{opacity:.55;}
+.streak-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;background:var(--bg-2);color:var(--text-light);}
+.streak-dot.on{background:var(--primary);color:#fff;}
 </style>
 </head>
 <body>
@@ -449,6 +464,7 @@ textarea{resize:none;min-height:80px;line-height:1.6;}
         <div class="nav-item" data-route="customer"><span class="icon">👤</span>客户档案</div>
         <div class="nav-item" data-route="member"><span class="icon">💳</span>会员管理</div>
         <div class="nav-item" data-route="points"><span class="icon">⭐</span>积分中心</div>
+        <div class="nav-item" data-route="rewards"><span class="icon">🎁</span>打卡送礼 <span class="badge" id="badge-rewards" style="display:none">0</span></div>
       </div>
       <div class="nav-group">
         <div class="nav-group-title">运营工具</div>
@@ -495,7 +511,36 @@ const DB_KEY='hemanli_db_v1';
 /* 云端同步基于 Supabase（免费、无需配置域名白名单）。
    工作台把 Provider 配置保存在 DB.settings.cloud 中，重载页面自动连接；
    客户端配置通过扫码链接 ?sb_url=...&sb_key=... 自动携带，无需手动填写。 */
-const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],technicians:[],shifts:[],priceMemory:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,depositAmount:50,imageMaxCount:6,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
+/* 积分营销（打卡送礼）默认规则 —— 全部可在工作台「打卡送礼」页自定义，随云端同步到手机/iPad */
+const DEFAULT_REWARDS={
+  /* 1. 推荐新客 */
+  referral:{enabled:true,referrerPoints:200,refereePoints:200,requireConsume:true,note:'新客首次消费后双方到账'},
+  /* 2. 社交分享 */
+  share:{enabled:true,points:80,maxPerMonth:2,needAudit:true,platforms:['小红书','抖音','微信朋友圈','大众点评']},
+  /* 3. 会员注册 / 每日签到 */
+  signin:{enabled:true,dailyPoints:10,firstMemberPoints:100,streakBonus:[{days:7,points:50},{days:30,points:200}]},
+  /* 4. 积分抵现 */
+  deduct:{enabled:true,pointsPerYuan:100,maxPercent:20,minPoints:100},
+  /* 9. 积分升级会员 */
+  levelUp:{enabled:true,rules:[{points:1000,amount:300},{points:3000,amount:500},{points:8000,amount:1000}]},
+  /* 10. 积分有效期 */
+  expire:{enabled:true,months:12,remindDays:30},
+  /* 11. 双倍积分日 */
+  doubleDay:{enabled:true,mode:'weekday',weekday:3,monthDay:8,multiplier:2,label:'双倍积分日'}
+};
+/* 默认兑换目录（5/6/7/8） */
+const DEFAULT_REWARD_ITEMS=[
+  {id:'rw_unload',name:'卸甲服务',type:'service',points:100,value:30,icon:'🧴',stock:-1,enabled:true,desc:'低门槛尝甜头'},
+  {id:'rw_touch',name:'单色补色',type:'service',points:300,value:80,icon:'💅',stock:-1,enabled:true,desc:'补色一次'},
+  {id:'rw_hand',name:'免费手部护理',type:'service',points:500,value:128,icon:'🤲',stock:-1,enabled:true,desc:'中高价值'},
+  {id:'rw_sticker',name:'限量款美甲贴纸',type:'product',points:800,value:68,icon:'✨',stock:20,enabled:true,desc:'限量周边'},
+  {id:'rw_coupon8',name:'8折美甲券',type:'coupon',points:300,value:0.8,icon:'🎫',stock:-1,enabled:true,desc:'下次消费打8折',validDays:60},
+  {id:'rw_cash10',name:'¥10 现金抵扣券',type:'coupon',points:1000,value:10,icon:'💰',stock:-1,enabled:true,desc:'满100可用',validDays:90}
+];
+const REWARD_TYPES={service:{label:'服务',color:'#dcfce7',text:'#166534'},product:{label:'实物',color:'#dbeafe',text:'#1e40af'},coupon:{label:'优惠券',color:'#fef3c7',text:'#92400e'}};
+const POINT_SOURCES={consume:'消费',signin:'签到',referral:'推荐好友',referred:'被推荐',share:'社交分享',member:'开通会员',redeem:'积分兑换',deduct:'积分抵现',expire:'过期作废',manual:'手动调整',levelup:'等级奖励'};
+
+const SCHEMA={customers:[],appointments:[],memberships:[],items:[],transactions:[],points_log:[],notifications:[],technicians:[],shifts:[],priceMemory:[],rewardItems:[],redeems:[],signins:[],referrals:[],shares:[],coupons:[],settings:{shopName:'禾蔓里·美甲美睫工作室',openTime:'09:00',closeTime:'20:00',appointmentInterval:30,reminderHours:24,depositAmount:50,imageMaxCount:6,rewards:DEFAULT_REWARDS,businessHours:[{day:1,open:'09:00',close:'20:00',enabled:true},{day:2,open:'09:00',close:'20:00',enabled:true},{day:3,open:'09:00',close:'20:00',enabled:true},{day:4,open:'09:00',close:'20:00',enabled:true},{day:5,open:'09:00',close:'20:00',enabled:true},{day:6,open:'09:00',close:'20:00',enabled:true},{day:0,open:'09:00',close:'20:00',enabled:false}],cloud:{provider:'local',url:'',key:'',enabled:false}}};
 
 const MEMBER_TIERS={
   '300':{name:'储值卡',amount:300,discount:0.95,tag:'normal',pointsRate:1.0,expireMonths:12,color:'#999'},
@@ -588,6 +633,322 @@ function getWeekDates(weekStartStr){
   return out;
 }
 
+/* =============================================================
+   积分营销规则引擎（打卡送礼）
+   ============================================================= */
+function RW(){return (DB.settings&&DB.settings.rewards)||DEFAULT_REWARDS;}
+
+/* 11. 是否双倍积分日 */
+function isDoubleDay(dateStr){
+  const cfg=RW().doubleDay;
+  if(!cfg||!cfg.enabled)return false;
+  const d=dateStr?new Date(dateStr):new Date();
+  if(cfg.mode==='weekday')return d.getDay()===(+cfg.weekday);
+  if(cfg.mode==='monthday')return d.getDate()===(+cfg.monthDay);
+  return false;
+}
+function doubleDayLabel(){
+  const cfg=RW().doubleDay;
+  if(!cfg||!cfg.enabled)return '';
+  const WD=['周日','周一','周二','周三','周四','周五','周六'];
+  return cfg.mode==='weekday'?`每${WD[+cfg.weekday]}`:`每月${cfg.monthDay}号`;
+}
+
+/* 10. 积分有效期 */
+function pointsExpireAt(fromTs){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return 0;
+  const d=new Date(fromTs||Date.now());
+  d.setMonth(d.getMonth()+(+cfg.months||12));
+  return d.getTime();
+}
+
+/* 通用加分入口：自动应用双倍日、写日志、检查升级 */
+function grantPoints(customerId,points,source,reason,opt){
+  opt=opt||{};
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c||!points)return 0;
+  let final=Math.round(points);
+  let dbl=false;
+  if(opt.allowDouble!==false&&final>0&&isDoubleDay(opt.date)){
+    final=Math.round(final*(+RW().doubleDay.multiplier||2));
+    dbl=true;
+  }
+  c.points=(+c.points||0)+final;
+  DB.points_log.unshift({
+    id:genId('pl'),date:opt.date||ymd(new Date()),
+    customerId:c.id,name:c.name,change:final,
+    source:source||'manual',
+    reason:(reason||POINT_SOURCES[source]||'调整')+(dbl?` 🎉${RW().doubleDay.label||'双倍日'}×${RW().doubleDay.multiplier}`:''),
+    balance:c.points,
+    expireAt:final>0?pointsExpireAt():0,
+    ts:Date.now()
+  });
+  if(final>0)checkLevelUp(c);
+  return final;
+}
+/* 扣分（兑换/抵现） */
+function spendPoints(customerId,points,source,reason){
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c)return false;
+  points=Math.round(Math.abs(points));
+  if((+c.points||0)<points)return false;
+  c.points=(+c.points)-points;
+  DB.points_log.unshift({
+    id:genId('pl'),date:ymd(new Date()),
+    customerId:c.id,name:c.name,change:-points,
+    source:source||'redeem',reason:reason||POINT_SOURCES[source]||'消耗',
+    balance:c.points,expireAt:0,ts:Date.now()
+  });
+  return true;
+}
+
+/* 9. 积分自动升级会员 */
+function checkLevelUp(c){
+  const cfg=RW().levelUp;
+  if(!cfg||!cfg.enabled||!cfg.rules||!cfg.rules.length)return;
+  const total=+c.points||0;
+  const hit=[...cfg.rules].sort((a,b)=>b.points-a.points).find(r=>total>=r.points);
+  if(!hit)return;
+  const cur=+c.membershipAmount||0;
+  if(cur>=hit.amount)return;
+  c.membershipAmount=hit.amount;
+  if(!c.membershipExpire){
+    const d=new Date();d.setMonth(d.getMonth()+12);
+    c.membershipExpire=ymd(d);
+  }
+  const tier=MEMBER_TIERS[String(hit.amount)];
+  DB.notifications.unshift({
+    id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),
+    customerName:c.name,type:'升级',
+    content:`🎉 ${c.name} 积分达 ${total} 分，已自动升级为「${tier?tier.name:hit.amount}」，享 ${tier?(tier.discount*10).toFixed(1):''} 折`,
+    createdAt:Date.now()
+  });
+}
+
+/* 4. 积分抵现计算 */
+function calcPointsDeduct(customerId,orderAmount,wantPoints){
+  const cfg=RW().deduct;
+  const res={usablePoints:0,deductAmount:0,maxAmount:0,reason:''};
+  if(!cfg||!cfg.enabled){res.reason='未开启积分抵现';return res;}
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c){res.reason='无客户档案';return res;}
+  const bal=+c.points||0;
+  const per=+cfg.pointsPerYuan||100;
+  res.maxAmount=+(orderAmount*(+cfg.maxPercent||20)/100).toFixed(2);
+  const maxByBalance=bal/per;
+  const cap=Math.min(res.maxAmount,maxByBalance);
+  let amt=wantPoints!=null?Math.min(wantPoints/per,cap):cap;
+  amt=Math.floor(amt*100)/100;
+  if(amt<=0){res.reason=bal<(+cfg.minPoints||0)?`积分不足（需≥${cfg.minPoints}分）`:'不可抵扣';return res;}
+  if(bal<(+cfg.minPoints||0)){res.reason=`积分不足（需≥${cfg.minPoints}分）`;return res;}
+  res.deductAmount=amt;
+  res.usablePoints=Math.ceil(amt*per);
+  return res;
+}
+
+/* 3. 每日签到 */
+function todaySignedIn(customerId){
+  const t=ymd(new Date());
+  return DB.signins.some(s=>s.customerId===customerId&&s.date===t);
+}
+function signinStreak(customerId){
+  const days=DB.signins.filter(s=>s.customerId===customerId).map(s=>s.date).sort().reverse();
+  if(!days.length)return 0;
+  let streak=0;const d=new Date();
+  for(let i=0;i<400;i++){
+    const ds=ymd(d);
+    if(days.includes(ds)){streak++;d.setDate(d.getDate()-1);}
+    else if(i===0){d.setDate(d.getDate()-1);}   // 今天还没签，从昨天算
+    else break;
+  }
+  return streak;
+}
+function doSignin(customerId){
+  const cfg=RW().signin;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'签到功能未开启'};
+  if(todaySignedIn(customerId))return{ok:false,msg:'今天已经签到过啦'};
+  const base=+cfg.dailyPoints||10;
+  const rec={id:genId('si'),date:ymd(new Date()),customerId,points:base,ts:Date.now()};
+  DB.signins.unshift(rec);
+  let got=grantPoints(customerId,base,'signin','每日签到');
+  const streak=signinStreak(customerId);
+  let bonusMsg='';
+  (cfg.streakBonus||[]).forEach(b=>{
+    if(streak===(+b.days)){
+      const bp=grantPoints(customerId,+b.points,'signin',`连续签到${b.days}天奖励`);
+      got+=bp;bonusMsg=` + 连签${b.days}天奖励${bp}分`;
+    }
+  });
+  rec.points=got;
+  saveDB();syncChannel();
+  return{ok:true,points:got,streak,msg:`签到成功 +${got}分${bonusMsg}`};
+}
+
+/* 1. 推荐新客 */
+function genReferralCode(c){
+  if(typeof c==='string')c=DB.customers.find(x=>x.id===c);
+  if(!c)return '';
+  if(c.referralCode)return c.referralCode;
+  const base=(c.phone||'').slice(-4)||String(Math.floor(Math.random()*9000)+1000);
+  c.referralCode='HM'+base+String(Math.floor(Math.random()*90)+10);
+  return c.referralCode;
+}
+function findByReferralCode(code){
+  if(!code)return null;
+  return DB.customers.find(c=>(c.referralCode||'').toUpperCase()===code.toUpperCase())||null;
+}
+function applyReferral(refereeId,code,opt){
+  const cfg=RW().referral;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'推荐功能未开启'};
+  const referrer=findByReferralCode(code);
+  const referee=DB.customers.find(c=>c.id===refereeId);
+  if(!referrer||!referee)return{ok:false,msg:'推荐码无效'};
+  if(referrer.id===referee.id)return{ok:false,msg:'不能推荐自己'};
+  if(DB.referrals.some(r=>r.refereeId===referee.id))return{ok:false,msg:'该客户已被推荐过'};
+  const pending=cfg.requireConsume&&!(opt&&opt.consumed);
+  const rec={
+    id:genId('rf'),date:ymd(new Date()),
+    referrerId:referrer.id,referrerName:referrer.name,
+    refereeId:referee.id,refereeName:referee.name,
+    referrerPoints:+cfg.referrerPoints||0,refereePoints:+cfg.refereePoints||0,
+    status:pending?'pending':'done',ts:Date.now()
+  };
+  DB.referrals.unshift(rec);
+  if(!pending)settleReferral(rec.id);
+  saveDB();syncChannel();
+  return{ok:true,pending,msg:pending?'已绑定推荐关系，新客首次消费后双方到账':`推荐成功，双方各得积分`};
+}
+function settleReferral(refId){
+  const r=DB.referrals.find(x=>x.id===refId);
+  if(!r||r.status==='done')return false;
+  grantPoints(r.referrerId,r.referrerPoints,'referral',`推荐 ${r.refereeName} 到店`);
+  grantPoints(r.refereeId,r.refereePoints,'referred',`由 ${r.referrerName} 推荐`);
+  r.status='done';r.settledAt=Date.now();
+  return true;
+}
+/* 新客首次消费时自动结算待处理推荐 */
+function autoSettleReferralOnConsume(customerId){
+  const pend=DB.referrals.filter(r=>r.refereeId===customerId&&r.status==='pending');
+  pend.forEach(r=>settleReferral(r.id));
+  return pend.length;
+}
+
+/* 2. 社交分享 */
+function submitShare(customerId,platform,url,note){
+  const cfg=RW().share;
+  if(!cfg||!cfg.enabled)return{ok:false,msg:'分享奖励未开启'};
+  const month=ymd(new Date()).slice(0,7);
+  const used=DB.shares.filter(s=>s.customerId===customerId&&s.date.startsWith(month)&&s.status!=='rejected').length;
+  if(used>=(+cfg.maxPerMonth||2))return{ok:false,msg:`本月分享奖励已达上限（${cfg.maxPerMonth}次）`};
+  const c=DB.customers.find(x=>x.id===customerId);
+  const rec={
+    id:genId('sh'),date:ymd(new Date()),customerId,customerName:c?c.name:'',
+    platform,url,note:note||'',points:+cfg.points||0,
+    status:cfg.needAudit?'pending':'approved',ts:Date.now()
+  };
+  DB.shares.unshift(rec);
+  if(!cfg.needAudit)grantPoints(customerId,rec.points,'share',`${platform} 分享奖励`);
+  saveDB();syncChannel();
+  return{ok:true,msg:cfg.needAudit?'已提交，店家审核通过后积分到账':`分享成功 +${rec.points}分`};
+}
+function auditShare(shareId,approve){
+  const s=DB.shares.find(x=>x.id===shareId);
+  if(!s||s.status!=='pending')return false;
+  if(approve){s.status='approved';grantPoints(s.customerId,s.points,'share',`${s.platform} 分享奖励（已审核）`);}
+  else s.status='rejected';
+  s.auditedAt=Date.now();
+  saveDB();syncChannel();
+  return true;
+}
+
+/* 5-8. 积分兑换 */
+function redeemReward(customerId,itemId){
+  const it=DB.rewardItems.find(x=>x.id===itemId);
+  if(!it||!it.enabled)return{ok:false,msg:'该奖品已下架'};
+  if(it.stock===0)return{ok:false,msg:'库存不足'};
+  const c=DB.customers.find(x=>x.id===customerId);
+  if(!c)return{ok:false,msg:'无客户档案'};
+  if((+c.points||0)<it.points)return{ok:false,msg:`积分不足（还差 ${it.points-(+c.points||0)} 分）`};
+  if(!spendPoints(customerId,it.points,'redeem',`兑换「${it.name}」`))return{ok:false,msg:'扣分失败'};
+  if(it.stock>0)it.stock--;
+  const code=genRedeemCode();
+  const rec={
+    id:genId('rd'),date:ymd(new Date()),customerId,customerName:c.name,
+    itemId:it.id,itemName:it.name,itemType:it.type,points:it.points,value:it.value,
+    code,status:'unused',ts:Date.now()
+  };
+  DB.redeems.unshift(rec);
+  // 优惠券入券包
+  if(it.type==='coupon'){
+    const exp=new Date();exp.setDate(exp.getDate()+(+it.validDays||60));
+    DB.coupons.unshift({
+      id:genId('cp'),customerId,customerName:c.name,name:it.name,
+      kind:it.value<1?'discount':'cash',value:it.value,
+      code,expireDate:ymd(exp),status:'unused',fromRedeem:rec.id,ts:Date.now()
+    });
+  }
+  saveDB();syncChannel();
+  return{ok:true,code,msg:`兑换成功！核销码 ${code}`};
+}
+function genRedeemCode(){
+  return String(Math.floor(Math.random()*900000)+100000);
+}
+function useRedeem(redeemId){
+  const r=DB.redeems.find(x=>x.id===redeemId);
+  if(!r||r.status==='used')return false;
+  r.status='used';r.usedAt=Date.now();
+  const cp=DB.coupons.find(x=>x.fromRedeem===r.id);
+  if(cp)cp.status='used';
+  saveDB();syncChannel();
+  return true;
+}
+
+/* 10. 扫描过期积分（每次启动跑一次） */
+function expireOldPoints(){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return 0;
+  const now=Date.now();
+  let expired=0;
+  const byCust={};
+  DB.points_log.forEach(l=>{
+    if(l.change>0&&l.expireAt&&l.expireAt<now&&!l.expired&&l.source!=='expire'){
+      l.expired=true;
+      byCust[l.customerId]=(byCust[l.customerId]||0)+l.change;
+    }
+  });
+  Object.entries(byCust).forEach(([cid,pts])=>{
+    const c=DB.customers.find(x=>x.id===cid);
+    if(!c)return;
+    const cut=Math.min(pts,+c.points||0);
+    if(cut<=0)return;
+    c.points=(+c.points)-cut;
+    expired+=cut;
+    DB.points_log.unshift({
+      id:genId('pl'),date:ymd(new Date()),customerId:c.id,name:c.name,
+      change:-cut,source:'expire',reason:`积分过期作废（有效期${cfg.months}个月）`,
+      balance:c.points,expireAt:0,ts:Date.now()
+    });
+  });
+  if(expired>0){saveDB();syncChannel();}
+  return expired;
+}
+/* 即将过期提醒列表 */
+function expiringSoonList(){
+  const cfg=RW().expire;
+  if(!cfg||!cfg.enabled)return [];
+  const now=Date.now(),limit=now+(+cfg.remindDays||30)*86400000;
+  const map={};
+  DB.points_log.forEach(l=>{
+    if(l.change>0&&l.expireAt&&!l.expired&&l.expireAt>now&&l.expireAt<=limit){
+      if(!map[l.customerId])map[l.customerId]={customerId:l.customerId,name:l.name,points:0,soonest:l.expireAt};
+      map[l.customerId].points+=l.change;
+      map[l.customerId].soonest=Math.min(map[l.customerId].soonest,l.expireAt);
+    }
+  });
+  return Object.values(map).sort((a,b)=>a.soonest-b.soonest);
+}
+
 function loadDB(){
   try{
     const raw=localStorage.getItem(DB_KEY);
@@ -598,6 +959,19 @@ function loadDB(){
       merged.technicians=merged.technicians||[];
       merged.shifts=merged.shifts||[];
       merged.priceMemory=merged.priceMemory||[];
+      // 积分营销（打卡送礼）
+      ['rewardItems','redeems','signins','referrals','shares','coupons'].forEach(k=>{merged[k]=merged[k]||[];});
+      if(!merged.rewardItems.length)merged.rewardItems=JSON.parse(JSON.stringify(DEFAULT_REWARD_ITEMS));
+      const rw=(data.settings&&data.settings.rewards)||{};
+      merged.settings.rewards={
+        referral:Object.assign({},DEFAULT_REWARDS.referral,rw.referral||{}),
+        share:Object.assign({},DEFAULT_REWARDS.share,rw.share||{}),
+        signin:Object.assign({},DEFAULT_REWARDS.signin,rw.signin||{}),
+        deduct:Object.assign({},DEFAULT_REWARDS.deduct,rw.deduct||{}),
+        levelUp:Object.assign({},DEFAULT_REWARDS.levelUp,rw.levelUp||{}),
+        expire:Object.assign({},DEFAULT_REWARDS.expire,rw.expire||{}),
+        doubleDay:Object.assign({},DEFAULT_REWARDS.doubleDay,rw.doubleDay||{})
+      };
       // 字段迁移：shift→type、level→role
       merged.shifts.forEach(s=>{if(!s.type&&s.shift)s.type=s.shift;});
       merged.technicians.forEach(t=>{if(!t.role)t.role=t.level||'美甲师';if(t.active===undefined)t.active=true;if(!t.skills)t.skills=[];});
@@ -617,7 +991,8 @@ function loadDB(){
       return merged;
     }
   }catch(e){}
-  const init=Object.assign({},SCHEMA);
+  const init=JSON.parse(JSON.stringify(SCHEMA));
+  init.rewardItems=JSON.parse(JSON.stringify(DEFAULT_REWARD_ITEMS));
   // 初始化示例数据
   init.memberships=[{id:'m300',amount:300,discount:0.95,name:'储值卡',pointsRate:1.0,expireMonths:12},{id:'m500',amount:500,discount:0.9,name:'银卡',pointsRate:1.2,expireMonths:12},{id:'m1000',amount:1000,discount:0.8,name:'金卡',pointsRate:1.5,expireMonths:12}];
   // 示例美甲师
@@ -746,7 +1121,7 @@ const CLOUD={
     this.apptPoll=setInterval(async()=>{const list=await this.fetchAppts(phone);cb(list);},5000);
   },
   stopPoll(){if(this.apptPoll){clearInterval(this.apptPoll);this.apptPoll=null;}},
-  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,technicians:DB.technicians,shifts:DB.shifts,priceMemory:DB.priceMemory,appointments:[]}},
+  dbFragment(){return{customers:DB.customers,transactions:DB.transactions,items:DB.items,memberships:DB.memberships,points_log:DB.points_log,notifications:DB.notifications,settings:DB.settings,technicians:DB.technicians,shifts:DB.shifts,priceMemory:DB.priceMemory,rewardItems:DB.rewardItems,redeems:DB.redeems,signins:DB.signins,referrals:DB.referrals,shares:DB.shares,coupons:DB.coupons,appointments:[]}},
   async pushDB(){
     if(!this.ready)return false;
     try{const{error}=await this.sb.from("sync").upsert({id:"main",data:this.dbFragment()});if(error){console.warn("pushDB",error);return false;}return true;}catch(e){return false;}
@@ -813,7 +1188,7 @@ function applyApptsForClient(list){
 /* 工作台间：合并其它数据 */
 function applyDB(frag){
   if(!frag)return;
-  ['customers','transactions','items','memberships','points_log','notifications','settings'].forEach(k=>{if(frag[k]!==undefined)DB[k]=frag[k];});
+  ['customers','transactions','items','memberships','points_log','notifications','settings','technicians','shifts','priceMemory','rewardItems','redeems','signins','referrals','shares','coupons'].forEach(k=>{if(frag[k]!==undefined)DB[k]=frag[k];});
   saveLocalOnly();
   if(!document.querySelector('.modal-mask'))renderCurrentRouteSafe();
   refreshBadges();
@@ -956,6 +1331,7 @@ function renderRoute(){
     schedule:'排班管理',
     member:'会员管理',
     points:'积分中心',
+    rewards:'打卡送礼',
     marketing:'营销管理',
     finance:'财务管理',
     crawler:'链接抓取',
@@ -972,6 +1348,7 @@ function renderRoute(){
     customer:renderCustomer,
     member:renderMember,
     points:renderPoints,
+    rewards:renderRewards,
     marketing:renderMarketing,
     finance:renderFinance,
     crawler:renderCrawler,
@@ -2159,6 +2536,360 @@ function addPointsManual(){
   c.points=Math.max(0,(+c.points||0)+change);
   DB.points_log.unshift({id:genId('pl'),date:ymd(new Date()),customerId:c.id,name:c.name,change,reason,balance:c.points});
   saveDB();syncChannel();renderCurrentRoute();toast('已调整');
+}
+
+/* =============================================================
+   打卡送礼（积分营销中心）—— 全部规则可自定义，saveDB 后自动同步手机/iPad
+   ============================================================= */
+let RWTAB='rules';
+function renderRewards(el){
+  const pendShares=DB.shares.filter(s=>s.status==='pending').length;
+  const pendRedeem=DB.redeems.filter(r=>r.status==='unused').length;
+  const tabs=[
+    ['rules','⚙️ 规则设置',0],
+    ['shop','🎁 兑换商城',DB.rewardItems.filter(i=>i.enabled).length],
+    ['redeem','🎫 兑换核销',pendRedeem],
+    ['audit','📸 分享审核',pendShares],
+    ['log','📋 活动记录',0]
+  ];
+  el.innerHTML=`
+    <div class="card">
+      <div class="card-title">
+        <span>🎁 打卡送礼 · 积分营销中心</span>
+        <span class="text-muted" style="font-size:12px">${isDoubleDay()?'🎉 今天是'+(RW().doubleDay.label||'双倍积分日'):'设置全部自动同步到手机/iPad'}</span>
+      </div>
+      <div class="sch-tabs" style="flex-wrap:wrap">
+        ${tabs.map(([k,label,n])=>`<div class="sch-tab ${RWTAB===k?'active':''}" onclick="RWTAB='${k}';renderRoute()">${label}${n?` <span style="background:var(--danger);color:#fff;border-radius:9px;padding:0 5px;font-size:10px">${n}</span>`:''}</div>`).join('')}
+      </div>
+      <div id="rw-body" class="mt-2"></div>
+    </div>
+  `;
+  ({rules:rwRules,shop:rwShop,redeem:rwRedeem,audit:rwAudit,log:rwLog})[RWTAB](document.getElementById('rw-body'));
+}
+
+function rwCard(title,desc,enabled,path,inner){
+  return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;background:${enabled?'#fff':'#fbf8f8'}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <div style="font-weight:600;font-size:14px">${title}</div>
+        <div class="text-muted" style="font-size:11.5px;margin-top:2px">${desc}</div>
+      </div>
+      <label class="rw-switch"><input type="checkbox" ${enabled?'checked':''} onchange="rwSet('${path}.enabled',this.checked)"><span></span></label>
+    </div>
+    <div style="margin-top:${enabled?'12px':'0'};${enabled?'':'display:none'}">${inner}</div>
+  </div>`;
+}
+function rwNum(label,path,val,suffix,width){
+  return `<div style="display:flex;align-items:center;gap:6px;font-size:13px">
+    <span style="color:var(--text-light)">${label}</span>
+    <input type="number" value="${val}" style="width:${width||80}px;padding:6px 8px" onchange="rwSet('${path}',+this.value)">
+    ${suffix?`<span style="color:var(--text-light);font-size:12px">${suffix}</span>`:''}
+  </div>`;
+}
+function rwSet(path,val){
+  const parts=path.split('.');
+  let o=DB.settings.rewards;
+  for(let i=0;i<parts.length-1;i++)o=o[parts[i]];
+  o[parts[parts.length-1]]=val;
+  saveDB();syncChannel();
+  renderRoute();
+  toast('已保存并同步');
+}
+
+function rwRules(b){
+  const r=RW();
+  const WD=['周日','周一','周二','周三','周四','周五','周六'];
+  b.innerHTML=`
+    ${rwCard('1️⃣ 推荐新客 · 老带新',`老顾客带新朋友到店消费，双方各得积分`,r.referral.enabled,'referral',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('推荐人得','referral.referrerPoints',r.referral.referrerPoints,'分')}
+        ${rwNum('新客得','referral.refereePoints',r.referral.refereePoints,'分')}
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;cursor:pointer">
+        <input type="checkbox" ${r.referral.requireConsume?'checked':''} style="width:auto" onchange="rwSet('referral.requireConsume',this.checked)">
+        新客首次消费后才发放（防刷单）
+      </label>
+    `)}
+
+    ${rwCard('2️⃣ 社交分享奖励','顾客在小红书/抖音发布带店铺定位的美甲图或视频',r.share.enabled,'share',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('每次奖励','share.points',r.share.points,'分')}
+        ${rwNum('每月上限','share.maxPerMonth',r.share.maxPerMonth,'次')}
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;cursor:pointer">
+        <input type="checkbox" ${r.share.needAudit?'checked':''} style="width:auto" onchange="rwSet('share.needAudit',this.checked)">
+        需店家审核后到账（推荐开启）
+      </label>
+      <div style="margin-top:10px;font-size:12px;color:var(--text-light)">支持平台：${(r.share.platforms||[]).map(p=>`<span class="tag" style="margin-right:4px">${p}</span>`).join('')}</div>
+    `)}
+
+    ${rwCard('3️⃣ 会员注册 / 每日签到','培养顾客到店习惯，连续签到额外奖励',r.signin.enabled,'signin',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('每日签到','signin.dailyPoints',r.signin.dailyPoints,'分')}
+        ${rwNum('首次开卡','signin.firstMemberPoints',r.signin.firstMemberPoints,'分')}
+      </div>
+      <div style="margin-top:10px;font-size:12.5px;color:var(--text-light)">连续签到奖励：</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px" id="rw-streak">
+        ${(r.signin.streakBonus||[]).map((s,i)=>`<div style="display:flex;align-items:center;gap:4px;background:var(--bg-2);padding:6px 10px;border-radius:20px;font-size:12px">
+          连签 <input type="number" value="${s.days}" style="width:52px;padding:3px 5px" onchange="rwStreak(${i},'days',+this.value)"> 天 得
+          <input type="number" value="${s.points}" style="width:60px;padding:3px 5px" onchange="rwStreak(${i},'points',+this.value)"> 分
+          <span style="cursor:pointer;color:var(--danger)" onclick="rwStreak(${i},'del')">×</span>
+        </div>`).join('')}
+        <button class="btn sm" onclick="rwStreak(-1,'add')">＋ 加一档</button>
+      </div>
+    `)}
+
+    ${rwCard('4️⃣ 积分抵扣现金','结算时可用积分直接抵现，设上限防止亏本',r.deduct.enabled,'deduct',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+        ${rwNum('','deduct.pointsPerYuan',r.deduct.pointsPerYuan,'分 = 1 元',80)}
+        ${rwNum('单笔最多抵','deduct.maxPercent',r.deduct.maxPercent,'% 的消费额',70)}
+        ${rwNum('起用门槛','deduct.minPoints',r.deduct.minPoints,'分')}
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:var(--bg-2);border-radius:6px;font-size:12px;color:var(--text-light)">
+        举例：消费 ¥500，最多可抵 <strong>¥${(500*r.deduct.maxPercent/100).toFixed(0)}</strong>（需 ${Math.round(500*r.deduct.maxPercent/100*r.deduct.pointsPerYuan)} 分）
+      </div>
+    `)}
+
+    ${rwCard('9️⃣ 积分自动升级会员','积分累计到门槛自动升级会员等级',r.levelUp.enabled,'levelUp',`
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${(r.levelUp.rules||[]).map((rule,i)=>{
+          const t=MEMBER_TIERS[String(rule.amount)];
+          return `<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;background:var(--bg-2);padding:8px 10px;border-radius:6px">
+            累计 <input type="number" value="${rule.points}" style="width:80px;padding:4px 6px" onchange="rwLevel(${i},'points',+this.value)"> 分 → 升级为
+            <select style="width:auto;padding:4px 6px" onchange="rwLevel(${i},'amount',+this.value)">
+              ${Object.entries(MEMBER_TIERS).map(([amt,tier])=>`<option value="${amt}" ${+amt===+rule.amount?'selected':''}>${tier.name}（享${(tier.discount*10).toFixed(1)}折）</option>`).join('')}
+            </select>
+            <span style="cursor:pointer;color:var(--danger);margin-left:auto" onclick="rwLevel(${i},'del')">删除</span>
+          </div>`;
+        }).join('')}
+        <button class="btn sm" style="width:fit-content" onclick="rwLevel(-1,'add')">＋ 加一档</button>
+      </div>
+    `)}
+
+    ${rwCard('🔟 积分有效期','积分过期作废，提前提醒顾客使用',r.expire.enabled,'expire',`
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${rwNum('有效期','expire.months',r.expire.months,'个月')}
+        ${rwNum('提前','expire.remindDays',r.expire.remindDays,'天提醒')}
+      </div>
+      ${(()=>{const l=expiringSoonList();return l.length?`<div style="margin-top:10px;padding:8px 10px;background:#fffbeb;border-radius:6px;font-size:12px">
+        ⏰ 即将过期：${l.slice(0,5).map(x=>`${x.name} ${x.points}分(${ymd(new Date(x.soonest))})`).join('、')}${l.length>5?` 等 ${l.length} 人`:''}
+        <button class="btn sm" style="margin-left:8px" onclick="notifyExpiring()">一键提醒</button>
+      </div>`:'<div style="margin-top:10px;font-size:12px;color:var(--text-light)">暂无即将过期的积分</div>';})()}
+    `)}
+
+    ${rwCard('1️⃣1️⃣ 双倍积分日','固定日子刺激顾客到店消费',r.doubleDay.enabled,'doubleDay',`
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:13px">
+        <select style="width:auto;padding:6px 8px" onchange="rwSet('doubleDay.mode',this.value)">
+          <option value="weekday" ${r.doubleDay.mode==='weekday'?'selected':''}>每周固定一天</option>
+          <option value="monthday" ${r.doubleDay.mode==='monthday'?'selected':''}>每月固定一号</option>
+        </select>
+        ${r.doubleDay.mode==='weekday'?`
+          <select style="width:auto;padding:6px 8px" onchange="rwSet('doubleDay.weekday',+this.value)">
+            ${WD.map((w,i)=>`<option value="${i}" ${+r.doubleDay.weekday===i?'selected':''}>${w}</option>`).join('')}
+          </select>`:`
+          <input type="number" min="1" max="31" value="${r.doubleDay.monthDay}" style="width:64px;padding:6px 8px" onchange="rwSet('doubleDay.monthDay',+this.value)"> 号`}
+        ${rwNum('积分','doubleDay.multiplier',r.doubleDay.multiplier,'倍',60)}
+      </div>
+      <div style="margin-top:10px;padding:8px 10px;background:${isDoubleDay()?'#fef3c7':'var(--bg-2)'};border-radius:6px;font-size:12px">
+        当前设置：<strong>${doubleDayLabel()}</strong> 积分 ×${r.doubleDay.multiplier}${isDoubleDay()?' · 🎉 <strong>今天就是！</strong>':''}
+      </div>
+    `)}
+  `;
+}
+function rwStreak(i,field,val){
+  const arr=DB.settings.rewards.signin.streakBonus||[];
+  if(field==='add')arr.push({days:60,points:300});
+  else if(field==='del')arr.splice(i,1);
+  else arr[i][field]=val;
+  DB.settings.rewards.signin.streakBonus=arr;
+  saveDB();syncChannel();renderRoute();toast('已保存');
+}
+function rwLevel(i,field,val){
+  const arr=DB.settings.rewards.levelUp.rules||[];
+  if(field==='add')arr.push({points:5000,amount:500});
+  else if(field==='del')arr.splice(i,1);
+  else arr[i][field]=val;
+  arr.sort((a,b)=>a.points-b.points);
+  DB.settings.rewards.levelUp.rules=arr;
+  saveDB();syncChannel();renderRoute();toast('已保存');
+}
+function notifyExpiring(){
+  const l=expiringSoonList();
+  if(!l.length){toast('暂无需要提醒的客户');return;}
+  l.forEach(x=>{
+    const c=DB.customers.find(y=>y.id===x.customerId);
+    DB.notifications.unshift({
+      id:genId('nt'),date:ymd(new Date())+' '+hm(new Date()),
+      customerName:x.name,type:'积分到期',
+      content:`亲爱的${x.name}，您有 ${x.points} 积分将于 ${ymd(new Date(x.soonest))} 到期，记得来店里兑换好礼哦～`,
+      phone:c?c.phone:'',createdAt:Date.now()
+    });
+  });
+  saveDB();syncChannel();renderRoute();
+  toast(`已生成 ${l.length} 条提醒，可在通知中心一键发送`);
+}
+
+/* ---- 兑换商城管理 ---- */
+function rwShop(b){
+  b.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <span class="text-muted" style="font-size:12.5px">客户在手机上可用积分兑换以下奖品，可自由增删改</span>
+      <button class="btn sm primary" onclick="openRewardItem()">＋ 添加奖品</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">
+      ${DB.rewardItems.map(it=>{
+        const t=REWARD_TYPES[it.type]||REWARD_TYPES.service;
+        return `<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;background:${it.enabled?'#fff':'#fbf8f8'};${it.enabled?'':'opacity:.55'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="font-size:28px">${it.icon||'🎁'}</div>
+            <span class="tag" style="background:${t.color};color:${t.text}">${t.label}</span>
+          </div>
+          <div style="font-weight:600;margin-top:6px">${it.name}</div>
+          <div class="text-muted" style="font-size:11.5px;min-height:16px">${it.desc||''}</div>
+          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <strong style="color:var(--warning);font-size:16px">${it.points} 分</strong>
+            <span class="text-muted" style="font-size:11px">${it.stock<0?'不限量':'剩 '+it.stock}</span>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:6px">
+            <button class="btn sm" style="flex:1" onclick="openRewardItem('${it.id}')">编辑</button>
+            <button class="btn sm ${it.enabled?'':'primary'}" onclick="toggleRewardItem('${it.id}')">${it.enabled?'下架':'上架'}</button>
+          </div>
+        </div>`;
+      }).join('')||'<div class="empty"><div class="icon">🎁</div>还没有奖品</div>'}
+    </div>
+  `;
+}
+function toggleRewardItem(id){
+  const it=DB.rewardItems.find(x=>x.id===id);if(!it)return;
+  it.enabled=!it.enabled;saveDB();syncChannel();renderRoute();
+  toast(it.enabled?'已上架':'已下架');
+}
+function openRewardItem(id){
+  const it=id?DB.rewardItems.find(x=>x.id===id):null;
+  showModal(it?'编辑奖品':'添加奖品',`
+    <div class="form-grid">
+      <div><label class="form-label">奖品名称 *</label><input id="ri-name" value="${it?it.name:''}" placeholder="如：免费手部护理"></div>
+      <div><label class="form-label">图标 emoji</label><input id="ri-icon" value="${it?(it.icon||'🎁'):'🎁'}" placeholder="🎁"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">类型</label>
+        <select id="ri-type" onchange="document.getElementById('ri-valid-wrap').style.display=this.value==='coupon'?'':'none'">
+          ${Object.entries(REWARD_TYPES).map(([k,v])=>`<option value="${k}" ${it&&it.type===k?'selected':''}>${v.label}</option>`).join('')}
+        </select>
+      </div>
+      <div><label class="form-label">所需积分 *</label><input id="ri-points" type="number" value="${it?it.points:300}"></div>
+    </div>
+    <div class="form-grid mt-2">
+      <div><label class="form-label">价值 (¥ / 折扣如0.8)</label><input id="ri-value" type="number" step="0.01" value="${it?it.value:0}"></div>
+      <div><label class="form-label">库存（-1 = 不限量）</label><input id="ri-stock" type="number" value="${it?it.stock:-1}"></div>
+    </div>
+    <div class="form-item mt-2" id="ri-valid-wrap" style="${it&&it.type==='coupon'?'':'display:none'}">
+      <label class="form-label">优惠券有效天数</label><input id="ri-valid" type="number" value="${it?(it.validDays||60):60}">
+    </div>
+    <div class="form-item mt-2"><label class="form-label">说明</label><input id="ri-desc" value="${it?(it.desc||''):''}" placeholder="一句话卖点"></div>
+  `,`
+    ${it?`<button class="btn danger" onclick="delRewardItem('${it.id}')">删除</button>`:''}
+    <button class="btn" onclick="this.closest('.modal-mask').remove()">取消</button>
+    <button class="btn primary" onclick="saveRewardItem('${id||''}')">保存</button>
+  `);
+}
+function saveRewardItem(id){
+  const name=document.getElementById('ri-name').value.trim();
+  if(!name){toast('请填写名称');return;}
+  const data={
+    name,icon:document.getElementById('ri-icon').value.trim()||'🎁',
+    type:document.getElementById('ri-type').value,
+    points:+document.getElementById('ri-points').value||0,
+    value:+document.getElementById('ri-value').value||0,
+    stock:+document.getElementById('ri-stock').value,
+    validDays:+document.getElementById('ri-valid').value||60,
+    desc:document.getElementById('ri-desc').value.trim(),
+    enabled:true
+  };
+  if(id)Object.assign(DB.rewardItems.find(x=>x.id===id),data);
+  else DB.rewardItems.push(Object.assign({id:genId('rw')},data));
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已保存并同步');
+}
+function delRewardItem(id){
+  if(!confirm('删除该奖品？已兑换记录不受影响'))return;
+  DB.rewardItems=DB.rewardItems.filter(x=>x.id!==id);
+  saveDB();syncChannel();
+  document.querySelector('.modal-mask').remove();
+  renderRoute();toast('已删除');
+}
+
+/* ---- 兑换核销 ---- */
+function rwRedeem(b){
+  const arr=DB.redeems.slice(0,100);
+  b.innerHTML=arr.length?`
+    <div class="text-muted" style="font-size:12.5px;margin-bottom:10px">客户在手机上兑换后会生成 6 位核销码，到店报码即可核销</div>
+    ${arr.map(r=>{
+      const t=REWARD_TYPES[r.itemType]||REWARD_TYPES.service;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;${r.status==='used'?'opacity:.55':''}">
+        <div style="flex:1;min-width:0">
+          <div><strong>${r.customerName}</strong> 兑换 <strong>${r.itemName}</strong> <span class="tag" style="background:${t.color};color:${t.text}">${t.label}</span></div>
+          <div class="text-muted" style="font-size:12px">${r.date} · 消耗 ${r.points} 分 · 核销码 <strong style="letter-spacing:2px;font-size:14px;color:var(--primary-dark)">${r.code}</strong></div>
+        </div>
+        ${r.status==='used'?'<span class="tag success">已核销</span>':`<button class="btn sm primary" onclick="doUseRedeem('${r.id}')">核销</button>`}
+      </div>`;
+    }).join('')}
+  `:'<div class="empty"><div class="icon">🎫</div>还没有兑换记录</div>';
+}
+function doUseRedeem(id){
+  if(!confirm('确认核销？核销后不可撤销'))return;
+  useRedeem(id);renderRoute();toast('已核销');
+}
+
+/* ---- 分享审核 ---- */
+function rwAudit(b){
+  const pend=DB.shares.filter(s=>s.status==='pending');
+  const done=DB.shares.filter(s=>s.status!=='pending').slice(0,30);
+  b.innerHTML=`
+    ${pend.length?`<div style="font-weight:600;font-size:13px;margin-bottom:8px">⏳ 待审核 (${pend.length})</div>
+    ${pend.map(s=>`<div style="padding:12px;border:1px solid var(--warning);border-radius:var(--radius-sm);margin-bottom:8px;background:#fffbeb">
+      <div><strong>${s.customerName}</strong> 在 <span class="tag">${s.platform}</span> 分享</div>
+      <div style="font-size:12px;margin-top:4px;word-break:break-all"><a href="${s.url}" target="_blank" style="color:var(--primary-dark)">${s.url}</a></div>
+      ${s.note?`<div class="text-muted" style="font-size:11.5px;margin-top:3px">${s.note}</div>`:''}
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn sm primary" onclick="auditShare('${s.id}',true);renderRoute();toast('已通过 +${s.points}分')">✅ 通过 +${s.points}分</button>
+        <button class="btn sm danger" onclick="auditShare('${s.id}',false);renderRoute();toast('已驳回')">驳回</button>
+      </div>
+    </div>`).join('')}`:'<div class="empty"><div class="icon">📸</div>暂无待审核的分享</div>'}
+    ${done.length?`<div style="font-weight:600;font-size:13px;margin:16px 0 8px">历史</div>
+    ${done.map(s=>`<div style="display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px">
+      <span>${s.date} ${s.customerName} · ${s.platform}</span>
+      <span class="tag ${s.status==='approved'?'success':'danger'}">${s.status==='approved'?'+'+s.points+'分':'已驳回'}</span>
+    </div>`).join('')}`:''}
+  `;
+}
+
+/* ---- 活动记录（签到 / 推荐 / 积分流水） ---- */
+function rwLog(b){
+  const today=ymd(new Date());
+  const todaySign=DB.signins.filter(s=>s.date===today);
+  const refs=DB.referrals.slice(0,30);
+  b.innerHTML=`
+    <div class="row" style="margin-bottom:14px">
+      <div class="col"><div class="stat-mini"><div class="v">${todaySign.length}</div><div class="l">今日签到人次</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.referrals.filter(r=>r.status==='done').length}</div><div class="l">成功推荐</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.redeems.length}</div><div class="l">累计兑换</div></div></div>
+      <div class="col"><div class="stat-mini"><div class="v">${DB.shares.filter(s=>s.status==='approved').length}</div><div class="l">通过分享</div></div></div>
+    </div>
+    <div style="font-weight:600;font-size:13px;margin-bottom:8px">🤝 推荐关系</div>
+    ${refs.length?refs.map(r=>`<div style="display:flex;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12.5px">
+      <span><strong>${r.referrerName}</strong> 推荐了 <strong>${r.refereeName}</strong> <span class="text-muted">· ${r.date}</span></span>
+      ${r.status==='done'?`<span class="tag success">已发放 ${r.referrerPoints}/${r.refereePoints}分</span>`:`<span class="tag warning" style="cursor:pointer" onclick="settleReferral('${r.id}');saveDB();renderRoute();toast('已发放')">待新客消费（点击手动发放）</span>`}
+    </div>`).join(''):'<div class="text-muted" style="font-size:12.5px">暂无推荐记录</div>'}
+    <div style="font-weight:600;font-size:13px;margin:16px 0 8px">📅 最近签到</div>
+    ${DB.signins.slice(0,20).map(s=>{
+      const c=DB.customers.find(x=>x.id===s.customerId);
+      return `<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12.5px">
+        <span>${s.date} · ${c?c.name:'(已删除)'}</span><span class="text-success">+${s.points}分</span>
+      </div>`;
+    }).join('')||'<div class="text-muted" style="font-size:12.5px">暂无签到记录</div>'}
+  `;
 }
 
 /* 营销管理 */
